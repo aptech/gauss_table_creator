@@ -19,6 +19,6 @@
 //Declare tableControl structure
 struct tableControl myTable;
 
-//Set the title
+//Set coefficient for significance markers
 tableSetAsterisk(&myTable, "coefficients");
 ```
