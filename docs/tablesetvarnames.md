@@ -10,7 +10,7 @@
 | Option | Description |
 |: ----- |: ------- |
 |&tctl  | A `tableControl` structure pointer |
-|variable | String, variable names separated by commas. |
+|variable_names | String, variable names separated by commas. |
 
 ## Example
 ```
