@@ -10,7 +10,7 @@
 | Option | Description |
 |: ----- |: ------- |
 |&tctl  | A `tableControl` structure pointer. |
-|variable | String, the variable to place in parentheses. Options include: "coefficients", "se", "tstat", "pval" |
+|variable | String, the statistic to place in parentheses. Options include: "coefficients", "se", "tstat", "pval" |
 
 ## Example
 ```

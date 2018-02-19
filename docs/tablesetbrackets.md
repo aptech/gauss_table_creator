@@ -10,7 +10,7 @@
 | Option | Description |
 |: ----- |: ------- |
 |&tctl  | A `tableControl` structure pointer. |
-|variable | String, the variable put in brackets. Options include: "coefficients", "se", "tstat", "pval" |
+|variable | String, the statistic put in brackets. Options include: "coefficients", "se", "tstat", "pval" |
 
 ## Example
 ```
