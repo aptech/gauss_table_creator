@@ -1,7 +1,7 @@
 # tableSetBrackets
 
 ## Purpose
-> Controls which table values to put brackets around.
+> Controls which statistics to put brackets around.
 
 ## Format
 > tableSetBrackets(&tctl, variable)

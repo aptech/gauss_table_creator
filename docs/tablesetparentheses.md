@@ -1,7 +1,7 @@
 # tableSetBrackets
 
 ## Purpose
-> Controls which table values to put parentheses around.
+> Controls which statistic to put parentheses around.
 
 ## Format
 > tableSetParentheses(&tctl, variable)
