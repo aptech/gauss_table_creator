@@ -10,7 +10,7 @@
 | Option | Description |
 |: ----- |: ------- |
 |&tctl  | A `tableControl` structure pointer. |
-|variable | String, the variable to have significance markers. Options include: "coefficients", "se", "tstat", "pval" |
+|variable | String, the variable put in brackets. Options include: "coefficients", "se", "tstat", "pval" |
 
 ## Example
 ```
@@ -18,5 +18,5 @@
 struct tableControl myTable;
 
 //Set up brackets
-tableSetBrackets(&tblCtl, "se");
+tableSetBrackets(&myTable, "se");
 ```

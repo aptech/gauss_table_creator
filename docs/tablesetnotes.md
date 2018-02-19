@@ -18,6 +18,6 @@
 struct tableControl myTable;
 
 //Set column header to independent variable
-tableSetNotes(&tblCtl, "Data source: FRED");
+tableSetNotes(&myTable, "Data source: FRED");
 
 ```

@@ -18,6 +18,6 @@
 struct tableControl myTable;
 
 //Set column header to independent variable
-tableSetColumnHeaders(&tblCtl, "mpg");
+tableSetColumnHeaders(&myTable, "mpg");
 
 ```

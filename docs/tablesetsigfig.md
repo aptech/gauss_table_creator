@@ -18,5 +18,5 @@
 struct tableControl myTable;
 
 //Set column header to independent variable
-tableSetSigFig(&tblCtl, 5);
+tableSetSigFig(&myTable, 5);
 ```

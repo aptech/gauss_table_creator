@@ -20,6 +20,6 @@
 struct tableControl myTable;
 
 //Export Table
-tableSetExport(&tblCtl,"TableOutDC","XLS");
+tableSetExport(&myTable,"TableOutDC","XLS");
 
 ```

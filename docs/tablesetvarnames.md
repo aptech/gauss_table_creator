@@ -18,5 +18,5 @@
 struct tableControl myTable;
 
 //Name variables included in model
-tableSetVarNames(&tblCtl, "Const., Weight, Length");
+tableSetVarNames(&myTable, "Const., Weight, Length");
 ```
