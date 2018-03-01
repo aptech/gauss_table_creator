@@ -10,7 +10,7 @@ The program files require a working copy of GAUSS 18+. Many can be run on earlie
 ### Installing
 The GAUSS table creator can be easily installed using the GAUSS application installation wizard. This can be done following some very simple steps:
 1. Download the zipped folder `tabout.zip`.
-2. In GAUSS go to Tools>Install Application
+2. In GAUSS go to Tools>Install Application  
 ![install wizard](install_aplication.jpg)
 3. Follow examples, making sure to navigate to the downloaded `tabout.zip`.
 4. Before using the functions created by tabout you will need to load the newly created `tabout` library. This can be done in a number of ways:
