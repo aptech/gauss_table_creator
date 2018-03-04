@@ -1,4 +1,4 @@
-# tableSetBrackets
+# tableSetParentheses
 
 ## Purpose
 > Controls which statistic to put parentheses around.
