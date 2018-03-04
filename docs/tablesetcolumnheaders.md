@@ -8,7 +8,7 @@
 
 ## Input
 | Option | Description |
-|: ----- |: ------- |
+|:------- |:------- |
 |&tctl  | A `tableControl` structure pointer |
 |column_headers | String array, headers for columns.|
 

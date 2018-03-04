@@ -8,7 +8,7 @@
 
 ## Input
 | Option | Description |
-|: ----- |: ------- |
+|:------- |:------- |
 |&tctl  | A `tableControl` structure pointer |
 |stack_direction | String, direction to stack coefficients. Valid options: "Horizontal" or "Vertical" |
 

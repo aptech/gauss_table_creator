@@ -8,7 +8,7 @@
 
 ## Input
 | Option | Description |
-|: ----- |: ------- |
+|:------- |:------- |
 |&tctl  | A `tableControl` structure pointer |
 |title | String, the desired table title |
 

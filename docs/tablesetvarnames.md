@@ -8,7 +8,7 @@
 
 ## Input
 | Option | Description |
-|: ----- |: ------- |
+|:------- |:------- |
 |&tctl  | A `tableControl` structure pointer |
 |variable_names | String, variable names separated by commas. |
 

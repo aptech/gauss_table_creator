@@ -8,7 +8,7 @@
 
 ## Input
 | Option | Description |
-|: ----- |: ------- |
+|:------- |:------- |
 |&tctl  | A `tableControl` structure pointer. |
 |variable | String, the statistic put in brackets. Options include: "coefficients", "se", "tstat", "pval" |
 

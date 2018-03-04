@@ -9,7 +9,7 @@
 
 ## Input
 | Option | Description |
-|: ----- |: ------- |
+|:------- |:------- |
 |&tctl  | A `tableControl` structure pointer |
 |filename | String, name of export file excluding type extension. |
 |filetype | Optional input, string, file extension. Options include: "XLS", "XLSX", "TXT". Default = "XLSX". |

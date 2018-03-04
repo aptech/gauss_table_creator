@@ -8,7 +8,7 @@
 
 ## Input
 | Option | Description |
-|: ----- |: ------- |
+|:------- |:------- |
 |&tctl  | A `tableControl` structure pointer. |
 |sigFig | Scalar, number of significant figures on numbers printed in the table.|
 
