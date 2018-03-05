@@ -1,14 +1,19 @@
+#include dynargs.dec
 #include tabout.sdf
 
-proc(1)=outputTable(struct tableControl tCtl,struct regressEstimate regEst);
+proc(1)=outputTable(struct tableControl tCtl, ...);
     local outNums,fname,xlsret,tmp,tmp2,tmp_fname;
+    
+    //Put dynamic arguments in structure
+    struct regressEstimate regEst;
+    regEst = _getTableInputs(...);
     
     //Load all regression results
     {tCtl,regEst}=tableSetregEst(tCtl,regEst);
     
     //Set up numeric table values
     struct regressEstimateTable regEstTable;
-    {regEstTable,tCtl} = getNumsTable(tCtl,regEst);
+    {regEstTable,tCtl} = getNumsTable(tCtl, regEst);
     
     //Add Title and Notes
     if tCtl.exportfilename$!="";
@@ -51,10 +56,45 @@ proc(1)=outputTable(struct tableControl tCtl,struct regressEstimate regEst);
     retp(regEstTable);
 endp;
 
-proc(2)=getNumsTable(struct tableControl tCtl,struct regressEstimate regEst);
+proc(1) = _getTableInputs(...);
+    local n_dynargs;
+    n_dynargs = COUNT_DYNARGS;
+    
+    //Declare structure
+    struct regressEstimate regEst;
+    
+    //Load coefficients
+    if n_dynargs >= 1;
+        regEst.coefficients = sysstate(GET_ONE_DYNARG, 1);
+    endif;
+    
+    //Standard errors
+    if n_dynargs >= 2;
+        regEst.se = sysstate(GET_ONE_DYNARG, 2);
+    endif;
+    
+    //T-stat
+    if n_dynargs >= 3;
+        regEst.tstat = sysstate(GET_ONE_DYNARG, 3);
+    endif;
+    
+    //P-vals
+    if n_dynargs >= 4;
+        regEst.pval = sysstate(GET_ONE_DYNARG, 3);
+    endif;
+    
+    if n_dynargs > 4;
+        errorlog "outputTable: The procedure accepts 2-5 inputs";
+        end;
+    endif;
+    retp(regEst);
+endp;
+
+
+proc(2)=getNumsTable(struct tableControl tCtl, struct regressEstimate regEst);
     local varlist,tmp,numCoeff,numPval,numTstat,numSe,varMat,tmpVar1,y;
     tmp = type(regEst.coefficients)*type(regEst.pval)*type(regEst.tstat)*type(regEst.se);
-   
+    
     numCoeff = rows(regEst.coefficients);
     numPval = rows(regEst.pval);
     numTstat = rows(regEst.tstat);
@@ -72,19 +112,19 @@ proc(2)=getNumsTable(struct tableControl tCtl,struct regressEstimate regEst);
     endif;
     if tCtl.asterisk!=0;
         {regEstTable,tCtl} = _putOnAsterisk(regEstTable,tCtl,regEst);
-//        regEstTable.coefficients=varMat;
+        //        regEstTable.coefficients=varMat;
     endif;
     if tCtl.diagnosticVariables$!="";
         regEstTable = stackTableVars(regEstTable,tCtl);
     endif;
-
+    
     retp(regEstTable,tCtl);
 endp;
 
 proc(1) = stackTableVars(struct regressEstimateTable regEstTable, struct tableControl tCtl);
     local varl,tmp,tmp1,tmp2,outTable,
-    numdiagVars,numCoeff,numModels,se,coefficients,pval,tstat,
-    rowLabel,colLabel;
+        numdiagVars,numCoeff,numModels,se,coefficients,pval,tstat,
+        rowLabel,colLabel;
     
     varl=tCtl.diagnosticVariables;
     se = regEstTable.se;
@@ -97,17 +137,17 @@ proc(1) = stackTableVars(struct regressEstimateTable regEstTable, struct tableCo
     numModels = cols(regEstTable.coefficients);
     
     if upper(tCtl.columnStack)$=="HORIZONTAL";
-       //Create string array for output table
-       outTable = ntos(zeros(numCoeff+1,NumModels*numdiagVars),5);
-       //Create string array for row labels
-       if tCtl.variableNames$!="";
-           rowLabel="Variables"$|tCtl.variableNames;
-       else;
-           rowLabel="Variables"$|("X"$+ntos(seqa(1,1,numCoeff)));
-       endif;
-       
-       //Create string array for col labels
-       colLabel= ntos(zeros(1,NumModels*numdiagVars),5);
+        //Create string array for output table
+        outTable = ntos(zeros(numCoeff+1,NumModels*numdiagVars),5);
+        //Create string array for row labels
+        if tCtl.variableNames$!="";
+            rowLabel="Variables"$|tCtl.variableNames;
+        else;
+            rowLabel="Variables"$|("X"$+ntos(seqa(1,1,numCoeff)));
+        endif;
+        
+        //Create string array for col labels
+        colLabel= ntos(zeros(1,NumModels*numdiagVars),5);
         for i(1,cols(regEstTable.coefficients),1);
             if tCtl.columnHeader$!="";
                 colLabel[i]=tCtl.columnHeader[i];
@@ -123,19 +163,19 @@ proc(1) = stackTableVars(struct regressEstimateTable regEstTable, struct tableCo
             endfor;
             outTable[.,(i-1)*numdiagVars+1:i*numdiagVars]=tmp;
         endfor;
-
+        
         outTable =rowLabel$~outTable;
     elseif upper(tCtl.columnStack)$=="VERTICAL";
         //Create string array for row labels
-       if tCtl.variableNames$!="";
-           colLabel="Variables"$~tCtl.columnHeader;
-       else;
-           colLabel="Variables"$~("X"$+ntos(seqa(1,1,numModels)));
-       endif;
-       
-       //Create string array for col labels
-       rowLabel= ntos(zeros(rows(regEstTable.coefficients)*numdiagVars,1),1);
-       outTable = ntos(zeros(rows(regEstTable.coefficients)*numdiagVars,cols(regEstTable.coefficients)+1),5);
+        if tCtl.variableNames$!="";
+            colLabel="Variables"$~tCtl.columnHeader;
+        else;
+            colLabel="Variables"$~("X"$+ntos(seqa(1,1,numModels)));
+        endif;
+        
+        //Create string array for col labels
+        rowLabel= ntos(zeros(rows(regEstTable.coefficients)*numdiagVars,1),1);
+        outTable = ntos(zeros(rows(regEstTable.coefficients)*numdiagVars,cols(regEstTable.coefficients)+1),5);
         for i(1,cols(regEstTable.coefficients),1);
             for j(1,numCoeff,1);
                 if i==1;
@@ -173,17 +213,17 @@ proc(1) = stackTableVars(struct regressEstimateTable regEstTable, struct tableCo
     
     retp(regEstTable);
 endp;
-        
-proc(2)=_putOnAsterisk(struct regressEstimateTable regEstTable, struct tableControl tCtl, struct regressEstimate regEst);   
+
+proc(2)=_putOnAsterisk(struct regressEstimateTable regEstTable, struct tableControl tCtl, struct regressEstimate regEst);
     local numVar,numModels,tmp;
     
     numVar = rows(regEst.coefficients);
     numModels = cols(regEst.coefficients);
     tmp = strtof(regEstTable.pval);
     
-   tCtl.tableNote = _AsteriskTableNote(tCtl.tableNote, tCtl.asteriskTolerance);
-   regEstTable = _varAddAsterisk(regEstTable, tCtl, regEst);
-
+    tCtl.tableNote = _AsteriskTableNote(tCtl.tableNote, tCtl.asteriskTolerance);
+    regEstTable = _varAddAsterisk(regEstTable, tCtl, regEst);
+    
     retp(regEstTable,tCtl);
 endp;
 proc(1) = _AsteriskTableNote(tableNote,tol);
@@ -198,7 +238,7 @@ proc(1) = _AsteriskTableNote(tableNote,tol);
     endif;
     retp(addNote);
 endp;
-    
+
 proc(1) = createRegEstTable(struct tableControl tCtl, struct regressEstimate regEst);
     
     struct regressEstimateTable regEstTable;
@@ -219,15 +259,15 @@ proc(1) = spacingMatrix(numMat,prec);
     for i(1,numRows,1);
         for j(1,numCols,1);
             if numMat[i,j]>=0;
-               strMat[i,j]= chrs(32)$+strMat[i,j];
+                strMat[i,j]= chrs(32)$+strMat[i,j];
             endif;
         endfor;
     endfor;
-   retp(strMat);
+    retp(strMat);
 endp;
 
 proc(2)=_putOnBrackets(struct regressEstimateTable regEstTable,struct tableControl tCtl,struct regressEstimate regEst);
-
+    
     tCtl.tableNote=_bracketTableNote(tCtl.tableNote,tCtl.bracket);
     for i(1,rows(tCtl.bracket),1);
         regEstTable = _varAddBracket(tCtl.bracket[i],regEstTable);
@@ -250,24 +290,24 @@ proc(1) = _bracketTableNote(tableNote,bracketVars);
 endp;
 
 proc(1) = _varAddBracket(varName,struct regressEstimateTable regEstTable);
-       
-       if upper(varName)=="SE";
-           regEstTable.se = "["$+regEstTable.se$+"]";
-       elseif upper(varName)=="TSTAT";
-          regEstTable.tstat = "["$+regEstTable.tstat$+"]";
-       elseif upper(varName)=="COEFFICIENTS";
-          regEstTable.coefficients = "["$+regEstTable.coefficients$+"]";
-       elseif upper(varName)=="PVAL";
-          regEstTable.pval = "["$+regEstTable.pval$+"]";
-       endif;
-       retp(regEstTable);
+    
+    if upper(varName)=="SE";
+        regEstTable.se = "["$+regEstTable.se$+"]";
+    elseif upper(varName)=="TSTAT";
+        regEstTable.tstat = "["$+regEstTable.tstat$+"]";
+    elseif upper(varName)=="COEFFICIENTS";
+        regEstTable.coefficients = "["$+regEstTable.coefficients$+"]";
+    elseif upper(varName)=="PVAL";
+        regEstTable.pval = "["$+regEstTable.pval$+"]";
+    endif;
+    retp(regEstTable);
 endp;
 
 proc(2)=_putOnParan(struct regressEstimateTable regEstTable,struct tableControl tCtl,struct regressEstimate regEst);
-
+    
     tCtl.tableNote=_paranthesesTableNote(tCtl.tableNote,tCtl.parentheses);
     for i(1,rows(tCtl.parentheses),1);
-      regEstTable = _varAddParan(tCtl.parentheses[i],regEstTable);
+        regEstTable = _varAddParan(tCtl.parentheses[i],regEstTable);
     endfor;
     retp(regEstTable,tCtl);
 endp;
@@ -287,17 +327,17 @@ proc(1) = _paranthesesTableNote(tableNote,paranVars);
 endp;
 
 proc(1) = _varAddParan(varName,struct regressEstimateTable regEstTable);
-   
-       if upper(varName)=="SE";
-           regEstTable.se = "("$+regEstTable.se$+")";
-       elseif upper(varName)=="TSTAT";
-          regEstTable.tstat = "("$+regEstTable.tstat$+")";
-       elseif upper(varName)=="COEFFICIENTS";
-          regEstTable.coefficients = "("$+regEstTable.coefficients$+")";
-       elseif upper(varName)=="PVAL";
-          regEstTable.pval = "("$+regEstTable.pval$+")";
-       endif;
-        retp(regEstTable);
+    
+    if upper(varName)=="SE";
+        regEstTable.se = "("$+regEstTable.se$+")";
+    elseif upper(varName)=="TSTAT";
+        regEstTable.tstat = "("$+regEstTable.tstat$+")";
+    elseif upper(varName)=="COEFFICIENTS";
+        regEstTable.coefficients = "("$+regEstTable.coefficients$+")";
+    elseif upper(varName)=="PVAL";
+        regEstTable.pval = "("$+regEstTable.pval$+")";
+    endif;
+    retp(regEstTable);
 endp;
 
 proc(2)=tableSetregEst(struct tableControl tCtl,struct regressEstimate regEst);
@@ -315,10 +355,10 @@ proc(2)=tableSetregEst(struct tableControl tCtl,struct regressEstimate regEst);
         tCtl.p0=tableSetSE(tCtl,regEst.se);
     endif;
     
-     //Get pval
+    //Get pval
     if type(regEst.pval)!=6;
         regEst.pval = (2*cdfTC(abs(regEst.tstat),tctl.numObs-rows(regEst.coefficients)));
-    endif;   
+    endif;
     tCtl.p0=tableSetPval(tCtl,regEst.pval);
     retp(tCtl,regEst);
 endp;
@@ -342,9 +382,9 @@ proc(1) = tableSetpval(struct tableControl tCtl, pval);
     tCtl.p0= pvPack(tCtl.p0,pval,"pval");
     retp(tCtl.p0);
 endp;
-    
+
 proc(1) = tableGetDefaults(regType);
-   
+    
     struct tableControl tCtl;
     regType = upper(regType);
     if  regtype=="OLS";
@@ -364,7 +404,7 @@ proc(1) = _getDefaultsTabOLS;
     //Indicates how to stack the columns of information
     //Horizontal or Vertical
     tOut.columnStack="Vertical";
-//    tOut.diasnosticVariables = 0;
+    //    tOut.diasnosticVariables = 0;
     
     //Add significant coefficient stars
     tOut.asterisk=0;
@@ -374,24 +414,24 @@ proc(1) = _getDefaultsTabOLS;
     //Add table and notes
     tableSetTitle(&tOut,"Linear regression");
     tOut.exportfilename = "tabout";
-   
+    
     //PV Output structure
     struct PV p0;
     p0 = pvCreate();
     tOut.p0=p0;
     retp(tOut);
 endp;
-    
+
 proc(0) = _dc_printTable(sa,s1,x,s2);
-
+    
     local m0,m1,t,ss,s5,tmp,table_fmt;
-
+    
     //Add space to end of variable names
     if sa[1] $== "";
-       sa = "  ";
-       for i(1,rows(x),1);
-           sa = sa $| "  ";
-       endfor;
+        sa = "  ";
+        for i(1,rows(x),1);
+            sa = sa $| "  ";
+        endfor;
     endif;
     
     
@@ -417,11 +457,11 @@ proc(0) = _dc_printTable(sa,s1,x,s2);
     else;
         m0 = strlen(s1);
     endif;
-
+    
     for i(1,rows(sa),1);
         sa[i] = sa[i]$+chrs(32*ones(1,m0-strlen(sa[i])));
     endfor;
-
+    
     //Add spaces to the end of output labels
     t = 11;
     if s2[1] $== "";
@@ -440,12 +480,12 @@ proc(0) = _dc_printTable(sa,s1,x,s2);
             s2[1,i] = s2[1,i]$+chrs(32*ones(1,m0-strlen(s2[1,i])+1));
         endfor;
     endif;
-
-//   Table format to fit data 
+    
+    //   Table format to fit data
     table_fmt = "% -"$+ftos(t,"*.*lf",1,0)$+".4lf";
     print ((s1$|sa)$~(s2$|ftostrc(x,table_fmt)));
- endp;
-proc(1) = _varAddAsterisk(struct regressEstimateTable regEstTable, struct tableControl tCtl, struct regressEstimate regEst); 
+endp;
+proc(1) = _varAddAsterisk(struct regressEstimateTable regEstTable, struct tableControl tCtl, struct regressEstimate regEst);
     local varName, numVar, numModels, tmp;
     
     varName = tCtl.asteriskVariable;
