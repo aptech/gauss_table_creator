@@ -53,7 +53,7 @@ tblCtl.printOut = 1;
 tblCtl.numObs = 74;
 
 //Export Table
-tableSetExport(&tblCtl,"TableOutDC","XLS");
+tableSetExport(&tblCtl,"TableOutOLS");
 
 struct regressEstimateTable regEstTab;
 regEstTab = outputTable(tblCtl, oOut.b, oOut.stderr);
