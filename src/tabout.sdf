@@ -1,50 +1,50 @@
 struct tableControl {
     scalar sigFig;
-string valueJustification;
-scalar numObs;
-scalar exportTable;
-string array diagnosticVariables;
+    string valueJustification;
+    scalar numObs;
+    scalar exportTable;
+    string array diagnosticVariables;
 
-//Indicates how to stack the columns of information
-//Horizontal or Vertical
-string columnStack;
-string addtoFile;
+    // Indicates how to stack the columns of information
+    // Horizontal or Vertical
+    string columnStack;
+    string addtoFile;
 
-//Variable Names
-string array variableNames;
+    // Variable Names
+    string array variableNames;
 
-//Add table and notes
-string tableTitle;
-string array tableNote;
-scalar printOut;
+    // Add table and notes
+    string tableTitle;
+    string array tableNote;
+    scalar printOut;
 
-//Column header
-string array columnHeader;
+    // Column header
+    string array columnHeader;
 
-//Export file
-string exportfilename;
+    // Export file
+    string exportfilename;
 
-//Add significant coefficient stars
-scalar asterisk;
-string asteriskVariable;
-matrix asteriskTolerance;
-string array bracket;
-string array parentheses;
+    // Add significant coefficient stars
+    scalar asterisk;
+    string asteriskVariable;
+    matrix asteriskTolerance;
+    string array bracket;
+    string array parentheses;
 
-struct PV p0;
+    struct PV p0;
 };
 
 struct regressEstimate {
     matrix coefficients;
-matrix pVal;
-matrix tStat;
-matrix se;
+    matrix pVal;
+    matrix tStat;
+    matrix se;
 };
 
 struct regressEstimateTable {
     string array coefficients;
-string array pVal;
-string array tstat;
-string array se;
-string array outTable;
+    string array pVal;
+    string array tstat;
+    string array se;
+    string array outTable;
 };
