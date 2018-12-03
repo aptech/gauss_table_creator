@@ -1,7 +1,7 @@
 /*
 **  tabset.src  -  Printing functions for SS procedures
 **
-** (C) Copyright 2017. Aptech Systems, Inc.
+** (C) Copyright 2017-2018. Aptech Systems, Inc.
 ** All Rights Reserved.
 **
 ** This Software Product is PROPRIETARY SOURCE CODE OF APTECH
@@ -22,81 +22,81 @@
 #include tabout.sdf
 #include dynargs.dec
 
-proc(0) = tableSetTitle(struct tableControl *tCtl,title);
-    tCtl->tableTitle=title;
+proc (0) = tableSetTitle(struct tableControl *tCtl,title);
+    tCtl->tableTitle = title;
 endp;
 
 
-proc(0) = tableSetAsterisk(struct tableControl *tCtl, ...);
+proc (0) = tableSetAsterisk(struct tableControl *tCtl, ...);
     local n_dynargs, asteriskVariable, asteriskTolerance;
     
     n_dynargs = COUNT_DYNARGS;
-    tCtl->asterisk=1;
+    tCtl->asterisk = 1;
     
     if n_dynargs == 1;
         
-        tCtl->asteriskVariable=sysstate(GET_ONE_DYNARG,1);
+        tCtl->asteriskVariable = sysstate(GET_ONE_DYNARG,1);
         
         //Default tolerance values
         asteriskTolerance = 0.001~0.05~0.01;
         tCtl->asteriskTolerance;
             
     elseif n_dynargs == 2;
-        tCtl->asteriskTolerance=sysstate(GET_ONE_DYNARG, 2);
+        tCtl->asteriskTolerance = sysstate(GET_ONE_DYNARG, 2);
     endif;
 endp;
 
-proc(0) = tableSetVarNames(struct tableControl *tCtl,varNames);
-    tCtl->variableNames=strsplit(varNames)';
+proc (0) = tableSetVarNames(struct tableControl *tCtl,varNames);
+    tCtl->variableNames = strsplit(varNames)';
 endp;
 
-proc(0) = tableSetExport(struct tableControl *tCtl, ...);
+proc (0) = tableSetExport(struct tableControl *tCtl, ...);
     local n_dynargs, filetype;
     
     n_dynargs = COUNT_DYNARGS;
     tCtl->exportfilename = sysstate(GET_ONE_DYNARG, 1);
     
     if n_dynargs == 1;
-        tCtl->exportTable=2;
+        tCtl->exportTable = 2;
     elseif n_dynargs == 2;
         filetype = sysstate(GET_ONE_DYNARG, 2);
         if filetype=="TXT";
-            tCtl->exportTable=1;
+            tCtl->exportTable = 1;
         elseif filetype=="XLS" or filetype=="XLSX";
-            tCtl->exportTable=2;
+            tCtl->exportTable = 2;
         endif;
     endif;
 endp;
 
-proc(0) = tableSetColumnHeaders(struct tableControl *tCtl,colHeaders);
-    tCtl->columnHeader=colHeaders;
+proc (0) = tableSetColumnHeaders(struct tableControl *tCtl,colHeaders);
+    tCtl->columnHeader = colHeaders;
 endp;
 
-proc(0) = tableSetNotes(struct tableControl *tCtl,note);
-    tCtl->tableNote=note;
+proc (0) = tableSetNotes(struct tableControl *tCtl,note);
+    tCtl->tableNote = note;
 endp;
 
-proc(0) = tableSetSigFig(struct tableControl *tCtl,sigFig);
-    tCtl->sigFig=sigFig;
+proc (0) = tableSetSigFig(struct tableControl *tCtl,sigFig);
+    tCtl->sigFig = sigFig;
 endp;
 
-proc(0) = tableSetAlignment(struct tableControl *tCtl,alignment);
+proc (0) = tableSetAlignment(struct tableControl *tCtl,alignment);
     tCtl->valueJustification = alignment;
 endp;
 
-proc(0) = tableSetBrackets(struct tableControl *tCtl,bracketVars);
+proc (0) = tableSetBrackets(struct tableControl *tCtl,bracketVars);
     tCtl->bracket = bracketVars;
 endp;
 
-proc(0) = tableSetParantheses(struct tableControl *tCtl,paranVars);
+proc (0) = tableSetParantheses(struct tableControl *tCtl,paranVars);
     tCtl->parentheses = paranVars;
 endp;
 
-proc(0) = tableSetStack(struct tableControl *tCtl,stackDir);
+proc (0) = tableSetStack(struct tableControl *tCtl,stackDir);
     tCtl->columnStack = stackDir;
 endp;
 
-proc(0) = tableSetVars(struct tableControl *tCtl,diagVars);
+proc (0) = tableSetVars(struct tableControl *tCtl,diagVars);
     tCtl->diagnosticVariables = strsplit(diagVars)';
 endp;
 
