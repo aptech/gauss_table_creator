@@ -19,7 +19,7 @@ The GAUSS table creator can be easily installed using the GAUSS application inst
   *  Enter `library tabout` in the program input/output window.
   *  Put the line `library tabout;` at the beginning of your program files.
 
-Note: I have provided the individual files found in `tabout.zip` for examination and review. However, installation should always be done using the `tabout.zip` folder and the Installation Wizard.
+Note: I have provided the individual files found in `tabout.zip` for examination and review. However, installation should always be done using the `tabout.zip` folder and the *Installation Wizard*.
 
 ### Examples
 After installing the library the example file will be found in your GAUSS home directory in the directory `\pkgs\tabout\examples`. The example uses a GAUSS dataset included with the GAUSS 18 examples.
