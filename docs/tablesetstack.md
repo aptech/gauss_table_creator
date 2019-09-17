@@ -17,6 +17,6 @@
 //Declare tableControl structure
 struct tableControl myTable;
 
-//Name variables included in model
+// Stack table vertically
 tableSetStack(&myTable, "Vertical");
 ```
