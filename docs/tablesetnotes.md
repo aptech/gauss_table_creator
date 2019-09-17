@@ -17,7 +17,7 @@
 //Declare tableControl structure
 struct tableControl myTable;
 
-//Set column header to independent variable
+//Make not for data source at bottom of table
 tableSetNotes(&myTable, "Data source: FRED");
 
 ```
