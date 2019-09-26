@@ -33,17 +33,22 @@ proc (0) = tableSetAsterisk(struct tableControl *tCtl, ...);
     n_dynargs = COUNT_DYNARGS;
     tCtl->asterisk = 1;
     
-    if n_dynargs == 1;
+    if n_dynargs >= 1;
         
         tCtl->asteriskVariable = sysstate(GET_ONE_DYNARG,1);
-        
-        //Default tolerance values
-        asteriskTolerance = 0.001~0.05~0.01;
-        tCtl->asteriskTolerance;
-            
-    elseif n_dynargs == 2;
-        tCtl->asteriskTolerance = sysstate(GET_ONE_DYNARG, 2);
+
+        if n_dynargs == 1;
+            // Default tolerance values
+            tCtl->asteriskTolerance = 0.001 ~ 0.05 ~ 0.01;
+        elseif n_dynargs == 2;
+            tCtl->asteriskTolerance=sysstate(GET_ONE_DYNARG, 2);
+        else;
+            errorlogat "'tableSetAsterisk' accepts 2 or 3 inputs. '"$+ntos(n_dynargs)$+"' passed in";
+            end;
+        endif;
+
     endif;
+            
 endp;
 
 proc (0) = tableSetVarNames(struct tableControl *tCtl,varNames);

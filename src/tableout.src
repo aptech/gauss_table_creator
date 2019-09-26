@@ -292,13 +292,13 @@ endp;
 
 proc (1) = _varAddBracket(varName,struct regressEstimateTable regEstTable);
     
-    if upper(varName) == SE";
+    if upper(varName) == "SE";
         regEstTable.se = "["$+regEstTable.se$+"]";
-    elseif upper(varName) == TSTAT";
+    elseif upper(varName) == "TSTAT";
         regEstTable.tstat = "["$+regEstTable.tstat$+"]";
-    elseif upper(varName) == COEFFICIENTS";
+    elseif upper(varName) == "COEFFICIENTS";
         regEstTable.coefficients = "["$+regEstTable.coefficients$+"]";
-    elseif upper(varName) == PVAL";
+    elseif upper(varName) == "PVAL";
         regEstTable.pval = "["$+regEstTable.pval$+"]";
     endif;
     retp(regEstTable);
@@ -329,13 +329,13 @@ endp;
 
 proc (1) = _varAddParan(varName,struct regressEstimateTable regEstTable);
     
-    if upper(varName) == SE";
+    if upper(varName) == "SE";
         regEstTable.se = "("$+regEstTable.se$+")";
-    elseif upper(varName) == TSTAT";
+    elseif upper(varName) == "TSTAT";
         regEstTable.tstat = "("$+regEstTable.tstat$+")";
-    elseif upper(varName) == COEFFICIENTS";
+    elseif upper(varName) == "COEFFICIENTS";
         regEstTable.coefficients = "("$+regEstTable.coefficients$+")";
-    elseif upper(varName) == PVAL";
+    elseif upper(varName) == "PVAL";
         regEstTable.pval = "("$+regEstTable.pval$+")";
     endif;
     retp(regEstTable);
@@ -388,7 +388,7 @@ proc (1) = tableGetDefaults(regType);
     
     struct tableControl tCtl;
     regType = upper(regType);
-    if  regtype == OLS";
+    if  regtype == "OLS";
         tCtl=_getDefaultsTabOLS;
     endif;
     retp (tCtl);
