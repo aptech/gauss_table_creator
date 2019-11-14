@@ -1,0 +1,19 @@
+{
+    "author": "Erica Clower",
+    "deps": [
+    ],
+    "description": "Provides a set of tools for formatting, creating, and exporting publication quality tables in GAUSS. Table formatting can be controlled by directly setting members in the tableControl structure or through use of a series of tableSet functions.",
+    "dlib": [
+    ],
+    "keywords": [
+    ],
+    "license": "",
+    "name": "tabout",
+    "repo": "",
+    "src": [
+        "tabout.sdf",
+        "tableout.src",
+        "tabset.src"
+    ],
+    "version": "0.1.0"
+}
