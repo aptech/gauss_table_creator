@@ -5,13 +5,17 @@ This package provides a set of tools for formatting, creating, and exporting pub
 
 ## Getting Started
 ### Prerequisites
-The program files require a working copy of GAUSS 18+. Many can be run on earlier versions with some small revisions.
+The program files require a working copy of **GAUSS 18+**. Many can be run on earlier versions with some small revisions.
 
 ### Installing
+**GAUSS 20+**
+The GAUSS table creator can be installed and updated directly in GAUSS using the [GAUSS package manager](https://www.aptech.com/blog/gauss-package-manager-basics/).
+
+**GAUSS 18+**
 The GAUSS table creator can be easily installed using the GAUSS application installation wizard, as shown below:
 
 1. Download the zipped folder `tabout.zip`.
-2. Select **Tools > Install Application** from the main GAUSS menu. 
+2. Select **Tools > Install Application** from the main GAUSS menu.
 ![install wizard](images/install_application.png)
 3. Follow the installer prompts, making sure to navigate to the downloaded `tabout.zip`.
 4. Before using the functions created by tabout you will need to load the newly created `tabout` library. This can be done in a number of ways:
