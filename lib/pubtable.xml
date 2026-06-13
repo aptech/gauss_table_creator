@@ -1,0 +1,8 @@
+<app>
+<name>pubtable</name>
+<source>pubtable.sdf</source>
+<source>pubtable.src</source>
+<source>pubtable_legacy.sdf</source>
+<source>pubtable_legacy_output.src</source>
+<source>pubtable_legacy_setters.src</source>
+</app>

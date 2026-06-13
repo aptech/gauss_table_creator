@@ -1,5 +1,5 @@
 /*
-**  tabset.src  -  Printing functions for SS procedures
+**  pubtable_legacy_setters.src  -  Legacy table setter functions
 **
 ** (C) Copyright 2017-2018. Aptech Systems, Inc.
 ** All Rights Reserved.
@@ -19,7 +19,7 @@
 **-------------------**------------------**-------------------**-----------**
 **
 */
-#include tabout.sdf
+#include pubtable_legacy.sdf
 #include dynargs.dec
 
 proc (0) = tableSetTitle(struct tableControl *tCtl,title);
@@ -43,7 +43,7 @@ proc (0) = tableSetAsterisk(struct tableControl *tCtl, ...);
         elseif n_dynargs == 2;
             tCtl->asteriskTolerance=sysstate(GET_ONE_DYNARG, 2);
         else;
-            errorlogat "'tableSetAsterisk' accepts 2 or 3 inputs. '"$+ntos(n_dynargs)$+"' passed in";
+            errorlogat "'tableSetAsterisk' accepts 2 or 3 inputs. '"$+sprintf("%d", n_dynargs)$+"' passed in";
             end;
         endif;
 

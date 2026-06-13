@@ -102,7 +102,7 @@ proc (1) = ptModelCreate(name, estimates, stdErrors);
     mdl.estimates = estimates;
     mdl.stdErrors = stdErrors;
     mdl.pValues = miss(zeros(rows(estimates), cols(estimates)), 0);
-    mdl.termNames = "x" $+ ntos(seqa(1, 1, rows(estimates)));
+    mdl.termNames = "x" $+ sprintf("%d", seqa(1, 1, rows(estimates)));
     mdl.gofNames = "";
     mdl.gofValues = miss(0, 0);
     mdl.fmt = ptFormatCreate();
@@ -270,7 +270,7 @@ proc (1) = ptModelFromOlsmt(name, struct olsmtOut out);
 
     names = out.vnam;
     if rows(names) == 0;
-        names = "x" $+ ntos(seqa(1, 1, rows(out.b)));
+        names = "x" $+ sprintf("%d", seqa(1, 1, rows(out.b)));
     endif;
 
     mdl = ptModelCreate(name, out.b, se);
@@ -352,7 +352,7 @@ proc (1) = ptFormatNumber(x, digits);
         retp("");
     endif;
 
-    retp(ftos(x, "*.*lf", 1, digits));
+    retp(sprintf("%." $+ sprintf("%d", digits) $+ "f", x));
 endp;
 
 proc (1) = ptFormatEstimate(x, pval, struct ptFormat fmt);
@@ -402,7 +402,7 @@ proc (1) = ptStarNote(struct ptFormat fmt);
         if i > 1;
             note = note $+ ", ";
         endif;
-        note = note $+ fmt.starSymbols[i] $+ " p<" $+ ntos(fmt.starCutoffs[i], 3);
+        note = note $+ fmt.starSymbols[i] $+ " p<" $+ sprintf("%.3g", fmt.starCutoffs[i]);
     endfor;
 
     retp(note);

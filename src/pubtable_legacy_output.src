@@ -1,5 +1,5 @@
 #include dynargs.dec
-#include tabout.sdf
+#include pubtable_legacy.sdf
 
 proc (1) = outputTable(struct tableControl tCtl, ...);
     local outNums,fname,xlsret,tmp,tmp2,tmp_fname;
@@ -229,9 +229,9 @@ endp;
 
 proc (1) = _AsteriskTableNote(tableNote,tol);
     local addNote;
-    addNote = chrs(42)$+"p-val<"$+ntos(tol[1],4)$+chrs(32);
-    addNote = addNote$+chrs(42)$+chrs(42)$+"p-val<"$+ntos(tol[2],4)$+chrs(32);
-    addNote = addNote$+chrs(42)$+chrs(42)$+chrs(42)$+"p-val<"$+ntos(tol[3],4)$+chrs(32);
+    addNote = chrs(42)$+"p-val<"$+sprintf("%.4g", tol[1])$+chrs(32);
+    addNote = addNote$+chrs(42)$+chrs(42)$+"p-val<"$+sprintf("%.4g", tol[2])$+chrs(32);
+    addNote = addNote$+chrs(42)$+chrs(42)$+chrs(42)$+"p-val<"$+sprintf("%.4g", tol[3])$+chrs(32);
     if tableNote $!= "";
         addNote = tableNote$|addNote;
     else;
@@ -483,7 +483,7 @@ proc (0) = _dc_printTable(sa,s1,x,s2);
     endif;
     
     // Table format to fit data
-    table_fmt = "% -"$+ftos(t,"*.*lf",1,0)$+".4lf";
+    table_fmt = "% -"$+sprintf("%d", t)$+".4lf";
     print ((s1$|sa)$~(s2$|ftostrc(x,table_fmt)));
 endp;
 proc (1) = _varAddAsterisk(struct regressEstimateTable regEstTable, struct tableControl tCtl, struct regressEstimate regEst);

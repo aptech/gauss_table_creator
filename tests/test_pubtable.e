@@ -20,6 +20,7 @@ struct ptTable tbl;
 tbl = ptTableFromMatrix(1.23456, "x", "Model 1", "Demo");
 
 checkStringEqual(tbl.body[1, 1], "1.235", "default numeric formatting");
+checkStringEqual(ptFormatNumber(1.2, 3), "1.200", "sprintf fixed decimal formatting");
 checkScalarEqual(rows(ptRenderArray(tbl)), 2, "rendered row count");
 checkScalarEqual(cols(ptRenderArray(tbl)), 2, "rendered column count");
 checkStringEqual(ptFileExt("table.xlsx"), "xlsx", "file extension");

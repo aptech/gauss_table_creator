@@ -13,9 +13,9 @@
     "src": [
         "pubtable.sdf",
         "pubtable.src",
-        "tabout.sdf",
-        "tableout.src",
-        "tabset.src"
+        "pubtable_legacy.sdf",
+        "pubtable_legacy_output.src",
+        "pubtable_legacy_setters.src"
     ],
     "version": "0.2.0"
 }
