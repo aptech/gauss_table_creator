@@ -1,0 +1,28 @@
+struct ptFormat {
+    scalar digits;
+    scalar stars;
+    matrix starCutoffs;
+    string array starSymbols;
+    string statisticWrapper;
+};
+
+struct ptTable {
+    string title;
+    string stubName;
+    string array rowNames;
+    string array colNames;
+    string array body;
+    string array notes;
+    struct ptFormat fmt;
+};
+
+struct ptModel {
+    string name;
+    string array termNames;
+    matrix estimates;
+    matrix stdErrors;
+    matrix pValues;
+    string array gofNames;
+    matrix gofValues;
+    struct ptFormat fmt;
+};

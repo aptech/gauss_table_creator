@@ -1,0 +1,623 @@
+proc (1) = ptFormatCreate();
+    struct ptFormat fmt;
+
+    fmt.digits = 3;
+    fmt.stars = 1;
+    fmt.starCutoffs = 0.10 | 0.05 | 0.01;
+    fmt.starSymbols = "+" $| "*" $| "**";
+    fmt.statisticWrapper = "paren";
+
+    retp(fmt);
+endp;
+
+proc (1) = ptBlankSA(n_rows, n_cols);
+    local out, i, j;
+
+    out = ntos(zeros(n_rows, n_cols), 1);
+    for i(1, n_rows, 1);
+        for j(1, n_cols, 1);
+            out[i, j] = "";
+        endfor;
+    endfor;
+
+    retp(out);
+endp;
+
+proc (1) = ptTableCreate(title);
+    struct ptTable tbl;
+
+    tbl.title = title;
+    tbl.stubName = "";
+    tbl.rowNames = "";
+    tbl.colNames = "";
+    tbl.body = "";
+    tbl.notes = "";
+    tbl.fmt = ptFormatCreate();
+
+    retp(tbl);
+endp;
+
+proc (1) = ptSetTitle(struct ptTable tbl, title);
+    tbl.title = title;
+    retp(tbl);
+endp;
+
+proc (1) = ptSetStubName(struct ptTable tbl, stubName);
+    tbl.stubName = stubName;
+    retp(tbl);
+endp;
+
+proc (1) = ptSetRowNames(struct ptTable tbl, rowNames);
+    tbl.rowNames = rowNames;
+    retp(tbl);
+endp;
+
+proc (1) = ptSetColNames(struct ptTable tbl, colNames);
+    tbl.colNames = colNames;
+    retp(tbl);
+endp;
+
+proc (1) = ptSetBody(struct ptTable tbl, body);
+    tbl.body = body;
+    retp(tbl);
+endp;
+
+proc (1) = ptSetNotes(struct ptTable tbl, notes);
+    tbl.notes = notes;
+    retp(tbl);
+endp;
+
+proc (1) = ptSetDigits(struct ptTable tbl, digits);
+    tbl.fmt.digits = digits;
+    retp(tbl);
+endp;
+
+proc (1) = ptSetStars(struct ptTable tbl, cutoffs, symbols);
+    tbl.fmt.stars = 1;
+    tbl.fmt.starCutoffs = cutoffs;
+    tbl.fmt.starSymbols = symbols;
+    retp(tbl);
+endp;
+
+proc (1) = ptNoStars(struct ptTable tbl);
+    tbl.fmt.stars = 0;
+    retp(tbl);
+endp;
+
+proc (1) = ptTableFromMatrix(x, rowNames, colNames, title);
+    struct ptTable tbl;
+
+    tbl = ptTableCreate(title);
+    tbl.rowNames = rowNames;
+    tbl.colNames = colNames;
+    tbl.body = ptFormatMatrix(x, tbl.fmt.digits);
+
+    retp(tbl);
+endp;
+
+proc (1) = ptModelCreate(name, estimates, stdErrors);
+    struct ptModel mdl;
+
+    mdl.name = name;
+    mdl.estimates = estimates;
+    mdl.stdErrors = stdErrors;
+    mdl.pValues = miss(zeros(rows(estimates), cols(estimates)), 0);
+    mdl.termNames = "x" $+ ntos(seqa(1, 1, rows(estimates)));
+    mdl.gofNames = "";
+    mdl.gofValues = miss(0, 0);
+    mdl.fmt = ptFormatCreate();
+
+    retp(mdl);
+endp;
+
+proc (1) = ptModelSetNames(struct ptModel mdl, termNames);
+    mdl.termNames = termNames;
+    retp(mdl);
+endp;
+
+proc (1) = ptModelSetPValues(struct ptModel mdl, pValues);
+    mdl.pValues = pValues;
+    retp(mdl);
+endp;
+
+proc (1) = ptModelSetGOF(struct ptModel mdl, gofNames, gofValues);
+    mdl.gofNames = gofNames;
+    mdl.gofValues = gofValues;
+    retp(mdl);
+endp;
+
+proc (1) = ptModelSetDigits(struct ptModel mdl, digits);
+    mdl.fmt.digits = digits;
+    retp(mdl);
+endp;
+
+proc (1) = ptModelTable(struct ptModel mdl);
+    local n_terms, n_gof, body, row_names, i;
+    struct ptTable tbl;
+
+    n_terms = rows(mdl.estimates);
+    n_gof = 0;
+    if mdl.gofNames[1] $/= "";
+        n_gof = rows(mdl.gofValues);
+    endif;
+
+    body = ptBlankSA(2 * n_terms + n_gof, 1);
+    row_names = ptBlankSA(rows(body), 1);
+
+    for i(1, n_terms, 1);
+        row_names[2 * i - 1] = mdl.termNames[i];
+        row_names[2 * i] = "";
+        body[2 * i - 1, 1] = ptFormatEstimate(mdl.estimates[i], mdl.pValues[i], mdl.fmt);
+        body[2 * i, 1] = ptWrapStatistic(ptFormatNumber(mdl.stdErrors[i], mdl.fmt.digits), mdl.fmt);
+    endfor;
+
+    for i(1, n_gof, 1);
+        row_names[2 * n_terms + i] = mdl.gofNames[i];
+        body[2 * n_terms + i, 1] = ptFormatNumber(mdl.gofValues[i], mdl.fmt.digits);
+    endfor;
+
+    tbl = ptTableCreate(mdl.name);
+    tbl.stubName = "Term";
+    tbl.rowNames = row_names;
+    tbl.colNames = mdl.name;
+    tbl.body = body;
+    tbl.fmt = mdl.fmt;
+    tbl.notes = ptStarNote(mdl.fmt);
+
+    retp(tbl);
+endp;
+
+proc (1) = ptModelCompare(struct ptModel models);
+    local n_models, n_terms, n_gof, n_rows, body, row_names, col_names, i, j, row;
+    struct ptTable tbl;
+
+    n_models = rows(models);
+    n_terms = rows(models[1].estimates);
+    n_gof = 0;
+    if models[1].gofNames[1] $/= "";
+        n_gof = rows(models[1].gofValues);
+    endif;
+    n_rows = 2 * n_terms + n_gof;
+
+    body = ptBlankSA(n_rows, n_models);
+    row_names = ptBlankSA(n_rows, 1);
+    col_names = ptBlankSA(n_models, 1);
+
+    for j(1, n_models, 1);
+        if rows(models[j].estimates) /= n_terms;
+            errorlog "ptModelCompare: all models must have the same number of coefficient rows in this version.";
+            end;
+        endif;
+        if rows(models[j].gofValues) /= rows(models[1].gofValues);
+            errorlog "ptModelCompare: all models must have the same number of GOF rows in this version.";
+            end;
+        endif;
+        col_names[j] = models[j].name;
+    endfor;
+
+    for i(1, n_terms, 1);
+        row_names[2 * i - 1] = models[1].termNames[i];
+        row_names[2 * i] = "";
+
+        for j(1, n_models, 1);
+            body[2 * i - 1, j] = ptFormatEstimate(models[j].estimates[i], models[j].pValues[i], models[j].fmt);
+            body[2 * i, j] = ptWrapStatistic(ptFormatNumber(models[j].stdErrors[i], models[j].fmt.digits), models[j].fmt);
+        endfor;
+    endfor;
+
+    for i(1, n_gof, 1);
+        row = 2 * n_terms + i;
+        row_names[row] = models[1].gofNames[i];
+
+        for j(1, n_models, 1);
+            body[row, j] = ptFormatNumber(models[j].gofValues[i], models[j].fmt.digits);
+        endfor;
+    endfor;
+
+    tbl = ptTableCreate("Model comparison");
+    tbl.stubName = "Term";
+    tbl.rowNames = row_names;
+    tbl.colNames = col_names;
+    tbl.body = body;
+    tbl.fmt = models[1].fmt;
+    tbl.notes = ptStarNote(models[1].fmt);
+
+    retp(tbl);
+endp;
+
+proc (1) = ptTableFrom(x);
+    struct ptTable tbl;
+
+    if isStructType(x, "olsmtOut");
+        tbl = ptFromOlsmt(x);
+    elseif isStructType(x, "glmOut");
+        tbl = ptFromGlm(x);
+    elseif isStructType(x, "dstatmtOut");
+        tbl = ptFromDstatmt(x);
+    else;
+        errorlog "ptTableFrom: unsupported input type.";
+        end;
+    endif;
+
+    retp(tbl);
+endp;
+
+proc (1) = ptModelFrom(name, x);
+    struct ptModel mdl;
+
+    if isStructType(x, "olsmtOut");
+        mdl = ptModelFromOlsmt(name, x);
+    elseif isStructType(x, "glmOut");
+        mdl = ptModelFromGlm(name, x);
+    elseif isStructType(x, "gmmOut");
+        mdl = ptModelFromGmm(name, x);
+    else;
+        errorlog "ptModelFrom: unsupported model output structure.";
+        end;
+    endif;
+
+    retp(mdl);
+endp;
+
+proc (1) = ptModelFromOlsmt(name, struct olsmtOut out);
+    local se, pval, df, names, tstat;
+    struct ptModel mdl;
+
+    se = out.stderr;
+    df = out.df;
+    tstat = out.b ./ se;
+    pval = 2 * cdfTc(abs(tstat), df);
+
+    names = out.vnam;
+    if rows(names) == 0;
+        names = "x" $+ ntos(seqa(1, 1, rows(out.b)));
+    endif;
+
+    mdl = ptModelCreate(name, out.b, se);
+    mdl = ptModelSetNames(mdl, names);
+    mdl = ptModelSetPValues(mdl, pval);
+    mdl = ptModelSetGOF(mdl, "N" $| "R-squared" $| "DF Residual", rows(out.resid) | out.rsq | out.df);
+
+    retp(mdl);
+endp;
+
+proc (1) = ptFromOlsmt(struct olsmtOut out);
+    struct ptModel mdl;
+    mdl = ptModelFromOlsmt("OLS results", out);
+    retp(ptModelTable(mdl));
+endp;
+
+proc (1) = ptModelFromGlm(name, struct glmOut out);
+    local names;
+    struct ptModel mdl;
+
+    names = out.modelInfo.xNames;
+    if out.constantFlag;
+        names = "Constant" $| names;
+    endif;
+
+    mdl = ptModelCreate(name, out.coef.estimates, out.coef.se);
+    mdl = ptModelSetNames(mdl, names);
+    mdl = ptModelSetPValues(mdl, out.coef.pvalue);
+    mdl = ptModelSetGOF(mdl, "N" $| "DF" $| "AIC" $| "BIC", out.modelInfo.n | out.modelInfo.df | out.modelSelect.aic | out.modelSelect.bic);
+
+    retp(mdl);
+endp;
+
+proc (1) = ptFromGlm(struct glmOut out);
+    struct ptModel mdl;
+    mdl = ptModelFromGlm("GLM results", out);
+    retp(ptModelTable(mdl));
+endp;
+
+proc (1) = ptModelFromGmm(name, struct gmmOut out);
+    local se;
+    struct ptModel mdl;
+
+    se = sqrt(diag(out.covPar));
+    mdl = ptModelCreate(name, out.paramEst, se);
+    mdl = ptModelSetNames(mdl, out.varnames);
+    mdl = ptModelSetGOF(mdl, "N" $| "J-statistic" $| "DF", out.numObs | out.jStat | out.df);
+
+    retp(mdl);
+endp;
+
+proc (1) = ptFromDstatmt(struct dstatmtOut out);
+    local body;
+    struct ptTable tbl;
+
+    body = out.mean ~ out.std ~ out.min ~ out.max ~ out.valid ~ out.missing;
+
+    tbl = ptTableFromMatrix(body, out.vnames, "Mean" $| "Std. Dev." $| "Min" $| "Max" $| "Valid" $| "Missing", "Summary statistics");
+    tbl.stubName = "Variable";
+
+    retp(tbl);
+endp;
+
+proc (1) = ptFormatMatrix(x, digits);
+    local out, i, j;
+
+    out = ptBlankSA(rows(x), cols(x));
+    for i(1, rows(x), 1);
+        for j(1, cols(x), 1);
+            out[i, j] = ptFormatNumber(x[i, j], digits);
+        endfor;
+    endfor;
+
+    retp(out);
+endp;
+
+proc (1) = ptFormatNumber(x, digits);
+    if scalmiss(x);
+        retp("");
+    endif;
+
+    retp(ftos(x, "*.*lf", 1, digits));
+endp;
+
+proc (1) = ptFormatEstimate(x, pval, struct ptFormat fmt);
+    local out;
+
+    out = ptFormatNumber(x, fmt.digits);
+
+    if fmt.stars and not scalmiss(pval);
+        out = out $+ ptStars(pval, fmt);
+    endif;
+
+    retp(out);
+endp;
+
+proc (1) = ptStars(pval, struct ptFormat fmt);
+    local mark, i;
+
+    mark = "";
+    for i(1, rows(fmt.starCutoffs), 1);
+        if pval <= fmt.starCutoffs[i];
+            mark = fmt.starSymbols[i];
+        endif;
+    endfor;
+
+    retp(mark);
+endp;
+
+proc (1) = ptWrapStatistic(value, struct ptFormat fmt);
+    if fmt.statisticWrapper $== "bracket";
+        retp("[" $+ value $+ "]");
+    elseif fmt.statisticWrapper $== "none";
+        retp(value);
+    endif;
+
+    retp("(" $+ value $+ ")");
+endp;
+
+proc (1) = ptStarNote(struct ptFormat fmt);
+    local note, i;
+
+    if not fmt.stars;
+        retp("");
+    endif;
+
+    note = "Significance: ";
+    for i(1, rows(fmt.starCutoffs), 1);
+        if i > 1;
+            note = note $+ ", ";
+        endif;
+        note = note $+ fmt.starSymbols[i] $+ " p<" $+ ntos(fmt.starCutoffs[i], 3);
+    endfor;
+
+    retp(note);
+endp;
+
+proc (1) = ptRenderArray(struct ptTable tbl);
+    local out, n_rows, n_cols;
+
+    n_rows = rows(tbl.body);
+    n_cols = cols(tbl.body);
+    out = ptBlankSA(n_rows + 1, n_cols + 1);
+    out[1, 1] = tbl.stubName;
+    out[1, 2:n_cols + 1] = tbl.colNames';
+    out[2:n_rows + 1, 1] = tbl.rowNames;
+    out[2:n_rows + 1, 2:n_cols + 1] = tbl.body;
+
+    retp(out);
+endp;
+
+proc (1) = ptRenderMarkdown(struct ptTable tbl);
+    local arr, out, sep, i;
+
+    arr = ptRenderArray(tbl);
+    out = "";
+
+    if tbl.title $/= "";
+        out = "# " $+ tbl.title $+ "\n\n";
+    endif;
+
+    out = out $+ ptJoinRow(arr[1, .], "|") $+ "\n";
+    sep = ptBlankSA(1, cols(arr));
+    for i(1, cols(arr), 1);
+        sep[i] = "---";
+    endfor;
+    out = out $+ ptJoinRow(sep, "|") $+ "\n";
+
+    for i(2, rows(arr), 1);
+        out = out $+ ptJoinRow(arr[i, .], "|") $+ "\n";
+    endfor;
+
+    if tbl.notes[1] $/= "";
+        out = out $+ "\n";
+        for i(1, rows(tbl.notes), 1);
+            out = out $+ tbl.notes[i] $+ "\n";
+        endfor;
+    endif;
+
+    retp(out);
+endp;
+
+proc (1) = ptRenderCsv(struct ptTable tbl);
+    local arr, out, i;
+
+    arr = ptRenderArray(tbl);
+    out = "";
+
+    for i(1, rows(arr), 1);
+        out = out $+ ptJoinRow(arr[i, .], ",") $+ "\n";
+    endfor;
+
+    retp(out);
+endp;
+
+proc (1) = ptRenderLatex(struct ptTable tbl);
+    local arr, out, i, spec;
+
+    arr = ptRenderArray(tbl);
+    spec = "l" $+ chrs(114 * ones(1, cols(arr) - 1));
+
+    out = "\\begin{table}[!htbp]\n\\centering\n";
+    if tbl.title $/= "";
+        out = out $+ "\\caption{" $+ ptEscapeLatex(tbl.title) $+ "}\n";
+    endif;
+    out = out $+ "\\begin{tabular}{" $+ spec $+ "}\n\\toprule\n";
+    out = out $+ ptJoinLatexRow(arr[1, .]) $+ " \\\\\n\\midrule\n";
+
+    for i(2, rows(arr), 1);
+        out = out $+ ptJoinLatexRow(arr[i, .]) $+ " \\\\\n";
+    endfor;
+
+    out = out $+ "\\bottomrule\n\\end{tabular}\n";
+
+    if tbl.notes[1] $/= "";
+        out = out $+ "\\\\\n";
+        for i(1, rows(tbl.notes), 1);
+            out = out $+ "\\footnotesize{" $+ ptEscapeLatex(tbl.notes[i]) $+ "}\\\\\n";
+        endfor;
+    endif;
+
+    out = out $+ "\\end{table}\n";
+    retp(out);
+endp;
+
+proc (1) = ptRenderText(struct ptTable tbl);
+    local arr, out, i;
+
+    arr = ptRenderArray(tbl);
+    out = "";
+
+    if tbl.title $/= "";
+        out = tbl.title $+ "\n\n";
+    endif;
+
+    for i(1, rows(arr), 1);
+        out = out $+ ptJoinRow(arr[i, .], "    ") $+ "\n";
+    endfor;
+
+    if tbl.notes[1] $/= "";
+        out = out $+ "\n";
+        for i(1, rows(tbl.notes), 1);
+            out = out $+ tbl.notes[i] $+ "\n";
+        endfor;
+    endif;
+
+    retp(out);
+endp;
+
+proc (1) = ptRenderRtf(struct ptTable tbl);
+    local arr, out, i;
+
+    arr = ptRenderArray(tbl);
+    out = "{\\rtf1\\ansi\n";
+
+    if tbl.title $/= "";
+        out = out $+ "\\b " $+ tbl.title $+ "\\b0\\par\n";
+    endif;
+
+    for i(1, rows(arr), 1);
+        out = out $+ ptJoinRow(arr[i, .], "\\tab ") $+ "\\par\n";
+    endfor;
+
+    if tbl.notes[1] $/= "";
+        for i(1, rows(tbl.notes), 1);
+            out = out $+ tbl.notes[i] $+ "\\par\n";
+        endfor;
+    endif;
+
+    out = out $+ "}\n";
+    retp(out);
+endp;
+
+proc (1) = ptJoinRow(row, sep);
+    local out, j;
+
+    out = row[1];
+    for j(2, cols(row), 1);
+        out = out $+ sep $+ row[j];
+    endfor;
+
+    retp(out);
+endp;
+
+proc (1) = ptJoinLatexRow(row);
+    local out, j;
+
+    out = ptEscapeLatex(row[1]);
+    for j(2, cols(row), 1);
+        out = out $+ " & " $+ ptEscapeLatex(row[j]);
+    endfor;
+
+    retp(out);
+endp;
+
+proc (1) = ptEscapeLatex(s);
+    s = strreplace(s, "\\", "\\textbackslash{}");
+    s = strreplace(s, "_", "\\_");
+    s = strreplace(s, "%", "\\%");
+    s = strreplace(s, "&", "\\&");
+    s = strreplace(s, "#", "\\#");
+    retp(s);
+endp;
+
+proc (1) = ptFileExt(fname);
+    local i, ext;
+
+    ext = "";
+    for i(strlen(fname), 1, -1);
+        if strsect(fname, i, 1) $== ".";
+            ext = lower(strsect(fname, i + 1, strlen(fname) - i));
+            break;
+        endif;
+    endfor;
+
+    retp(ext);
+endp;
+
+proc (1) = ptExport(struct ptTable tbl, fname);
+    local ext, text, ret;
+
+    ext = ptFileExt(fname);
+
+    if ext $== "xlsx" or ext $== "xls";
+        ret = SpreadsheetWrite(ptRenderArray(tbl), fname, "A1", 1);
+        retp(ret);
+    elseif ext $== "md";
+        text = ptRenderMarkdown(tbl);
+    elseif ext $== "tex";
+        text = ptRenderLatex(tbl);
+    elseif ext $== "csv";
+        text = ptRenderCsv(tbl);
+    elseif ext $== "rtf";
+        text = ptRenderRtf(tbl);
+    else;
+        text = ptRenderText(tbl);
+    endif;
+
+    call ptWriteTextFile(fname, text);
+    retp(0);
+endp;
+
+proc (0) = ptWriteTextFile(fname, text);
+    output file=^fname reset;
+    screen off;
+    output on;
+    print /flush text;
+    output off;
+    screen on;
+endp;

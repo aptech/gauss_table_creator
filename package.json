@@ -2,18 +2,20 @@
     "author": "Erica Clower",
     "deps": [
     ],
-    "description": "Provides a set of tools for formatting, creating, and exporting publication quality tables in GAUSS. Table formatting can be controlled by directly setting members in the tableControl structure or through use of a series of tableSet functions.",
+    "description": "Provides tools for creating and exporting publication-quality GAUSS tables from matrices, summary statistics, and common estimation output structures.",
     "dlib": [
     ],
     "keywords": [
     ],
     "license": "",
-    "name": "tabout",
+    "name": "pubtable",
     "repo": "",
     "src": [
+        "pubtable.sdf",
+        "pubtable.src",
         "tabout.sdf",
         "tableout.src",
         "tabset.src"
     ],
-    "version": "0.1.0"
+    "version": "0.2.0"
 }
