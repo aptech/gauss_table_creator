@@ -9,7 +9,7 @@
     ],
     "license": "",
     "name": "pubtable",
-    "repo": "",
+    "repo": "https://github.com/aptech/gauss_table_creator",
     "src": [
         "pubtable.sdf",
         "pubtable.src",

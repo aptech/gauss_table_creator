@@ -50,7 +50,7 @@ Current exporters:
 - LaTeX `.tex`
 - CSV `.csv`
 - plain text `.txt`
-- Excel `.xls`/`.xlsx`
+- Excel `.xls` through GAUSS `SpreadsheetWrite`; `.xlsx` is provisional/where supported
 - Word-compatible RTF `.rtf`
 
 True `.docx` is provisional/future work.
@@ -100,4 +100,3 @@ Note: GAUSS may print a command-log permission warning in this environment; the 
 - `strindx()` returns `0` when not found.
 - Use `getorders()` for arrays, `rows()`/`cols()` for matrices.
 - Check existing GAUSS examples before assuming a function exists.
-
