@@ -13,6 +13,11 @@ endp;
 proc (1) = ptBlankSA(n_rows, n_cols);
     local out, i, j;
 
+    if n_rows < 1 or n_cols < 1;
+        errorlog "ptBlankSA: row and column counts must be positive.";
+        end;
+    endif;
+
     out = ntos(zeros(n_rows, n_cols), 1);
     for i(1, n_rows, 1);
         for j(1, n_cols, 1);
@@ -21,6 +26,114 @@ proc (1) = ptBlankSA(n_rows, n_cols);
     endfor;
 
     retp(out);
+endp;
+
+proc (0) = ptCheckDigits(digits, caller);
+    if scalmiss(digits) or digits < 0 or digits > 12;
+        errorlog caller $+ ": digits must be between 0 and 12.";
+        end;
+    endif;
+endp;
+
+proc (0) = ptValidateFormat(struct ptFormat fmt, caller);
+    call ptCheckDigits(fmt.digits, caller);
+
+    if fmt.stars;
+        if rows(fmt.starCutoffs) /= rows(fmt.starSymbols);
+            errorlog caller $+ ": starCutoffs and starSymbols must have the same number of rows.";
+            end;
+        endif;
+        if rows(fmt.starCutoffs) < 1;
+            errorlog caller $+ ": at least one significance cutoff is required when stars are enabled.";
+            end;
+        endif;
+    endif;
+
+    if not (fmt.statisticWrapper $== "paren" or fmt.statisticWrapper $== "bracket" or fmt.statisticWrapper $== "none");
+        errorlog caller $+ ": statisticWrapper must be 'paren', 'bracket', or 'none'.";
+        end;
+    endif;
+endp;
+
+proc (0) = ptValidateTable(struct ptTable tbl, caller);
+    call ptValidateFormat(tbl.fmt, caller);
+
+    if rows(tbl.body) /= rows(tbl.rowNames);
+        errorlog caller $+ ": rowNames must have one row for each table body row.";
+        end;
+    endif;
+
+    if rows(tbl.colNames) /= cols(tbl.body);
+        errorlog caller $+ ": colNames must have one row for each table body column.";
+        end;
+    endif;
+endp;
+
+proc (1) = ptLabelsToCol(labels, n_labels, caller, label_name);
+    if rows(labels) == n_labels and cols(labels) == 1;
+        retp(labels);
+    elseif rows(labels) == 1 and cols(labels) == n_labels;
+        retp(labels');
+    endif;
+
+    errorlog caller $+ ": " $+ label_name $+ " must contain " $+ sprintf("%d", n_labels) $+ " labels.";
+    end;
+endp;
+
+proc (1) = ptFindLabel(labels, target);
+    local i;
+
+    for i(1, rows(labels), 1);
+        if labels[i] $== target;
+            retp(i);
+        endif;
+    endfor;
+
+    retp(0);
+endp;
+
+proc (1) = ptAppendNewLabels(existing, additional);
+    local out, i;
+
+    out = existing;
+    for i(1, rows(additional), 1);
+        if ptFindLabel(out, additional[i]) == 0;
+            out = out $| additional[i];
+        endif;
+    endfor;
+
+    retp(out);
+endp;
+
+proc (0) = ptValidateModel(struct ptModel mdl, caller);
+    call ptValidateFormat(mdl.fmt, caller);
+
+    if rows(mdl.estimates) < 1 or cols(mdl.estimates) /= 1;
+        errorlog caller $+ ": estimates must be a non-empty column vector.";
+        end;
+    endif;
+
+    if rows(mdl.stdErrors) /= rows(mdl.estimates) or cols(mdl.stdErrors) /= cols(mdl.estimates);
+        errorlog caller $+ ": stdErrors must have the same dimensions as estimates.";
+        end;
+    endif;
+
+    if rows(mdl.pValues) /= rows(mdl.estimates) or cols(mdl.pValues) /= cols(mdl.estimates);
+        errorlog caller $+ ": pValues must have the same dimensions as estimates.";
+        end;
+    endif;
+
+    if rows(mdl.termNames) /= rows(mdl.estimates);
+        errorlog caller $+ ": termNames must have one row for each estimate.";
+        end;
+    endif;
+
+    if mdl.gofNames[1] $/= "";
+        if rows(mdl.gofNames) /= rows(mdl.gofValues) or cols(mdl.gofValues) /= 1;
+            errorlog caller $+ ": gofNames and gofValues must be matching column vectors.";
+            end;
+        endif;
+    endif;
 endp;
 
 proc (1) = ptTableCreate(title);
@@ -48,11 +161,13 @@ proc (1) = ptSetStubName(struct ptTable tbl, stubName);
 endp;
 
 proc (1) = ptSetRowNames(struct ptTable tbl, rowNames);
+    rowNames = ptLabelsToCol(rowNames, rows(tbl.body), "ptSetRowNames", "rowNames");
     tbl.rowNames = rowNames;
     retp(tbl);
 endp;
 
 proc (1) = ptSetColNames(struct ptTable tbl, colNames);
+    colNames = ptLabelsToCol(colNames, cols(tbl.body), "ptSetColNames", "colNames");
     tbl.colNames = colNames;
     retp(tbl);
 endp;
@@ -68,11 +183,17 @@ proc (1) = ptSetNotes(struct ptTable tbl, notes);
 endp;
 
 proc (1) = ptSetDigits(struct ptTable tbl, digits);
+    call ptCheckDigits(digits, "ptSetDigits");
     tbl.fmt.digits = digits;
     retp(tbl);
 endp;
 
 proc (1) = ptSetStars(struct ptTable tbl, cutoffs, symbols);
+    if rows(cutoffs) /= rows(symbols);
+        errorlog "ptSetStars: cutoffs and symbols must have the same number of rows.";
+        end;
+    endif;
+
     tbl.fmt.stars = 1;
     tbl.fmt.starCutoffs = cutoffs;
     tbl.fmt.starSymbols = symbols;
@@ -88,8 +209,8 @@ proc (1) = ptTableFromMatrix(x, rowNames, colNames, title);
     struct ptTable tbl;
 
     tbl = ptTableCreate(title);
-    tbl.rowNames = rowNames;
-    tbl.colNames = colNames;
+    tbl.rowNames = ptLabelsToCol(rowNames, rows(x), "ptTableFromMatrix", "rowNames");
+    tbl.colNames = ptLabelsToCol(colNames, cols(x), "ptTableFromMatrix", "colNames");
     tbl.body = ptFormatMatrix(x, tbl.fmt.digits);
 
     retp(tbl);
@@ -97,6 +218,16 @@ endp;
 
 proc (1) = ptModelCreate(name, estimates, stdErrors);
     struct ptModel mdl;
+
+    if rows(estimates) < 1 or cols(estimates) /= 1;
+        errorlog "ptModelCreate: estimates must be a non-empty column vector.";
+        end;
+    endif;
+
+    if rows(stdErrors) /= rows(estimates) or cols(stdErrors) /= cols(estimates);
+        errorlog "ptModelCreate: stdErrors must have the same dimensions as estimates.";
+        end;
+    endif;
 
     mdl.name = name;
     mdl.estimates = estimates;
@@ -111,22 +242,33 @@ proc (1) = ptModelCreate(name, estimates, stdErrors);
 endp;
 
 proc (1) = ptModelSetNames(struct ptModel mdl, termNames);
-    mdl.termNames = termNames;
+    mdl.termNames = ptLabelsToCol(termNames, rows(mdl.estimates), "ptModelSetNames", "termNames");
     retp(mdl);
 endp;
 
 proc (1) = ptModelSetPValues(struct ptModel mdl, pValues);
+    if rows(pValues) /= rows(mdl.estimates) or cols(pValues) /= cols(mdl.estimates);
+        errorlog "ptModelSetPValues: pValues must have the same dimensions as estimates.";
+        end;
+    endif;
+
     mdl.pValues = pValues;
     retp(mdl);
 endp;
 
 proc (1) = ptModelSetGOF(struct ptModel mdl, gofNames, gofValues);
-    mdl.gofNames = gofNames;
+    if cols(gofValues) /= 1;
+        errorlog "ptModelSetGOF: gofValues must be a column vector.";
+        end;
+    endif;
+
+    mdl.gofNames = ptLabelsToCol(gofNames, rows(gofValues), "ptModelSetGOF", "gofNames");
     mdl.gofValues = gofValues;
     retp(mdl);
 endp;
 
 proc (1) = ptModelSetDigits(struct ptModel mdl, digits);
+    call ptCheckDigits(digits, "ptModelSetDigits");
     mdl.fmt.digits = digits;
     retp(mdl);
 endp;
@@ -134,6 +276,8 @@ endp;
 proc (1) = ptModelTable(struct ptModel mdl);
     local n_terms, n_gof, body, row_names, i;
     struct ptTable tbl;
+
+    call ptValidateModel(mdl, "ptModelTable");
 
     n_terms = rows(mdl.estimates);
     n_gof = 0;
@@ -169,13 +313,40 @@ endp;
 
 proc (1) = ptModelCompare(struct ptModel models);
     local n_models, n_terms, n_gof, n_rows, body, row_names, col_names, i, j, row;
+    local term_names, gof_names, idx;
     struct ptTable tbl;
 
     n_models = rows(models);
-    n_terms = rows(models[1].estimates);
-    n_gof = 0;
+    if n_models < 1;
+        errorlog "ptModelCompare: at least one model is required.";
+        end;
+    endif;
+
+    for j(1, n_models, 1);
+        call ptValidateModel(models[j], "ptModelCompare");
+    endfor;
+
+    term_names = models[1].termNames;
+    gof_names = "";
     if models[1].gofNames[1] $/= "";
-        n_gof = rows(models[1].gofValues);
+        gof_names = models[1].gofNames;
+    endif;
+
+    for j(2, n_models, 1);
+        term_names = ptAppendNewLabels(term_names, models[j].termNames);
+        if models[j].gofNames[1] $/= "";
+            if gof_names[1] $== "";
+                gof_names = models[j].gofNames;
+            else;
+                gof_names = ptAppendNewLabels(gof_names, models[j].gofNames);
+            endif;
+        endif;
+    endfor;
+
+    n_terms = rows(term_names);
+    n_gof = 0;
+    if gof_names[1] $/= "";
+        n_gof = rows(gof_names);
     endif;
     n_rows = 2 * n_terms + n_gof;
 
@@ -184,33 +355,44 @@ proc (1) = ptModelCompare(struct ptModel models);
     col_names = ptBlankSA(n_models, 1);
 
     for j(1, n_models, 1);
-        if rows(models[j].estimates) /= n_terms;
-            errorlog "ptModelCompare: all models must have the same number of coefficient rows in this version.";
-            end;
-        endif;
-        if rows(models[j].gofValues) /= rows(models[1].gofValues);
-            errorlog "ptModelCompare: all models must have the same number of GOF rows in this version.";
-            end;
-        endif;
         col_names[j] = models[j].name;
     endfor;
 
     for i(1, n_terms, 1);
-        row_names[2 * i - 1] = models[1].termNames[i];
+        row_names[2 * i - 1] = term_names[i];
         row_names[2 * i] = "";
 
         for j(1, n_models, 1);
-            body[2 * i - 1, j] = ptFormatEstimate(models[j].estimates[i], models[j].pValues[i], models[j].fmt);
-            body[2 * i, j] = ptWrapStatistic(ptFormatNumber(models[j].stdErrors[i], models[j].fmt.digits), models[j].fmt);
+            idx = ptFindLabel(models[j].termNames, term_names[i]);
+            if idx == 0;
+                body[2 * i - 1, j] = "";
+                body[2 * i, j] = "";
+            else;
+                body[2 * i - 1, j] = ptFormatEstimate(models[j].estimates[idx], models[j].pValues[idx], models[j].fmt);
+                if scalmiss(models[j].stdErrors[idx]);
+                    body[2 * i, j] = "";
+                else;
+                    body[2 * i, j] = ptWrapStatistic(ptFormatNumber(models[j].stdErrors[idx], models[j].fmt.digits), models[j].fmt);
+                endif;
+            endif;
         endfor;
     endfor;
 
     for i(1, n_gof, 1);
         row = 2 * n_terms + i;
-        row_names[row] = models[1].gofNames[i];
+        row_names[row] = gof_names[i];
 
         for j(1, n_models, 1);
-            body[row, j] = ptFormatNumber(models[j].gofValues[i], models[j].fmt.digits);
+            idx = 0;
+            if models[j].gofNames[1] $/= "";
+                idx = ptFindLabel(models[j].gofNames, gof_names[i]);
+            endif;
+
+            if idx == 0;
+                body[row, j] = "";
+            else;
+                body[row, j] = ptFormatNumber(models[j].gofValues[idx], models[j].fmt.digits);
+            endif;
         endfor;
     endfor;
 
@@ -269,7 +451,15 @@ proc (1) = ptModelFromOlsmt(name, struct olsmtOut out);
     pval = 2 * cdfTc(abs(tstat), df);
 
     names = out.vnam;
-    if rows(names) == 0;
+    if rows(names) == 1 and cols(names) > 1;
+        names = names';
+    endif;
+
+    if rows(names) == rows(out.b) + 1;
+        names = names[2:rows(names)];
+    endif;
+
+    if names[1] $== "";
         names = "x" $+ sprintf("%d", seqa(1, 1, rows(out.b)));
     endif;
 
@@ -410,6 +600,8 @@ endp;
 
 proc (1) = ptRenderArray(struct ptTable tbl);
     local out, n_rows, n_cols;
+
+    call ptValidateTable(tbl, "ptRenderArray");
 
     n_rows = rows(tbl.body);
     n_cols = cols(tbl.body);
@@ -590,12 +782,20 @@ proc (1) = ptFileExt(fname);
 endp;
 
 proc (1) = ptExport(struct ptTable tbl, fname);
-    local ext, text, ret;
+    local ext, text, ret, oldtrap;
+
+    call ptValidateTable(tbl, "ptExport");
 
     ext = ptFileExt(fname);
 
     if ext $== "xlsx" or ext $== "xls";
+        oldtrap = trapchk(1);
+        trap 1;
         ret = SpreadsheetWrite(ptRenderArray(tbl), fname, "A1", 1);
+        trap oldtrap;
+        if scalerr(ret);
+            ret = scalerr(ret);
+        endif;
         retp(ret);
     elseif ext $== "md";
         text = ptRenderMarkdown(tbl);

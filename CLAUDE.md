@@ -32,7 +32,7 @@ The library should support:
 - Summary/statistics tables.
 - Custom matrix/data tables.
 - Exporters for Markdown, LaTeX, CSV, and plain text.
-- Additional practical exporters where feasible, currently including `.xls`/`.xlsx` through `SpreadsheetWrite` and `.rtf` for Word-compatible output.
+- Additional practical exporters where feasible, currently including tested `.xls` output through `SpreadsheetWrite`, provisional `.xlsx` support where the local GAUSS/Excel stack permits it, and `.rtf` for Word-compatible output.
 
 True `.docx` export is provisional/future work unless a maintainable GAUSS-native implementation is designed.
 
@@ -133,7 +133,7 @@ Current automatic adapters:
 - `gmmOut` through `ptModelFrom`
 - `dstatmtOut`
 
-Current limitation: `ptModelCompare` expects models with the same coefficient row layout. Flexible term-union alignment is future work unless explicitly implemented.
+`ptModelCompare` aligns models on the union of their term names (in order of first appearance) and the union of their GOF row names, so models with different regressors can be compared side by side; missing cells render blank. Configurable term ordering, coefficient renaming/maps, model-specific notes, and additional statistic rows (t-stats, p-values, confidence intervals) remain future work.
 
 ## Documentation
 
@@ -141,4 +141,3 @@ Current limitation: `ptModelCompare` expects models with the same coefficient ro
 - `examples/`: runnable usage examples.
 - `docs/`: older legacy `tableSet` command docs; update or replace as the modern API matures.
 - `tests/`: source tests/smoke tests.
-
