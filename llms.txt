@@ -1,0 +1,103 @@
+# GAUSS Table Creator / pubtable
+
+## Project Summary
+
+This repo modernizes an outdated GAUSS table creator into `pubtable`, a GAUSS-first library for publication-quality tables from GAUSS results, summary statistics, matrices, and custom data. Legacy code exists only as compatibility material; new work should prefer the modern `pt` API.
+
+Reference repos:
+
+- Existing table library: https://github.com/aptech/gauss_table_creator
+- GAUSS coding/reference repo: https://github.com/ec78/gauss-programming-llm
+- Local GAUSS reference repo, if present: `C:\Users\eclow\Documents\GitHub\gauss-programming-llm`
+
+## Target Users
+
+GAUSS users who need publication-ready regression/model tables, summary-statistics tables, matrix/data tables, and exports to common writing/reporting formats.
+
+## Core Principles
+
+- GAUSS-first syntax and idioms.
+- Simple composable procedures, not heavy abstractions.
+- Separate table objects, model adapters, formatting, rendering, and exporting.
+- Explicit adapters for known GAUSS output structs; use `isStructType()` only for safe routing.
+- MVP-first implementation with tests/examples/docs updated together.
+- Preserve legacy code only where it helps migration or maintainability.
+- Do not invent GAUSS functions; verify against GAUSS docs, examples, or the reference repo.
+
+## Public API Direction
+
+Current/provisional modern API:
+
+- `ptTableCreate(title)`
+- `ptTableFromMatrix(x, rowNames, colNames, title)`
+- `ptTableFrom(out)` for `isStructType()` dispatch
+- `ptModelCreate(name, estimates, stdErrors)`
+- `ptModelFrom(name, out)` for typed model adapters
+- `ptModelTable(model)`
+- `ptModelCompare(models)`
+- `ptExport(tbl, fname)`
+
+Current adapters:
+
+- `olsmtOut`
+- `glmOut`
+- `gmmOut` through `ptModelFrom`
+- `dstatmtOut`
+
+Current exporters:
+
+- Markdown `.md`
+- LaTeX `.tex`
+- CSV `.csv`
+- plain text `.txt`
+- Excel `.xls`/`.xlsx`
+- Word-compatible RTF `.rtf`
+
+True `.docx` is provisional/future work.
+
+## File Structure
+
+- `src/pubtable.sdf`: modern structs: `ptFormat`, `ptTable`, `ptModel`
+- `src/pubtable.src`: modern implementation, adapters, renderers, exporters
+- `src/pubtable_legacy.sdf`: legacy structs
+- `src/pubtable_legacy_output.src`: legacy output helpers
+- `src/pubtable_legacy_setters.src`: legacy setter helpers
+- `examples/`: modern and legacy examples
+- `tests/test_pubtable.e`: current GAUSS smoke/source test
+- `README.md`: user-facing overview
+- `docs/`: older legacy command docs
+- `lib/pubtable.xml`: GAUSS application manifest
+
+## Testing
+
+Run:
+
+```powershell
+C:\gauss26\tgauss.exe C:\Users\eclow\Documents\GitHub\gauss_table_creator\tests\test_pubtable.e
+```
+
+Also run:
+
+```powershell
+git -C C:\Users\eclow\Documents\GitHub\gauss_table_creator diff --check
+```
+
+Note: GAUSS may print a command-log permission warning in this environment; the test pass/fail message is what matters.
+
+## Common Development Tasks
+
+- Add an exporter: implement `ptRender...`, route in `ptExport`, add example/test/docs.
+- Add an output adapter: inspect the source `.sdf`, implement explicit `ptModelFrom...` or `ptFrom...`, add `isStructType()` dispatch, add tests.
+- Improve model comparison: preserve existing API; add term alignment and tests for mismatched model terms.
+- Update docs: keep README examples, `examples/`, and tests synchronized.
+- Rename files carefully: avoid collisions with native GAUSS source filenames and update `package.json` plus `lib/pubtable.xml`.
+
+## GAUSS Reminders
+
+- GAUSS is case-insensitive.
+- Prefer `sprintf` for user-facing formatting.
+- Use supported string functions such as `strindx`, `strsect`, `strreplace`, and `strtof`.
+- `strindx()` returns `0` when not found.
+- Use `getorders()` for arrays, `rows()`/`cols()` for matrices.
+- Check existing GAUSS examples before assuming a function exists.
+
