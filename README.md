@@ -36,7 +36,9 @@ Supported table sources in this first version:
 - `ptTableFromMatrix(x, rowNames, colNames, title)` for custom matrix tables.
 - `ptTableFrom(out)` for automatic dispatch using `isStructType`.
 - `ptModelFrom(name, out)` for typed model adapters.
-- `ptModelCompare(models)` for side-by-side model comparison when models share the same coefficient rows.
+- `ptModelCompare(models)` for side-by-side model comparison, aligning on the union of term and goodness-of-fit row names across models with different regressors.
+
+Coefficient tables show one statistic row per term (standard errors by default). Use `ptModelSetStatRows(model, statRows)` (or `ptSetStatRows(tbl, statRows)`) to choose any combination of `"se"`, `"tstat"`, `"pvalue"`, and `"ci"`; confidence intervals require calling `ptModelSetCI(model, ciLower, ciUpper)` first.
 
 Initial automatic adapters:
 

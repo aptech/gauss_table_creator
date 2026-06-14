@@ -121,6 +121,7 @@ Current implemented/provisional public API includes:
 - `ptTableFrom`
 - `ptModelCreate`
 - `ptModelFrom`
+- `ptModelSetCI`, `ptModelSetStatRows`, `ptSetStatRows`
 - `ptModelTable`
 - `ptModelCompare`
 - `ptExport`
@@ -133,7 +134,9 @@ Current automatic adapters:
 - `gmmOut` through `ptModelFrom`
 - `dstatmtOut`
 
-`ptModelCompare` aligns models on the union of their term names (in order of first appearance) and the union of their GOF row names, so models with different regressors can be compared side by side; missing cells render blank. Configurable term ordering, coefficient renaming/maps, model-specific notes, and additional statistic rows (t-stats, p-values, confidence intervals) remain future work.
+`ptModelCompare` aligns models on the union of their term names (in order of first appearance) and the union of their GOF row names, so models with different regressors can be compared side by side; missing cells render blank.
+
+`ptFormat.statRows` controls which statistic rows render under each coefficient (`se`, `tstat`, `pvalue`, `ci`, settable via `ptModelSetStatRows`/`ptSetStatRows`; defaults to `"se"`). Confidence intervals require `ptModelSetCI` before requesting the `ci` row. Configurable term ordering, coefficient renaming/maps, and model-specific notes remain future work.
 
 ## Documentation
 

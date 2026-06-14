@@ -4,6 +4,7 @@ struct ptFormat {
     matrix starCutoffs;
     string array starSymbols;
     string statisticWrapper;
+    string array statRows;
 };
 
 struct ptTable {
@@ -22,6 +23,8 @@ struct ptModel {
     matrix estimates;
     matrix stdErrors;
     matrix pValues;
+    matrix ciLower;
+    matrix ciUpper;
     string array gofNames;
     matrix gofValues;
     struct ptFormat fmt;

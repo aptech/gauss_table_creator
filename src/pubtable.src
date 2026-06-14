@@ -6,6 +6,7 @@ proc (1) = ptFormatCreate();
     fmt.starCutoffs = 0.10 | 0.05 | 0.01;
     fmt.starSymbols = "+" $| "*" $| "**";
     fmt.statisticWrapper = "paren";
+    fmt.statRows = "se";
 
     retp(fmt);
 endp;
@@ -35,6 +36,24 @@ proc (0) = ptCheckDigits(digits, caller);
     endif;
 endp;
 
+proc (0) = ptCheckStatRows(statRows, caller);
+    local allowed, i;
+
+    allowed = "se" $| "tstat" $| "pvalue" $| "ci";
+
+    if rows(statRows) < 1 or statRows[1] $== "";
+        errorlog caller $+ ": statRows must contain at least one of se, tstat, pvalue, ci.";
+        end;
+    endif;
+
+    for i(1, rows(statRows), 1);
+        if ptFindLabel(allowed, statRows[i]) == 0;
+            errorlog caller $+ ": unsupported statistic row '" $+ statRows[i] $+ "'. Supported values are se, tstat, pvalue, ci.";
+            end;
+        endif;
+    endfor;
+endp;
+
 proc (0) = ptValidateFormat(struct ptFormat fmt, caller);
     call ptCheckDigits(fmt.digits, caller);
 
@@ -53,6 +72,8 @@ proc (0) = ptValidateFormat(struct ptFormat fmt, caller);
         errorlog caller $+ ": statisticWrapper must be 'paren', 'bracket', or 'none'.";
         end;
     endif;
+
+    call ptCheckStatRows(fmt.statRows, caller);
 endp;
 
 proc (0) = ptValidateTable(struct ptTable tbl, caller);
@@ -126,6 +147,13 @@ proc (0) = ptValidateModel(struct ptModel mdl, caller);
     if rows(mdl.termNames) /= rows(mdl.estimates);
         errorlog caller $+ ": termNames must have one row for each estimate.";
         end;
+    endif;
+
+    if ptFindLabel(mdl.fmt.statRows, "ci") > 0;
+        if scalmiss(mdl.ciLower[1]) or scalmiss(mdl.ciUpper[1]);
+            errorlog caller $+ ": confidence intervals requested in statRows but ciLower/ciUpper have not been set via ptModelSetCI.";
+            end;
+        endif;
     endif;
 
     if mdl.gofNames[1] $/= "";
@@ -233,6 +261,8 @@ proc (1) = ptModelCreate(name, estimates, stdErrors);
     mdl.estimates = estimates;
     mdl.stdErrors = stdErrors;
     mdl.pValues = miss(zeros(rows(estimates), cols(estimates)), 0);
+    mdl.ciLower = miss(zeros(rows(estimates), 1), 0);
+    mdl.ciUpper = miss(zeros(rows(estimates), 1), 0);
     mdl.termNames = "x" $+ sprintf("%d", seqa(1, 1, rows(estimates)));
     mdl.gofNames = "";
     mdl.gofValues = miss(0, 0);
@@ -273,31 +303,65 @@ proc (1) = ptModelSetDigits(struct ptModel mdl, digits);
     retp(mdl);
 endp;
 
+proc (1) = ptModelSetCI(struct ptModel mdl, ciLower, ciUpper);
+    if rows(ciLower) /= rows(mdl.estimates) or cols(ciLower) /= 1;
+        errorlog "ptModelSetCI: ciLower must be a column vector matching estimates.";
+        end;
+    endif;
+
+    if rows(ciUpper) /= rows(mdl.estimates) or cols(ciUpper) /= 1;
+        errorlog "ptModelSetCI: ciUpper must be a column vector matching estimates.";
+        end;
+    endif;
+
+    mdl.ciLower = ciLower;
+    mdl.ciUpper = ciUpper;
+    retp(mdl);
+endp;
+
+proc (1) = ptModelSetStatRows(struct ptModel mdl, statRows);
+    call ptCheckStatRows(statRows, "ptModelSetStatRows");
+    mdl.fmt.statRows = statRows;
+    retp(mdl);
+endp;
+
+proc (1) = ptSetStatRows(struct ptTable tbl, statRows);
+    call ptCheckStatRows(statRows, "ptSetStatRows");
+    tbl.fmt.statRows = statRows;
+    retp(tbl);
+endp;
+
 proc (1) = ptModelTable(struct ptModel mdl);
-    local n_terms, n_gof, body, row_names, i;
+    local n_terms, n_gof, n_stat, rows_per_term, body, row_names, i, k, base;
     struct ptTable tbl;
 
     call ptValidateModel(mdl, "ptModelTable");
 
     n_terms = rows(mdl.estimates);
+    n_stat = rows(mdl.fmt.statRows);
+    rows_per_term = 1 + n_stat;
     n_gof = 0;
     if mdl.gofNames[1] $/= "";
         n_gof = rows(mdl.gofValues);
     endif;
 
-    body = ptBlankSA(2 * n_terms + n_gof, 1);
+    body = ptBlankSA(rows_per_term * n_terms + n_gof, 1);
     row_names = ptBlankSA(rows(body), 1);
 
     for i(1, n_terms, 1);
-        row_names[2 * i - 1] = mdl.termNames[i];
-        row_names[2 * i] = "";
-        body[2 * i - 1, 1] = ptFormatEstimate(mdl.estimates[i], mdl.pValues[i], mdl.fmt);
-        body[2 * i, 1] = ptWrapStatistic(ptFormatNumber(mdl.stdErrors[i], mdl.fmt.digits), mdl.fmt);
+        base = rows_per_term * (i - 1);
+        row_names[base + 1] = mdl.termNames[i];
+        body[base + 1, 1] = ptFormatEstimate(mdl.estimates[i], mdl.pValues[i], mdl.fmt);
+
+        for k(1, n_stat, 1);
+            row_names[base + 1 + k] = "";
+            body[base + 1 + k, 1] = ptStatRowValue(mdl.fmt.statRows[k], mdl, i);
+        endfor;
     endfor;
 
     for i(1, n_gof, 1);
-        row_names[2 * n_terms + i] = mdl.gofNames[i];
-        body[2 * n_terms + i, 1] = ptFormatNumber(mdl.gofValues[i], mdl.fmt.digits);
+        row_names[rows_per_term * n_terms + i] = mdl.gofNames[i];
+        body[rows_per_term * n_terms + i, 1] = ptFormatNumber(mdl.gofValues[i], mdl.fmt.digits);
     endfor;
 
     tbl = ptTableCreate(mdl.name);
@@ -312,7 +376,7 @@ proc (1) = ptModelTable(struct ptModel mdl);
 endp;
 
 proc (1) = ptModelCompare(struct ptModel models);
-    local n_models, n_terms, n_gof, n_rows, body, row_names, col_names, i, j, row;
+    local n_models, n_terms, n_gof, n_stat, rows_per_term, n_rows, body, row_names, col_names, i, j, k, row, base;
     local term_names, gof_names, idx;
     struct ptTable tbl;
 
@@ -344,11 +408,13 @@ proc (1) = ptModelCompare(struct ptModel models);
     endfor;
 
     n_terms = rows(term_names);
+    n_stat = rows(models[1].fmt.statRows);
+    rows_per_term = 1 + n_stat;
     n_gof = 0;
     if gof_names[1] $/= "";
         n_gof = rows(gof_names);
     endif;
-    n_rows = 2 * n_terms + n_gof;
+    n_rows = rows_per_term * n_terms + n_gof;
 
     body = ptBlankSA(n_rows, n_models);
     row_names = ptBlankSA(n_rows, 1);
@@ -359,27 +425,27 @@ proc (1) = ptModelCompare(struct ptModel models);
     endfor;
 
     for i(1, n_terms, 1);
-        row_names[2 * i - 1] = term_names[i];
-        row_names[2 * i] = "";
+        base = rows_per_term * (i - 1);
+        row_names[base + 1] = term_names[i];
 
         for j(1, n_models, 1);
             idx = ptFindLabel(models[j].termNames, term_names[i]);
             if idx == 0;
-                body[2 * i - 1, j] = "";
-                body[2 * i, j] = "";
+                body[base + 1, j] = "";
+                for k(1, n_stat, 1);
+                    body[base + 1 + k, j] = "";
+                endfor;
             else;
-                body[2 * i - 1, j] = ptFormatEstimate(models[j].estimates[idx], models[j].pValues[idx], models[j].fmt);
-                if scalmiss(models[j].stdErrors[idx]);
-                    body[2 * i, j] = "";
-                else;
-                    body[2 * i, j] = ptWrapStatistic(ptFormatNumber(models[j].stdErrors[idx], models[j].fmt.digits), models[j].fmt);
-                endif;
+                body[base + 1, j] = ptFormatEstimate(models[j].estimates[idx], models[j].pValues[idx], models[j].fmt);
+                for k(1, n_stat, 1);
+                    body[base + 1 + k, j] = ptStatRowValue(models[1].fmt.statRows[k], models[j], idx);
+                endfor;
             endif;
         endfor;
     endfor;
 
     for i(1, n_gof, 1);
-        row = 2 * n_terms + i;
+        row = rows_per_term * n_terms + i;
         row_names[row] = gof_names[i];
 
         for j(1, n_models, 1);
@@ -578,6 +644,35 @@ proc (1) = ptWrapStatistic(value, struct ptFormat fmt);
     endif;
 
     retp("(" $+ value $+ ")");
+endp;
+
+proc (1) = ptStatRowValue(statType, struct ptModel mdl, idx);
+    local tstat;
+
+    if statType $== "se";
+        if scalmiss(mdl.stdErrors[idx]);
+            retp("");
+        endif;
+        retp(ptWrapStatistic(ptFormatNumber(mdl.stdErrors[idx], mdl.fmt.digits), mdl.fmt));
+    elseif statType $== "tstat";
+        if scalmiss(mdl.stdErrors[idx]) or mdl.stdErrors[idx] == 0;
+            retp("");
+        endif;
+        tstat = mdl.estimates[idx] / mdl.stdErrors[idx];
+        retp(ptWrapStatistic(ptFormatNumber(tstat, mdl.fmt.digits), mdl.fmt));
+    elseif statType $== "pvalue";
+        if scalmiss(mdl.pValues[idx]);
+            retp("");
+        endif;
+        retp(ptWrapStatistic(ptFormatNumber(mdl.pValues[idx], mdl.fmt.digits), mdl.fmt));
+    elseif statType $== "ci";
+        if scalmiss(mdl.ciLower[idx]) or scalmiss(mdl.ciUpper[idx]);
+            retp("");
+        endif;
+        retp("[" $+ ptFormatNumber(mdl.ciLower[idx], mdl.fmt.digits) $+ ", " $+ ptFormatNumber(mdl.ciUpper[idx], mdl.fmt.digits) $+ "]");
+    endif;
+
+    retp("");
 endp;
 
 proc (1) = ptStarNote(struct ptFormat fmt);

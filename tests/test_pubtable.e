@@ -79,6 +79,23 @@ checkStringEqual(cmpTbl.body[5, 1], "", "blank cell for term missing from first 
 checkStringEqual(cmpTbl.body[7, 1], "", "blank cell for GOF missing from first model");
 checkStringEqual(cmpTbl.body[7, 2], "100.000", "GOF value present for second model");
 
+struct ptModel statMdl;
+statMdl = ptModelCreate("StatRows", 1.2 | 0.4, 0.1 | 0.2);
+statMdl = ptModelSetNames(statMdl, "Constant" $| "x");
+statMdl = ptModelSetPValues(statMdl, 0.004 | 0.08);
+statMdl = ptModelSetStatRows(statMdl, "tstat" $| "pvalue");
+
+struct ptTable statTbl;
+statTbl = ptModelTable(statMdl);
+checkScalarEqual(rows(statTbl.body), 6, "model table row count with two statistic rows per term");
+checkStringEqual(statTbl.body[2, 1], "(12.000)", "t-statistic row");
+checkStringEqual(statTbl.body[3, 1], "(0.004)", "p-value row");
+
+statMdl = ptModelSetCI(statMdl, 1.0 | 0.2, 1.4 | 0.6);
+statMdl = ptModelSetStatRows(statMdl, "ci");
+statTbl = ptModelTable(statMdl);
+checkStringEqual(statTbl.body[2, 1], "[1.000, 1.400]", "confidence interval row");
+
 struct olsmtControl ctl;
 struct olsmtOut out;
 
