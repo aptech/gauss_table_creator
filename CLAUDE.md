@@ -134,6 +134,7 @@ Current automatic adapters:
 - `glmOut`
 - `gmmOut` through `ptModelFrom`
 - `dstatmtOut`
+- `fglsOut`
 
 `ptModelCompare` aligns models on the union of their term names (in order of first appearance) and the union of their GOF row names, so models with different regressors can be compared side by side; missing cells render blank.
 

@@ -49,6 +49,7 @@ Current adapters:
 - `glmOut`
 - `gmmOut` through `ptModelFrom`
 - `dstatmtOut`
+- `fglsOut`
 
 Current exporters:
 

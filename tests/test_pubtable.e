@@ -154,6 +154,15 @@ checkStringEqual(dstatTbl.title, "Summary statistics", "dstatmt struct dispatch"
 checkScalarEqual(rows(dstatTbl.body), rows(dstatOutput.vnames), "dstatmt table row count matches variable count");
 checkScalarEqual(cols(dstatTbl.body), 6, "dstatmt table column count");
 
+struct fglsOut fglsOutput;
+fglsOutput = fgls(loadd(getGAUSSHome() $+ "examples/auto.dat"), "mpg ~ weight + length");
+
+struct ptTable fglsTbl;
+fglsTbl = ptTableFrom(fglsOutput);
+checkStringEqual(fglsTbl.title, "FGLS results", "fgls struct dispatch");
+checkScalarEqual(rows(fglsTbl.body), 2 * rows(fglsOutput.beta_fgls) + 3, "fgls table row count includes statistic and GOF rows");
+checkStringEqual(fglsTbl.rowNames[1], "Constant", "fgls constant label normalized");
+
 export_base = "C:\\Users\\eclow\\Documents\\GitHub\\gauss_table_creator\\tests\\_pubtable_test";
 call deleteFile(export_base $+ ".md");
 call deleteFile(export_base $+ ".tex");

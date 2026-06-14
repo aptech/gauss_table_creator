@@ -55,6 +55,7 @@ Initial automatic adapters:
 - `glmOut`
 - `gmmOut` through `ptModelFrom`
 - `dstatmtOut`
+- `fglsOut`
 
 Initial exporters:
 

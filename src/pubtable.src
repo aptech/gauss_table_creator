@@ -628,6 +628,8 @@ proc (1) = ptTableFrom(x);
         tbl = ptFromGlm(x);
     elseif isStructType(x, "dstatmtOut");
         tbl = ptFromDstatmt(x);
+    elseif isStructType(x, "fglsOut");
+        tbl = ptFromFgls(x);
     else;
         errorlog "ptTableFrom: unsupported input type.";
         end;
@@ -645,6 +647,8 @@ proc (1) = ptModelFrom(name, x);
         mdl = ptModelFromGlm(name, x);
     elseif isStructType(x, "gmmOut");
         mdl = ptModelFromGmm(name, x);
+    elseif isStructType(x, "fglsOut");
+        mdl = ptModelFromFgls(name, x);
     else;
         errorlog "ptModelFrom: unsupported model output structure.";
         end;
@@ -686,6 +690,30 @@ endp;
 proc (1) = ptFromOlsmt(struct olsmtOut out);
     struct ptModel mdl;
     mdl = ptModelFromOlsmt("OLS results", out);
+    retp(ptModelTable(mdl));
+endp;
+
+proc (1) = ptModelFromFgls(name, struct fglsOut out);
+    local names;
+    struct ptModel mdl;
+
+    names = out.varnames;
+    if names[1] $== "CONSTANT";
+        names[1] = "Constant";
+    endif;
+
+    mdl = ptModelCreate(name, out.beta_fgls, out.se_fgls);
+    mdl = ptModelSetNames(mdl, names);
+    mdl = ptModelSetPValues(mdl, out.pvt);
+    mdl = ptModelSetCI(mdl, out.ci[., 1], out.ci[., 2]);
+    mdl = ptModelSetGOF(mdl, "N" $| "R-squared" $| "DF Residual", rows(out.resid) | out.rsq | out.df);
+
+    retp(mdl);
+endp;
+
+proc (1) = ptFromFgls(struct fglsOut out);
+    struct ptModel mdl;
+    mdl = ptModelFromFgls("FGLS results", out);
     retp(ptModelTable(mdl));
 endp;
 
