@@ -32,7 +32,7 @@ The library should support:
 - Summary/statistics tables.
 - Custom matrix/data tables.
 - Exporters for Markdown, LaTeX, CSV, and plain text.
-- Additional practical exporters where feasible, currently including tested `.xls` output through `SpreadsheetWrite`, provisional `.xlsx` support where the local GAUSS/Excel stack permits it, and `.rtf` for Word-compatible output.
+- Additional practical exporters where feasible, currently including tested `.xls` output through `SpreadsheetWrite`, provisional `.xlsx` support where the local GAUSS/Excel stack permits it, `.rtf` for Word-compatible output, and `.html`/`.htm`.
 
 True `.docx` export is provisional/future work unless a maintainable GAUSS-native implementation is designed.
 
@@ -122,11 +122,12 @@ Current implemented/provisional public API includes:
 - `ptModelCreate`
 - `ptModelFrom`
 - `ptModelSetCI`, `ptModelSetStatRows`, `ptSetStatRows`, `ptModelSetNotes`
+- `ptSetLabel`, `ptModelSetLabel`, `ptSetColAlign`, `ptModelSetColAlign`
 - `ptModelTable`
 - `ptModelCompare`, `ptModelCompareWith`
 - `ptCompareOptionsCreate`, `ptCompareSetTermOrder`, `ptCompareSetGofOrder`, `ptCompareSetLabelMap`, `ptCompareSetNotes`
 - `ptExport`
-- `ptRenderMarkdown`, `ptRenderLatex`, `ptRenderCsv`, `ptRenderText`, `ptRenderRtf`
+- `ptRenderMarkdown`, `ptRenderLatex`, `ptRenderCsv`, `ptRenderText`, `ptRenderRtf`, `ptRenderHtml`
 
 Current automatic adapters:
 

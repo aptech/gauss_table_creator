@@ -139,17 +139,17 @@ Add support for:
 
 - [x] booktabs
 - [x] caption
-- [ ] label
+- [x] label (`ptSetLabel`/`ptModelSetLabel`)
 - [x] notes
-- [ ] alignment controls
+- [x] alignment controls (`ptSetColAlign`/`ptModelSetColAlign`)
 
 ## HTML
 
 Add HTML export as a bridge to:
 
-- [ ] Word workflows
-- [ ] Web reports
-- [ ] Documentation systems
+- [x] Word workflows (via `.html`/`.rtf` exporters)
+- [x] Web reports (via `ptRenderHtml`/`.html`)
+- [x] Documentation systems (via `ptRenderHtml`/`.html`)
 
 ## RTF
 

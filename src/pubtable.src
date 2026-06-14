@@ -7,6 +7,8 @@ proc (1) = ptFormatCreate();
     fmt.starSymbols = "+" $| "*" $| "**";
     fmt.statisticWrapper = "paren";
     fmt.statRows = "se";
+    fmt.label = "";
+    fmt.colAlign = "";
 
     retp(fmt);
 endp;
@@ -49,6 +51,18 @@ proc (0) = ptCheckStatRows(statRows, caller);
     for i(1, rows(statRows), 1);
         if ptFindLabel(allowed, statRows[i]) == 0;
             errorlog caller $+ ": unsupported statistic row '" $+ statRows[i] $+ "'. Supported values are se, tstat, pvalue, ci.";
+            end;
+        endif;
+    endfor;
+endp;
+
+proc (0) = ptCheckColAlign(colAlign, caller);
+    local i, c;
+
+    for i(1, strlen(colAlign), 1);
+        c = strsect(colAlign, i, 1);
+        if c $/= "l" and c $/= "c" and c $/= "r";
+            errorlog caller $+ ": colAlign must contain only 'l', 'c', or 'r' characters.";
             end;
         endif;
     endfor;
@@ -316,6 +330,17 @@ proc (1) = ptNoStars(struct ptTable tbl);
     retp(tbl);
 endp;
 
+proc (1) = ptSetLabel(struct ptTable tbl, label);
+    tbl.fmt.label = label;
+    retp(tbl);
+endp;
+
+proc (1) = ptSetColAlign(struct ptTable tbl, colAlign);
+    call ptCheckColAlign(colAlign, "ptSetColAlign");
+    tbl.fmt.colAlign = colAlign;
+    retp(tbl);
+endp;
+
 proc (1) = ptTableFromMatrix(x, rowNames, colNames, title);
     struct ptTable tbl;
 
@@ -384,6 +409,17 @@ endp;
 proc (1) = ptModelSetDigits(struct ptModel mdl, digits);
     call ptCheckDigits(digits, "ptModelSetDigits");
     mdl.fmt.digits = digits;
+    retp(mdl);
+endp;
+
+proc (1) = ptModelSetLabel(struct ptModel mdl, label);
+    mdl.fmt.label = label;
+    retp(mdl);
+endp;
+
+proc (1) = ptModelSetColAlign(struct ptModel mdl, colAlign);
+    call ptCheckColAlign(colAlign, "ptModelSetColAlign");
+    mdl.fmt.colAlign = colAlign;
     retp(mdl);
 endp;
 
@@ -931,11 +967,23 @@ proc (1) = ptRenderLatex(struct ptTable tbl);
     local arr, out, i, spec;
 
     arr = ptRenderArray(tbl);
-    spec = "l" $+ chrs(114 * ones(1, cols(arr) - 1));
+
+    if tbl.fmt.colAlign $/= "";
+        if strlen(tbl.fmt.colAlign) /= cols(arr);
+            errorlog "ptRenderLatex: colAlign must specify " $+ sprintf("%d", cols(arr)) $+ " column(s) (stub column plus data columns).";
+            end;
+        endif;
+        spec = tbl.fmt.colAlign;
+    else;
+        spec = "l" $+ chrs(114 * ones(1, cols(arr) - 1));
+    endif;
 
     out = "\\begin{table}[!htbp]\n\\centering\n";
     if tbl.title $/= "";
         out = out $+ "\\caption{" $+ ptEscapeLatex(tbl.title) $+ "}\n";
+    endif;
+    if tbl.fmt.label $/= "";
+        out = out $+ "\\label{" $+ tbl.fmt.label $+ "}\n";
     endif;
     out = out $+ "\\begin{tabular}{" $+ spec $+ "}\n\\toprule\n";
     out = out $+ ptJoinLatexRow(arr[1, .]) $+ " \\\\\n\\midrule\n";
@@ -1051,6 +1099,42 @@ proc (1) = ptRenderRtf(struct ptTable tbl);
     retp(out);
 endp;
 
+proc (1) = ptRenderHtml(struct ptTable tbl);
+    local arr, out, i, j, n_cols;
+
+    arr = ptRenderArray(tbl);
+    n_cols = cols(arr);
+
+    out = "<table>\n";
+    if tbl.title $/= "";
+        out = out $+ "<caption>" $+ ptEscapeHtml(tbl.title) $+ "</caption>\n";
+    endif;
+
+    out = out $+ "<thead>\n<tr>";
+    for j(1, n_cols, 1);
+        out = out $+ "<th>" $+ ptEscapeHtml(arr[1, j]) $+ "</th>";
+    endfor;
+    out = out $+ "</tr>\n</thead>\n<tbody>\n";
+
+    for i(2, rows(arr), 1);
+        out = out $+ "<tr><th scope=\"row\">" $+ ptEscapeHtml(arr[i, 1]) $+ "</th>";
+        for j(2, n_cols, 1);
+            out = out $+ "<td>" $+ ptEscapeHtml(arr[i, j]) $+ "</td>";
+        endfor;
+        out = out $+ "</tr>\n";
+    endfor;
+
+    out = out $+ "</tbody>\n</table>\n";
+
+    if tbl.notes[1] $/= "";
+        for i(1, rows(tbl.notes), 1);
+            out = out $+ "<p class=\"pt-note\">" $+ ptEscapeHtml(tbl.notes[i]) $+ "</p>\n";
+        endfor;
+    endif;
+
+    retp(out);
+endp;
+
 proc (1) = ptJoinRow(row, sep);
     local out, j;
 
@@ -1079,6 +1163,13 @@ proc (1) = ptEscapeLatex(s);
     s = strreplace(s, "%", "\\%");
     s = strreplace(s, "&", "\\&");
     s = strreplace(s, "#", "\\#");
+    retp(s);
+endp;
+
+proc (1) = ptEscapeHtml(s);
+    s = strreplace(s, "&", "&amp;");
+    s = strreplace(s, "<", "&lt;");
+    s = strreplace(s, ">", "&gt;");
     retp(s);
 endp;
 
@@ -1120,6 +1211,8 @@ proc (1) = ptExport(struct ptTable tbl, fname);
         text = ptRenderCsv(tbl);
     elseif ext $== "rtf";
         text = ptRenderRtf(tbl);
+    elseif ext $== "html" or ext $== "htm";
+        text = ptRenderHtml(tbl);
     else;
         text = ptRenderText(tbl);
     endif;

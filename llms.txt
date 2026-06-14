@@ -66,8 +66,11 @@ Current exporters:
 - plain text `.txt`
 - Excel `.xls` through GAUSS `SpreadsheetWrite`; `.xlsx` is provisional/where supported
 - Word-compatible RTF `.rtf`
+- HTML `.html`/`.htm`
 
 True `.docx` is provisional/future work.
+
+LaTeX rendering supports `ptSetLabel`/`ptModelSetLabel` (adds `\label{...}` after `\caption{...}`) and `ptSetColAlign`/`ptModelSetColAlign` (overrides the default `l` + `r...` column alignment spec; one `l`/`c`/`r` per column including the stub).
 
 ## File Structure
 

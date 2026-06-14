@@ -47,6 +47,18 @@ checkStringContains(ptRenderCsv(tbl), "Model 1", "csv header");
 checkStringContains(ptRenderText(tbl), "Demo_table", "text title");
 checkStringContains(ptRenderRtf(tbl), "{\\rtf1\\ansi", "rtf header");
 
+checkStringContains(ptRenderHtml(tbl), "<caption>Demo_table</caption>", "html caption");
+checkStringContains(ptRenderHtml(tbl), "<th>Model 1</th>", "html column header");
+checkStringContains(ptRenderHtml(tbl), "<td>1.235</td>", "html data cell");
+checkStringEqual(ptEscapeHtml("a < b & c > d"), "a &lt; b &amp; c &gt; d", "html escaping");
+
+struct ptTable latexTbl;
+latexTbl = ptSetLabel(tbl, "tab:demo");
+checkStringContains(ptRenderLatex(latexTbl), "\\label{tab:demo}", "latex label");
+
+latexTbl = ptSetColAlign(tbl, "lc");
+checkStringContains(ptRenderLatex(latexTbl), "\\begin{tabular}{lc}", "latex custom column alignment");
+
 struct ptModel mdl;
 mdl = ptModelCreate("Model", 1.2 | 0.4, 0.1 | 0.2);
 mdl = ptModelSetNames(mdl, "Constant" $| "x");
@@ -174,6 +186,7 @@ call deleteFile(export_base $+ ".tex");
 call deleteFile(export_base $+ ".csv");
 call deleteFile(export_base $+ ".txt");
 call deleteFile(export_base $+ ".rtf");
+call deleteFile(export_base $+ ".html");
 call deleteFile(export_base $+ ".xls");
 
 checkScalarEqual(ptExport(tbl, export_base $+ ".md"), 0, "markdown export");
@@ -181,6 +194,7 @@ checkScalarEqual(ptExport(tbl, export_base $+ ".tex"), 0, "latex export");
 checkScalarEqual(ptExport(tbl, export_base $+ ".csv"), 0, "csv export");
 checkScalarEqual(ptExport(tbl, export_base $+ ".txt"), 0, "text export");
 checkScalarEqual(ptExport(tbl, export_base $+ ".rtf"), 0, "rtf export");
+checkScalarEqual(ptExport(tbl, export_base $+ ".html"), 0, "html export");
 xls_ret = ptExport(tbl, export_base $+ ".xls");
 checkScalarNotMissing(xls_ret, "xls export trapped return");
 

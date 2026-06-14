@@ -5,6 +5,8 @@ struct ptFormat {
     string array starSymbols;
     string statisticWrapper;
     string array statRows;
+    string label;
+    string colAlign;
 };
 
 struct ptTable {

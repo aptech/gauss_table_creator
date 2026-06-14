@@ -72,8 +72,16 @@ Initial exporters:
 - Plain text: `.txt`
 - Excel: `.xls` through GAUSS `SpreadsheetWrite`; `.xlsx` is attempted through the same route where supported by the local GAUSS/Excel stack
 - Word-compatible rich text: `.rtf`
+- HTML: `.html`/`.htm`
 
-True `.docx` export is not part of the first version because it requires generating zipped Office Open XML. The practical Word path for now is `.rtf`, with `.html` and true `.docx` good candidates for a later exporter phase.
+True `.docx` export is not part of the first version because it requires generating zipped Office Open XML. The practical Word path for now is `.rtf`/`.html`, with true `.docx` a candidate for a later exporter phase.
+
+### LaTeX options
+
+`ptRenderLatex` (and `ptExport(tbl, "*.tex")`) support a few additional `ptFormat` options:
+
+- `ptSetLabel(tbl, "tab:my-table")` / `ptModelSetLabel(mdl, "tab:my-table")` adds a `\label{...}` after `\caption{...}`.
+- `ptSetColAlign(tbl, "lcr")` / `ptModelSetColAlign(mdl, "lcr")` overrides the default column alignment (`l` for the stub column, `r` for data columns). The string must contain one `l`/`c`/`r` character per column, including the stub column.
 
 ## Getting Started
 ### Prerequisites
