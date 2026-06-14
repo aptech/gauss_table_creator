@@ -126,6 +126,89 @@ proc (1) = ptAppendNewLabels(existing, additional);
     retp(out);
 endp;
 
+proc (1) = ptOrderLabels(names, order);
+    local out, i, first;
+
+    if rows(order) < 1 or order[1] $== "";
+        retp(names);
+    endif;
+
+    out = "";
+    first = 1;
+    for i(1, rows(order), 1);
+        if ptFindLabel(names, order[i]) > 0 and ptFindLabel(out, order[i]) == 0;
+            if first;
+                out = order[i];
+                first = 0;
+            else;
+                out = out $| order[i];
+            endif;
+        endif;
+    endfor;
+
+    for i(1, rows(names), 1);
+        if ptFindLabel(out, names[i]) == 0;
+            if first;
+                out = names[i];
+                first = 0;
+            else;
+                out = out $| names[i];
+            endif;
+        endif;
+    endfor;
+
+    retp(out);
+endp;
+
+proc (0) = ptCheckLabelMap(mapFrom, mapTo, caller);
+    if rows(mapFrom) < 1 or mapFrom[1] $== "";
+        retp;
+    endif;
+
+    if rows(mapFrom) /= rows(mapTo);
+        errorlog caller $+ ": mapFrom and mapTo must have the same number of rows.";
+        end;
+    endif;
+endp;
+
+proc (1) = ptApplyLabelMap(names, mapFrom, mapTo);
+    local out, i, idx;
+
+    out = names;
+    if rows(mapFrom) < 1 or mapFrom[1] $== "";
+        retp(out);
+    endif;
+
+    for i(1, rows(out), 1);
+        idx = ptFindLabel(mapFrom, out[i]);
+        if idx > 0;
+            out[i] = mapTo[idx];
+        endif;
+    endfor;
+
+    retp(out);
+endp;
+
+proc (1) = ptAppendNotes(existing, additional);
+    local out, i, first;
+
+    out = existing;
+    first = rows(out) == 1 and out[1] $== "";
+
+    for i(1, rows(additional), 1);
+        if additional[i] $/= "";
+            if first;
+                out = additional[i];
+                first = 0;
+            else;
+                out = out $| additional[i];
+            endif;
+        endif;
+    endfor;
+
+    retp(out);
+endp;
+
 proc (0) = ptValidateModel(struct ptModel mdl, caller);
     call ptValidateFormat(mdl.fmt, caller);
 
@@ -266,6 +349,7 @@ proc (1) = ptModelCreate(name, estimates, stdErrors);
     mdl.termNames = "x" $+ sprintf("%d", seqa(1, 1, rows(estimates)));
     mdl.gofNames = "";
     mdl.gofValues = miss(0, 0);
+    mdl.notes = "";
     mdl.fmt = ptFormatCreate();
 
     retp(mdl);
@@ -331,6 +415,45 @@ proc (1) = ptSetStatRows(struct ptTable tbl, statRows);
     retp(tbl);
 endp;
 
+proc (1) = ptModelSetNotes(struct ptModel mdl, notes);
+    mdl.notes = notes;
+    retp(mdl);
+endp;
+
+proc (1) = ptCompareOptionsCreate();
+    struct ptCompareOptions opts;
+
+    opts.termOrder = "";
+    opts.gofOrder = "";
+    opts.mapFrom = "";
+    opts.mapTo = "";
+    opts.notes = "";
+
+    retp(opts);
+endp;
+
+proc (1) = ptCompareSetTermOrder(struct ptCompareOptions opts, termOrder);
+    opts.termOrder = termOrder;
+    retp(opts);
+endp;
+
+proc (1) = ptCompareSetGofOrder(struct ptCompareOptions opts, gofOrder);
+    opts.gofOrder = gofOrder;
+    retp(opts);
+endp;
+
+proc (1) = ptCompareSetLabelMap(struct ptCompareOptions opts, mapFrom, mapTo);
+    call ptCheckLabelMap(mapFrom, mapTo, "ptCompareSetLabelMap");
+    opts.mapFrom = mapFrom;
+    opts.mapTo = mapTo;
+    retp(opts);
+endp;
+
+proc (1) = ptCompareSetNotes(struct ptCompareOptions opts, notes);
+    opts.notes = notes;
+    retp(opts);
+endp;
+
 proc (1) = ptModelTable(struct ptModel mdl);
     local n_terms, n_gof, n_stat, rows_per_term, body, row_names, i, k, base;
     struct ptTable tbl;
@@ -370,14 +493,19 @@ proc (1) = ptModelTable(struct ptModel mdl);
     tbl.colNames = mdl.name;
     tbl.body = body;
     tbl.fmt = mdl.fmt;
-    tbl.notes = ptStarNote(mdl.fmt);
+    tbl.notes = ptAppendNotes(ptStarNote(mdl.fmt), mdl.notes);
 
     retp(tbl);
 endp;
 
 proc (1) = ptModelCompare(struct ptModel models);
+    retp(ptModelCompareWith(models, ptCompareOptionsCreate()));
+endp;
+
+proc (1) = ptModelCompareWith(struct ptModel models, struct ptCompareOptions opts);
     local n_models, n_terms, n_gof, n_stat, rows_per_term, n_rows, body, row_names, col_names, i, j, k, row, base;
-    local term_names, gof_names, idx;
+    local term_names, gof_names, display_names, notes;
+    local idx;
     struct ptTable tbl;
 
     n_models = rows(models);
@@ -407,6 +535,12 @@ proc (1) = ptModelCompare(struct ptModel models);
         endif;
     endfor;
 
+    term_names = ptOrderLabels(term_names, opts.termOrder);
+    if gof_names[1] $/= "";
+        gof_names = ptOrderLabels(gof_names, opts.gofOrder);
+    endif;
+    display_names = ptApplyLabelMap(term_names, opts.mapFrom, opts.mapTo);
+
     n_terms = rows(term_names);
     n_stat = rows(models[1].fmt.statRows);
     rows_per_term = 1 + n_stat;
@@ -426,7 +560,7 @@ proc (1) = ptModelCompare(struct ptModel models);
 
     for i(1, n_terms, 1);
         base = rows_per_term * (i - 1);
-        row_names[base + 1] = term_names[i];
+        row_names[base + 1] = display_names[i];
 
         for j(1, n_models, 1);
             idx = ptFindLabel(models[j].termNames, term_names[i]);
@@ -462,13 +596,25 @@ proc (1) = ptModelCompare(struct ptModel models);
         endfor;
     endfor;
 
+    notes = ptStarNote(models[1].fmt);
+    for j(1, n_models, 1);
+        if models[j].notes[1] $/= "";
+            if n_models > 1;
+                notes = ptAppendNotes(notes, models[j].name $+ ": " $+ models[j].notes);
+            else;
+                notes = ptAppendNotes(notes, models[j].notes);
+            endif;
+        endif;
+    endfor;
+    notes = ptAppendNotes(notes, opts.notes);
+
     tbl = ptTableCreate("Model comparison");
     tbl.stubName = "Term";
     tbl.rowNames = row_names;
     tbl.colNames = col_names;
     tbl.body = body;
     tbl.fmt = models[1].fmt;
-    tbl.notes = ptStarNote(models[1].fmt);
+    tbl.notes = notes;
 
     retp(tbl);
 endp;

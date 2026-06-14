@@ -121,9 +121,10 @@ Current implemented/provisional public API includes:
 - `ptTableFrom`
 - `ptModelCreate`
 - `ptModelFrom`
-- `ptModelSetCI`, `ptModelSetStatRows`, `ptSetStatRows`
+- `ptModelSetCI`, `ptModelSetStatRows`, `ptSetStatRows`, `ptModelSetNotes`
 - `ptModelTable`
-- `ptModelCompare`
+- `ptModelCompare`, `ptModelCompareWith`
+- `ptCompareOptionsCreate`, `ptCompareSetTermOrder`, `ptCompareSetGofOrder`, `ptCompareSetLabelMap`, `ptCompareSetNotes`
 - `ptExport`
 - `ptRenderMarkdown`, `ptRenderLatex`, `ptRenderCsv`, `ptRenderText`, `ptRenderRtf`
 
@@ -136,7 +137,16 @@ Current automatic adapters:
 
 `ptModelCompare` aligns models on the union of their term names (in order of first appearance) and the union of their GOF row names, so models with different regressors can be compared side by side; missing cells render blank.
 
-`ptFormat.statRows` controls which statistic rows render under each coefficient (`se`, `tstat`, `pvalue`, `ci`, settable via `ptModelSetStatRows`/`ptSetStatRows`; defaults to `"se"`). Confidence intervals require `ptModelSetCI` before requesting the `ci` row. Configurable term ordering, coefficient renaming/maps, and model-specific notes remain future work.
+`ptFormat.statRows` controls which statistic rows render under each coefficient (`se`, `tstat`, `pvalue`, `ci`, settable via `ptModelSetStatRows`/`ptSetStatRows`; defaults to `"se"`). Confidence intervals require `ptModelSetCI` before requesting the `ci` row.
+
+`ptModelCompareWith(models, struct ptCompareOptions opts)` extends `ptModelCompare` with:
+
+- `ptCompareSetTermOrder(opts, termOrder)`: lists terms in the desired display order; unlisted terms keep their union order and are appended.
+- `ptCompareSetGofOrder(opts, gofOrder)`: same ordering behavior for GOF rows.
+- `ptCompareSetLabelMap(opts, mapFrom, mapTo)`: renames term row labels for display only (matching against model term names is unaffected).
+- `ptCompareSetNotes(opts, notes)`: table-level notes appended after the significance note and any per-model notes (set via `ptModelSetNotes`, prefixed with the model name when comparing more than one model).
+
+`ptModelCompare(models)` is equivalent to `ptModelCompareWith(models, ptCompareOptionsCreate())`.
 
 ## Documentation
 

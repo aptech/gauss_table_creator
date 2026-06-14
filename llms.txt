@@ -33,12 +33,15 @@ Current/provisional modern API:
 - `ptTableFrom(out)` for `isStructType()` dispatch
 - `ptModelCreate(name, estimates, stdErrors)`
 - `ptModelFrom(name, out)` for typed model adapters
-- `ptModelSetCI(model, ciLower, ciUpper)`, `ptModelSetStatRows(model, statRows)`, `ptSetStatRows(tbl, statRows)`
+- `ptModelSetCI(model, ciLower, ciUpper)`, `ptModelSetStatRows(model, statRows)`, `ptSetStatRows(tbl, statRows)`, `ptModelSetNotes(model, notes)`
 - `ptModelTable(model)`
 - `ptModelCompare(models)` aligns models on the union of term/GOF names, blanking missing cells
+- `ptModelCompareWith(models, opts)` adds term/GOF ordering, coefficient renaming, and notes via `ptCompareOptions`
 - `ptExport(tbl, fname)`
 
 `statRows` controls which statistic rows render under each coefficient: `se`, `tstat`, `pvalue`, `ci` (default `"se"`). `ci` requires `ptModelSetCI` first.
+
+`ptCompareOptions` (built with `ptCompareOptionsCreate`, configured via `ptCompareSetTermOrder`, `ptCompareSetGofOrder`, `ptCompareSetLabelMap`, `ptCompareSetNotes`) lets `ptModelCompareWith` reorder term/GOF rows, rename term labels for display, and append table-level notes alongside per-model notes.
 
 Current adapters:
 

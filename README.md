@@ -40,6 +40,15 @@ Supported table sources in this first version:
 
 Coefficient tables show one statistic row per term (standard errors by default). Use `ptModelSetStatRows(model, statRows)` (or `ptSetStatRows(tbl, statRows)`) to choose any combination of `"se"`, `"tstat"`, `"pvalue"`, and `"ci"`; confidence intervals require calling `ptModelSetCI(model, ciLower, ciUpper)` first.
 
+For more control over model comparisons, build a `ptCompareOptions` struct with `ptCompareOptionsCreate()` and pass it to `ptModelCompareWith(models, opts)`:
+
+- `ptCompareSetTermOrder(opts, termOrder)` puts the listed terms first, in that order, with any remaining terms appended afterward.
+- `ptCompareSetGofOrder(opts, gofOrder)` does the same for goodness-of-fit rows.
+- `ptCompareSetLabelMap(opts, mapFrom, mapTo)` renames term row labels for display (e.g. `"Constant"` to `"(Intercept)"`) without affecting how terms are matched across models.
+- `ptCompareSetNotes(opts, notes)` adds table-level notes. Per-model notes set with `ptModelSetNotes(model, notes)` are also included, prefixed with the model name when comparing more than one model.
+
+`ptModelCompare(models)` is shorthand for `ptModelCompareWith(models, ptCompareOptionsCreate())`.
+
 Initial automatic adapters:
 
 - `olsmtOut`

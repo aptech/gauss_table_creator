@@ -96,6 +96,36 @@ statMdl = ptModelSetStatRows(statMdl, "ci");
 statTbl = ptModelTable(statMdl);
 checkStringEqual(statTbl.body[2, 1], "[1.000, 1.400]", "confidence interval row");
 
+statMdl = ptModelSetNotes(statMdl, "Robust standard errors.");
+statTbl = ptModelTable(statMdl);
+checkScalarEqual(rows(statTbl.notes), 2, "model table combines significance note with model notes");
+checkStringEqual(statTbl.notes[2], "Robust standard errors.", "model-level note appended to table notes");
+
+struct ptCompareOptions cmpOpts;
+cmpOpts = ptCompareOptionsCreate();
+cmpOpts = ptCompareSetTermOrder(cmpOpts, "z" $| "x" $| "Constant");
+cmpOpts = ptCompareSetGofOrder(cmpOpts, "R2" $| "N");
+cmpOpts = ptCompareSetLabelMap(cmpOpts, "Constant", "(Intercept)");
+cmpOpts = ptCompareSetNotes(cmpOpts, "Comparison note.");
+
+mdl = ptModelSetNotes(mdl, "Model A note.");
+mdl2 = ptModelSetNotes(mdl2, "Model B note.");
+cmpModels[1] = mdl;
+cmpModels[2] = mdl2;
+
+struct ptTable cmpTbl2;
+cmpTbl2 = ptModelCompareWith(cmpModels, cmpOpts);
+
+checkStringEqual(cmpTbl2.rowNames[1], "z", "custom term order moves z first");
+checkStringEqual(cmpTbl2.rowNames[3], "x", "custom term order keeps x second");
+checkStringEqual(cmpTbl2.rowNames[5], "(Intercept)", "coefficient renamed via label map");
+checkStringEqual(cmpTbl2.rowNames[7], "R2", "custom GOF order moves R2 first");
+checkStringEqual(cmpTbl2.rowNames[8], "N", "custom GOF order keeps N second");
+checkScalarEqual(rows(cmpTbl2.notes), 4, "model comparison combines significance, model, and table notes");
+checkStringContains(cmpTbl2.notes[2], "Model A note.", "model-specific note prefixed with model name");
+checkStringContains(cmpTbl2.notes[3], "Model B note.", "second model note prefixed with model name");
+checkStringEqual(cmpTbl2.notes[4], "Comparison note.", "table-level comparison note appended last");
+
 struct olsmtControl ctl;
 struct olsmtOut out;
 

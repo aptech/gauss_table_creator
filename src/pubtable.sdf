@@ -27,5 +27,14 @@ struct ptModel {
     matrix ciUpper;
     string array gofNames;
     matrix gofValues;
+    string array notes;
     struct ptFormat fmt;
+};
+
+struct ptCompareOptions {
+    string array termOrder;
+    string array gofOrder;
+    string array mapFrom;
+    string array mapTo;
+    string array notes;
 };
