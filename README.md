@@ -107,7 +107,11 @@ Older application-wizard installation is retained as a provisional legacy workfl
 Note: this installation section is provisional while the package is being modernized.
 
 ### Examples
-Modern examples are in `examples/model_table_ols.e`, `examples/model_comparison.e`, and `examples/summary_table.e`. Older `tableSet*.e` examples are retained as legacy references.
+Modern examples are in `examples/model_table_ols.e`, `examples/model_comparison.e`, `examples/summary_table.e`, `examples/summary_statistics_dstatmt.e`, and `examples/export_formats.e`. Older `tableSet*.e` examples are retained as legacy references.
+
+### Further documentation
+- [docs/README.md](docs/README.md): documentation index, including a command reference for the modern API in `docs/api/`.
+- [docs/migration.md](docs/migration.md): mapping from the legacy `tableControl`/`tableSet...`/`outputTable` workflow to the modern `pt*` API.
 
 ## Authors
 *  Erica Clower - [Aptech Systems, Inc](www.aptech.com)

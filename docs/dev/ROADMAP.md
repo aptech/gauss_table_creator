@@ -209,40 +209,41 @@ supported for migration; nothing in the modern `pt*` API has been deprecated or 
 
 Replace or modernize:
 
-- [ ] `docs/tableset*.md`
+- [x] `docs/tableset*.md` (kept as legacy-only reference; `docs/README.md` now indexes them
+  separately from the modern `docs/api/` reference and points to `docs/migration.md`)
 
 ## Command Reference
 
 Add documentation for:
 
-- [ ] `ptTableFromMatrix`
-- [ ] `ptTableFrom`
-- [ ] `ptModelFrom`
-- [ ] `ptModelCompare`
-- [ ] `ptExport`
+- [x] `ptTableFromMatrix` (`docs/api/ptTableFromMatrix.md`)
+- [x] `ptTableFrom` (`docs/api/ptTableFrom.md`)
+- [x] `ptModelFrom` (`docs/api/ptModelFrom.md`)
+- [x] `ptModelCompare` (`docs/api/ptModelCompare.md`, includes `ptModelCompareWith`/`ptCompareOptions`)
+- [x] `ptExport` (`docs/api/ptExport.md`)
 
 ## Examples
 
 Add examples covering:
 
-- [ ] Summary statistics tables
-- [ ] Model comparison tables
-- [ ] Custom matrix tables
-- [ ] Markdown export
-- [ ] LaTeX export
-- [ ] HTML export
-- [ ] CSV export
-- [ ] XLSX export
+- [x] Summary statistics tables (`examples/summary_table.e` via `ptTableFromMatrix`; `examples/summary_statistics_dstatmt.e` via `ptFromDstatmt`)
+- [x] Model comparison tables (`examples/model_comparison.e`)
+- [x] Custom matrix tables (`examples/summary_table.e`)
+- [x] Markdown export (`examples/export_formats.e`)
+- [x] LaTeX export (`examples/export_formats.e`)
+- [x] HTML export (`examples/export_formats.e`)
+- [x] CSV export (`examples/export_formats.e`)
+- [x] XLSX export (`examples/export_formats.e`)
 
 ## Migration Guide
 
 Create:
 
 ```text
-tabout -> pubtable
+tableControl/tableSet... -> pubtable
 ```
 
-- [ ] migration documentation.
+- [x] migration documentation (`docs/migration.md`).
 
 ---
 
