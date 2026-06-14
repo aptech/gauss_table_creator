@@ -958,17 +958,33 @@ proc (1) = ptRenderLatex(struct ptTable tbl);
 endp;
 
 proc (1) = ptRenderText(struct ptTable tbl);
-    local arr, out, i;
+    local arr, out, i, j, n_rows, n_cols, widths, row, sep;
 
     arr = ptRenderArray(tbl);
-    out = "";
+    n_rows = rows(arr);
+    n_cols = cols(arr);
+    widths = ptColWidths(arr);
 
+    out = "";
     if tbl.title $/= "";
         out = tbl.title $+ "\n\n";
     endif;
 
-    for i(1, rows(arr), 1);
-        out = out $+ ptJoinRow(arr[i, .], "    ") $+ "\n";
+    for i(1, n_rows, 1);
+        row = ptBlankSA(1, n_cols);
+        row[1] = ptPadRight(arr[i, 1], widths[1]);
+        for j(2, n_cols, 1);
+            row[j] = ptPadLeft(arr[i, j], widths[j]);
+        endfor;
+        out = out $+ ptJoinRow(row, "  ") $+ "\n";
+
+        if i == 1;
+            sep = ptRepeatChar("-", widths[1]);
+            for j(2, n_cols, 1);
+                sep = sep $+ "  " $+ ptRepeatChar("-", widths[j]);
+            endfor;
+            out = out $+ sep $+ "\n";
+        endif;
     endfor;
 
     if tbl.notes[1] $/= "";
@@ -977,6 +993,36 @@ proc (1) = ptRenderText(struct ptTable tbl);
             out = out $+ tbl.notes[i] $+ "\n";
         endfor;
     endif;
+
+    retp(out);
+endp;
+
+proc (1) = ptColWidths(arr);
+    local widths, j;
+
+    widths = zeros(1, cols(arr));
+    for j(1, cols(arr), 1);
+        widths[j] = maxc(strlen(arr[., j]));
+    endfor;
+
+    retp(widths);
+endp;
+
+proc (1) = ptPadRight(s, width);
+    retp(sprintf("%-" $+ ntos(width) $+ "s", s));
+endp;
+
+proc (1) = ptPadLeft(s, width);
+    retp(sprintf("%" $+ ntos(width) $+ "s", s));
+endp;
+
+proc (1) = ptRepeatChar(ch, n);
+    local out, i;
+
+    out = "";
+    for i(1, n, 1);
+        out = out $+ ch;
+    endfor;
 
     retp(out);
 endp;

@@ -126,6 +126,11 @@ checkStringContains(cmpTbl2.notes[2], "Model A note.", "model-specific note pref
 checkStringContains(cmpTbl2.notes[3], "Model B note.", "second model note prefixed with model name");
 checkStringEqual(cmpTbl2.notes[4], "Comparison note.", "table-level comparison note appended last");
 
+local txtLines;
+txtLines = strsplit(ptRenderText(cmpTbl2), "\n");
+checkScalarEqual(strlen(txtLines[2]), strlen(txtLines[3]), "text rendering aligns header and data row widths");
+checkStringEqual(strtrim(strreplace(txtLines[3], "-", "")), "", "text rendering separator row contains only dashes and spaces");
+
 struct olsmtControl ctl;
 struct olsmtOut out;
 
