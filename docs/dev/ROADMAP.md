@@ -110,8 +110,8 @@ Evaluate support for:
 - [ ] `qfitOut` (not present in GAUSS 26 `src`; no action unless added upstream)
 - [ ] `ttestOut` (two-group comparison shape; would need a custom-table adapter, not the coefficient-model shape)
 - [x] `fglsOut`
-- [ ] `cmlmt` (optional add-on package; not yet evaluated)
-- [ ] `maxlikmt` (optional add-on package; not yet evaluated)
+- [x] `cmlmt` (optional add-on package; `src/pubtable_cmlmt.src`, requires `library cmlmt;`)
+- [x] `maxlikmt` (optional add-on package; `src/pubtable_maxlikmt.src`, requires `library maxlikmt;`)
 
 ## Design Constraint
 

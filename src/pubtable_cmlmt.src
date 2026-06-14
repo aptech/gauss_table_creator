@@ -1,0 +1,32 @@
+/*
+** pubtable_cmlmt.src
+**
+** Optional pubtable adapter for cmlmt (constrained maximum likelihood)
+** results.
+**
+** Requires `library cmlmt;` and `#include cmlmt.sdf` (which also brings
+** in `struct PV`) before this file, in addition to pubtable.sdf /
+** pubtable.src.
+*/
+
+proc (1) = ptModelFromCmlmt(name, struct cmlmtResults out);
+    local names, estimates, se, tstat, pval;
+    struct ptModel mdl;
+
+    names = pvGetParNames(out.par);
+    estimates = pvGetParVector(out.par);
+    se = real(sqrt(diag(out.covPar)));
+    tstat = estimates ./ se;
+    pval = 2 * cdfnc(abs(tstat));
+
+    mdl = ptModelCreate(name, estimates, se);
+    mdl = ptModelSetNames(mdl, names);
+    mdl = ptModelSetPValues(mdl, pval);
+    mdl = ptModelSetGOF(mdl, "N" $| "Function value", out.numObs | out.fct);
+
+    retp(mdl);
+endp;
+
+proc (1) = ptFromCmlmt(struct cmlmtResults out);
+    retp(ptModelTable(ptModelFromCmlmt("Constrained ML results", out)));
+endp;

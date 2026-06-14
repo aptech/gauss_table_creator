@@ -136,6 +136,11 @@ Current automatic adapters:
 - `dstatmtOut`
 - `fglsOut`
 
+Optional add-on package adapters (separate source files, not wired into `ptModelFrom`/`ptTableFrom` since the underlying packages may not be installed):
+
+- `src/pubtable_maxlikmt.src`: `ptModelFromMaxlikmt`/`ptFromMaxlikmt` for `struct maxlikmtResults`. Requires `library maxlikmt;` and `#include maxlikmt.sdf` before including this file.
+- `src/pubtable_cmlmt.src`: `ptModelFromCmlmt`/`ptFromCmlmt` for `struct cmlmtResults`. Requires `library cmlmt;` and `#include cmlmt.sdf` before including this file.
+
 `ptModelCompare` aligns models on the union of their term names (in order of first appearance) and the union of their GOF row names, so models with different regressors can be compared side by side; missing cells render blank.
 
 `ptFormat.statRows` controls which statistic rows render under each coefficient (`se`, `tstat`, `pvalue`, `ci`, settable via `ptModelSetStatRows`/`ptSetStatRows`; defaults to `"se"`). Confidence intervals require `ptModelSetCI` before requesting the `ci` row.

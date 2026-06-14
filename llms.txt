@@ -51,6 +51,11 @@ Current adapters:
 - `dstatmtOut`
 - `fglsOut`
 
+Optional add-on package adapters (separate files, not wired into `ptModelFrom`/`ptTableFrom`):
+
+- `src/pubtable_maxlikmt.src`: `ptModelFromMaxlikmt`/`ptFromMaxlikmt` for `maxlikmtResults` (requires `library maxlikmt;` + `#include maxlikmt.sdf`)
+- `src/pubtable_cmlmt.src`: `ptModelFromCmlmt`/`ptFromCmlmt` for `cmlmtResults` (requires `library cmlmt;` + `#include cmlmt.sdf`)
+
 Current exporters:
 
 - Markdown `.md`
