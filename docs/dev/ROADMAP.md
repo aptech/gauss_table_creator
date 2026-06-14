@@ -25,27 +25,27 @@ Design priorities:
 
 ## Validation
 
-* Harden `ptTable`, `ptModel`, and `ptFormat` validation.
-* Add dimension checks.
-* Add clearer error messages for malformed inputs.
-* Ensure invalid export options fail gracefully.
+- [x] Harden `ptTable`, `ptModel`, and `ptFormat` validation.
+- [x] Add dimension checks.
+- [x] Add clearer error messages for malformed inputs.
+- [x] Ensure invalid export options fail gracefully.
 
 ## Testing
 
 Expand `tests/test_pubtable.e` to cover:
 
-* Markdown export
-* LaTeX export
-* CSV export
-* Plain text export
-* RTF export
-* XLSX export
+- [x] Markdown export
+- [x] LaTeX export
+- [x] CSV export
+- [x] Plain text export
+- [x] RTF export
+- [x] XLSX export
 
 ## Documentation
 
-* Update README examples.
-* Ensure install/use instructions reference `pubtable`.
-* Remove remaining references to legacy `tabout` workflows.
+- [x] Update README examples.
+- [x] Ensure install/use instructions reference `pubtable`.
+- [x] Remove remaining references to legacy `tabout` workflows.
 
 ---
 
@@ -55,35 +55,40 @@ Expand `tests/test_pubtable.e` to cover:
 
 Enhance `ptModelCompare`:
 
-* Flexible term alignment across models.
-* Support models with different regressors.
-* Consistent handling of missing coefficients.
+- [x] Flexible term alignment across models.
+- [x] Support models with different regressors.
+- [x] Consistent handling of missing coefficients.
 
 ## Coefficient Presentation
 
 Add support for:
 
-* Coefficient maps / variable renaming
-* Custom term ordering
-* Optional confidence intervals
+- [x] Coefficient maps / variable renaming
+- [x] Custom term ordering
+- [x] Optional confidence intervals
 
 ## Statistics Rows
 
 Configurable display of:
 
-* Standard errors
-* t-statistics
-* p-values
-* Confidence intervals
+- [x] Standard errors
+- [x] t-statistics
+- [x] p-values
+- [x] Confidence intervals
 
 ## Model Metadata
 
 Support:
 
-* Goodness-of-fit row selection
-* GOF row ordering
-* Model-specific notes
-* Table-level notes
+- [x] Goodness-of-fit row selection
+- [x] GOF row ordering
+- [x] Model-specific notes
+- [x] Table-level notes
+
+## Rendering Quality
+
+- [x] Improve `ptRenderText` column alignment (computed column widths, left/right padding, dashed header separator)
+- [ ] Further polish for `ptRenderMarkdown` / `ptRenderLatex` / `ptRenderRtf` as needed
 
 ---
 
@@ -93,20 +98,20 @@ Support:
 
 Strengthen support for:
 
-* `olsmtOut`
-* `glmOut`
-* `gmmOut`
-* `dstatmtOut`
+- [x] `olsmtOut`
+- [x] `glmOut`
+- [ ] `gmmOut` (field names verified; real-execution test still pending due to `&meqn` callback complexity)
+- [x] `dstatmtOut`
 
 ## Additional Adapters
 
 Evaluate support for:
 
-* `qfitOut`
-* `ttestOut`
-* `fglsOut`
-* `cmlmt`
-* `maxlikmt`
+- [ ] `qfitOut` (not present in GAUSS 26 `src`; no action unless added upstream)
+- [ ] `ttestOut` (two-group comparison shape; would need a custom-table adapter, not the coefficient-model shape)
+- [x] `fglsOut`
+- [ ] `cmlmt` (optional add-on package; not yet evaluated)
+- [ ] `maxlikmt` (optional add-on package; not yet evaluated)
 
 ## Design Constraint
 
@@ -130,27 +135,27 @@ Avoid automatic reflection-style behavior.
 
 Add support for:
 
-* booktabs
-* caption
-* label
-* notes
-* alignment controls
+- [x] booktabs
+- [x] caption
+- [ ] label
+- [x] notes
+- [ ] alignment controls
 
 ## HTML
 
 Add HTML export as a bridge to:
 
-* Word workflows
-* Web reports
-* Documentation systems
+- [ ] Word workflows
+- [ ] Web reports
+- [ ] Documentation systems
 
 ## RTF
 
-Improve formatting beyond simple tab-separated rows.
+- [ ] Improve formatting beyond simple tab-separated rows.
 
 ## DOCX
 
-Defer until a maintainable GAUSS-native ZIP/XML implementation exists.
+- [ ] Defer until a maintainable GAUSS-native ZIP/XML implementation exists.
 
 ---
 
@@ -160,17 +165,17 @@ Defer until a maintainable GAUSS-native ZIP/XML implementation exists.
 
 Finalize names for:
 
-* setters
-* builders
-* renderers
-* exporters
+- [ ] setters
+- [ ] builders
+- [ ] renderers
+- [ ] exporters
 
 ## Options
 
 Evaluate:
 
-* `ptOptions`
-* extending `ptFormat`
+- [ ] `ptOptions`
+- [ ] extending `ptFormat`
 
 Use whichever produces the simplest API.
 
@@ -178,16 +183,16 @@ Use whichever produces the simplest API.
 
 Provide compatibility wrappers where practical for:
 
-* `tableSet...`
-* `outputTable`
+- [ ] `tableSet...`
+- [ ] `outputTable`
 
 ## Deprecation Policy
 
 Document:
 
-* Supported legacy APIs
-* Deprecated APIs
-* Removed APIs
+- [ ] Supported legacy APIs
+- [ ] Deprecated APIs
+- [ ] Removed APIs
 
 ---
 
@@ -197,30 +202,30 @@ Document:
 
 Replace or modernize:
 
-* `docs/tableset*.md`
+- [ ] `docs/tableset*.md`
 
 ## Command Reference
 
 Add documentation for:
 
-* `ptTableFromMatrix`
-* `ptTableFrom`
-* `ptModelFrom`
-* `ptModelCompare`
-* `ptExport`
+- [ ] `ptTableFromMatrix`
+- [ ] `ptTableFrom`
+- [ ] `ptModelFrom`
+- [ ] `ptModelCompare`
+- [ ] `ptExport`
 
 ## Examples
 
 Add examples covering:
 
-* Summary statistics tables
-* Model comparison tables
-* Custom matrix tables
-* Markdown export
-* LaTeX export
-* HTML export
-* CSV export
-* XLSX export
+- [ ] Summary statistics tables
+- [ ] Model comparison tables
+- [ ] Custom matrix tables
+- [ ] Markdown export
+- [ ] LaTeX export
+- [ ] HTML export
+- [ ] CSV export
+- [ ] XLSX export
 
 ## Migration Guide
 
@@ -230,7 +235,7 @@ Create:
 tabout -> pubtable
 ```
 
-migration documentation.
+- [ ] migration documentation.
 
 ---
 
@@ -240,47 +245,47 @@ migration documentation.
 
 Support:
 
-* Grouped headers
-* Spanning headers
+- [ ] Grouped headers
+- [ ] Spanning headers
 
 ## Multi-Equation Models
 
 Support:
 
-* Equation panels
-* Quantile-model panels
-* Multi-model panels
+- [ ] Equation panels
+- [ ] Quantile-model panels
+- [ ] Multi-model panels
 
 ## Cell Formatting
 
 Support:
 
-* Alignment controls
-* Number formatting
-* Cell-level styling
+- [ ] Alignment controls
+- [ ] Number formatting
+- [ ] Cell-level styling
 
 ## Significance Controls
 
 Support:
 
-* Custom significance symbols
-* Custom significance thresholds
+- [ ] Custom significance symbols
+- [ ] Custom significance thresholds
 
 ## Workflow Enhancements
 
 Support:
 
-* Multi-table export workflows
-* Batch reporting workflows
+- [ ] Multi-table export workflows
+- [ ] Batch reporting workflows
 
 ## Style Presets
 
 Provide optional presets:
 
-* journal
-* compact
-* plain
-* report
+- [ ] journal
+- [ ] compact
+- [ ] plain
+- [ ] report
 
 ---
 
@@ -288,8 +293,8 @@ Provide optional presets:
 
 Potential future integrations:
 
-* QARDL reporting helpers
-* TSMT reporting helpers
-* ARDL-family reporting adapters
-* Automatic model-summary generation
-* Publication-ready econometric reporting workflows
+- [ ] QARDL reporting helpers
+- [ ] TSMT reporting helpers
+- [ ] ARDL-family reporting adapters
+- [ ] Automatic model-summary generation
+- [ ] Publication-ready econometric reporting workflows
