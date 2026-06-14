@@ -65,7 +65,7 @@ Current exporters:
 - CSV `.csv`
 - plain text `.txt`
 - Excel `.xls` through GAUSS `SpreadsheetWrite`; `.xlsx` is provisional/where supported
-- Word-compatible RTF `.rtf`
+- Word-compatible RTF `.rtf` (real RTF table with grid borders and bold header row)
 - HTML `.html`/`.htm`
 
 True `.docx` is provisional/future work.

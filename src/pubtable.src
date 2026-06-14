@@ -1076,22 +1076,44 @@ proc (1) = ptRepeatChar(ch, n);
 endp;
 
 proc (1) = ptRenderRtf(struct ptTable tbl);
-    local arr, out, i;
+    local arr, out, i, j, n_rows, n_cols, widths, borders, cellx, cellText;
 
     arr = ptRenderArray(tbl);
+    n_rows = rows(arr);
+    n_cols = cols(arr);
+    widths = ptColWidths(arr);
+
     out = "{\\rtf1\\ansi\n";
 
     if tbl.title $/= "";
-        out = out $+ "\\b " $+ tbl.title $+ "\\b0\\par\n";
+        out = out $+ "{\\b " $+ ptEscapeRtf(tbl.title) $+ "}\\par\n";
     endif;
 
-    for i(1, rows(arr), 1);
-        out = out $+ ptJoinRow(arr[i, .], "\\tab ") $+ "\\par\n";
+    borders = "\\clbrdrt\\brdrs\\brdrw10\\clbrdrl\\brdrs\\brdrw10"
+        $+ "\\clbrdrb\\brdrs\\brdrw10\\clbrdrr\\brdrs\\brdrw10";
+
+    for i(1, n_rows, 1);
+        out = out $+ "\\trowd\\trgaph108\\trleft0\n";
+        cellx = 0;
+        for j(1, n_cols, 1);
+            cellx = cellx + (widths[j] * 120 + 200);
+            out = out $+ borders $+ "\\cellx" $+ ntos(cellx) $+ "\n";
+        endfor;
+
+        out = out $+ "\\pard\\intbl";
+        for j(1, n_cols, 1);
+            cellText = ptEscapeRtf(arr[i, j]);
+            if i == 1;
+                cellText = "\\b " $+ cellText $+ "\\b0";
+            endif;
+            out = out $+ " " $+ cellText $+ "\\cell";
+        endfor;
+        out = out $+ "\\row\n";
     endfor;
 
     if tbl.notes[1] $/= "";
         for i(1, rows(tbl.notes), 1);
-            out = out $+ tbl.notes[i] $+ "\\par\n";
+            out = out $+ "{\\i " $+ ptEscapeRtf(tbl.notes[i]) $+ "}\\par\n";
         endfor;
     endif;
 
@@ -1163,6 +1185,13 @@ proc (1) = ptEscapeLatex(s);
     s = strreplace(s, "%", "\\%");
     s = strreplace(s, "&", "\\&");
     s = strreplace(s, "#", "\\#");
+    retp(s);
+endp;
+
+proc (1) = ptEscapeRtf(s);
+    s = strreplace(s, "\\", "\\\\");
+    s = strreplace(s, "{", "\\{");
+    s = strreplace(s, "}", "\\}");
     retp(s);
 endp;
 

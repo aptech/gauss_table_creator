@@ -71,7 +71,7 @@ Initial exporters:
 - CSV: `.csv`
 - Plain text: `.txt`
 - Excel: `.xls` through GAUSS `SpreadsheetWrite`; `.xlsx` is attempted through the same route where supported by the local GAUSS/Excel stack
-- Word-compatible rich text: `.rtf`
+- Word-compatible rich text: `.rtf` (rendered as a real RTF table with borders and a bold header row, not just tab-separated text)
 - HTML: `.html`/`.htm`
 
 True `.docx` export is not part of the first version because it requires generating zipped Office Open XML. The practical Word path for now is `.rtf`/`.html`, with true `.docx` a candidate for a later exporter phase.

@@ -46,6 +46,11 @@ checkStringContains(ptRenderLatex(tbl), "\\caption{Demo\\_table}", "latex escape
 checkStringContains(ptRenderCsv(tbl), "Model 1", "csv header");
 checkStringContains(ptRenderText(tbl), "Demo_table", "text title");
 checkStringContains(ptRenderRtf(tbl), "{\\rtf1\\ansi", "rtf header");
+checkStringContains(ptRenderRtf(tbl), "\\trowd", "rtf table row");
+checkStringContains(ptRenderRtf(tbl), "\\cellx", "rtf table cell definition");
+checkStringContains(ptRenderRtf(tbl), "\\b Model 1\\b0\\cell", "rtf bold header cell");
+checkStringContains(ptRenderRtf(tbl), "1.235\\cell", "rtf data cell");
+checkStringEqual(ptEscapeRtf("a\\b{c}"), "a\\\\b\\{c\\}", "rtf escaping");
 
 checkStringContains(ptRenderHtml(tbl), "<caption>Demo_table</caption>", "html caption");
 checkStringContains(ptRenderHtml(tbl), "<th>Model 1</th>", "html column header");

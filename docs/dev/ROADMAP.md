@@ -153,7 +153,7 @@ Add HTML export as a bridge to:
 
 ## RTF
 
-- [ ] Improve formatting beyond simple tab-separated rows.
+- [x] Improve formatting beyond simple tab-separated rows (real RTF table with grid borders and bold header row via `\trowd`/`\cellx`/`\cell`/`\row`).
 
 ## DOCX
 
