@@ -16,6 +16,7 @@ struct ptTable {
     string array colNames;
     string array body;
     string array notes;
+    string array colGroups;
     struct ptFormat fmt;
 };
 
@@ -39,4 +40,5 @@ struct ptCompareOptions {
     string array mapFrom;
     string array mapTo;
     string array notes;
+    string array colGroups;
 };

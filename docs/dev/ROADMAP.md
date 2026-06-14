@@ -253,16 +253,25 @@ tableControl/tableSet... -> pubtable
 
 Support:
 
-- [ ] Grouped headers
-- [ ] Spanning headers
+- [x] Grouped headers
+- [x] Spanning headers
+
+Implemented via `ptTable.colGroups` / `ptSetColGroups(tbl, colGroups)`, one label per body column
+(blank for ungrouped columns). Contiguous equal labels form a span. Markdown/CSV/Text render a
+pseudo-span (label in the first column of the run, blanks elsewhere); LaTeX renders
+`\multicolumn`/`\cmidrule`; HTML renders `colspan`; RTF renders `\clmgf`/`\clmrg` cell merges.
 
 ## Multi-Equation Models
 
 Support:
 
-- [ ] Equation panels
-- [ ] Quantile-model panels
-- [ ] Multi-model panels
+- [x] Equation panels
+- [x] Quantile-model panels
+- [x] Multi-model panels
+
+Implemented via `ptCompareSetColGroups(opts, colGroups)` (one label per model, passed to
+`ptModelCompareWith`), which populates the comparison table's `colGroups` so the same
+spanning-header rendering groups comparison columns by equation, quantile, or panel name.
 
 ## Cell Formatting
 

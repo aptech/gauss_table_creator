@@ -216,6 +216,25 @@ checkStringEqual(fglsTbl.title, "FGLS results", "fgls struct dispatch");
 checkScalarEqual(rows(fglsTbl.body), 2 * rows(fglsOutput.beta_fgls) + 3, "fgls table row count includes statistic and GOF rows");
 checkStringEqual(fglsTbl.rowNames[1], "Constant", "fgls constant label normalized");
 
+struct ptTable grpTbl;
+grpTbl = ptTableFromMatrix(1.1~2.2~3.3~4.4, "x", "A" $| "B" $| "C" $| "D", "Group_table");
+grpTbl = ptSetColGroups(grpTbl, "G1" $| "G1" $| "G2" $| "G2");
+
+checkStringContains(ptRenderMarkdown(grpTbl), "G1", "markdown column group label");
+checkStringContains(ptRenderCsv(grpTbl), "G1", "csv column group label");
+checkStringContains(ptRenderText(grpTbl), "G1", "text column group label");
+checkStringContains(ptRenderLatex(grpTbl), "\\multicolumn{2}{c}{G1}", "latex spanning header");
+checkStringContains(ptRenderLatex(grpTbl), "\\cmidrule(lr){2-3}", "latex cmidrule under group");
+checkStringContains(ptRenderHtml(grpTbl), "<th colspan=\"2\">G1</th>", "html spanning header");
+checkStringContains(ptRenderRtf(grpTbl), "\\clmgf", "rtf merged cell start");
+checkStringContains(ptRenderRtf(grpTbl), "\\clmrg", "rtf merged cell continuation");
+
+cmpOpts = ptCompareSetColGroups(cmpOpts, "Set A" $| "Set B");
+cmpTbl2 = ptModelCompareWith(cmpModels, cmpOpts);
+checkStringEqual(cmpTbl2.colGroups[1], "Set A", "compare colGroups first model label");
+checkStringEqual(cmpTbl2.colGroups[2], "Set B", "compare colGroups second model label");
+checkStringContains(ptRenderMarkdown(cmpTbl2), "Set A", "compare markdown group header");
+
 export_base = "C:\\Users\\eclow\\Documents\\GitHub\\gauss_table_creator\\tests\\_pubtable_test";
 call deleteFile(export_base $+ ".md");
 call deleteFile(export_base $+ ".tex");

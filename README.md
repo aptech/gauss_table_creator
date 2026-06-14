@@ -59,8 +59,19 @@ For more control over model comparisons, build a `ptCompareOptions` struct with 
 - `ptCompareSetGofOrder(opts, gofOrder)` does the same for goodness-of-fit rows.
 - `ptCompareSetLabelMap(opts, mapFrom, mapTo)` renames term row labels for display (e.g. `"Constant"` to `"(Intercept)"`) without affecting how terms are matched across models.
 - `ptCompareSetNotes(opts, notes)` adds table-level notes. Per-model notes set with `ptModelSetNotes(model, notes)` are also included, prefixed with the model name when comparing more than one model.
+- `ptCompareSetColGroups(opts, colGroups)` adds a grouped/spanning header above the comparison columns, one label per model (e.g. to group columns by equation, quantile, or panel).
 
 `ptModelCompare(models)` is shorthand for `ptModelCompareWith(models, ptCompareOptionsCreate())`.
+
+### Grouped / spanning column headers
+
+`ptSetColGroups(tbl, colGroups)` sets one column-group label per body column (use `""` for ungrouped columns). Contiguous columns with the same label are rendered as a single spanning header:
+
+```gauss
+tbl = ptSetColGroups(tbl, "Sample A" $| "Sample A" $| "Sample B" $| "Sample B");
+```
+
+Markdown, CSV, and plain text render a pseudo-span (the label appears in the first column of the run, with blanks for the remaining spanned columns); LaTeX renders `\multicolumn{n}{c}{...}` with a `\cmidrule(lr){...}` underneath; HTML renders `<th colspan="n">`; RTF renders merged header cells via `\clmgf`/`\clmrg`.
 
 Initial automatic adapters:
 

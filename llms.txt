@@ -41,7 +41,9 @@ Current/provisional modern API:
 
 `statRows` controls which statistic rows render under each coefficient: `se`, `tstat`, `pvalue`, `ci` (default `"se"`). `ci` requires `ptModelSetCI` first.
 
-`ptCompareOptions` (built with `ptCompareOptionsCreate`, configured via `ptCompareSetTermOrder`, `ptCompareSetGofOrder`, `ptCompareSetLabelMap`, `ptCompareSetNotes`) lets `ptModelCompareWith` reorder term/GOF rows, rename term labels for display, and append table-level notes alongside per-model notes.
+`ptCompareOptions` (built with `ptCompareOptionsCreate`, configured via `ptCompareSetTermOrder`, `ptCompareSetGofOrder`, `ptCompareSetLabelMap`, `ptCompareSetNotes`, `ptCompareSetColGroups`) lets `ptModelCompareWith` reorder term/GOF rows, rename term labels for display, append table-level notes alongside per-model notes, and add grouped/spanning column headers over the comparison columns (e.g. for equation/quantile/multi-model panels).
+
+`ptSetColGroups(tbl, colGroups)` sets one column-group label per body column (blank for ungrouped columns); contiguous equal labels form a span, rendered as a pseudo-span in Markdown/CSV/Text, `\multicolumn`/`\cmidrule` in LaTeX, `colspan` in HTML, and `\clmgf`/`\clmrg` cell merges in RTF.
 
 `ptModelSetStars(model, cutoffs, symbols)` / `ptSetStars(tbl, cutoffs, symbols)` set custom significance cutoffs/symbols (default `0.10`/`0.05`/`0.01` -> `"+"`/`"*"`/`"**"`); `ptModelNoStars(model)` / `ptNoStars(tbl)` disable stars.
 

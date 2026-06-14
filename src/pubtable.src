@@ -101,6 +101,68 @@ proc (0) = ptCheckStatRows(statRows, caller);
     endfor;
 endp;
 
+proc (1) = ptHasColGroups(colGroups);
+    local i;
+
+    for i(1, rows(colGroups), 1);
+        if colGroups[i] $/= "";
+            retp(1);
+        endif;
+    endfor;
+
+    retp(0);
+endp;
+
+proc (2) = ptColGroupRuns(colGroups);
+    local labels, spans, n, i, cur, count, first;
+
+    n = rows(colGroups);
+    first = 1;
+
+    i = 1;
+    do while i <= n;
+        cur = colGroups[i];
+        count = 1;
+
+        if cur $/= "";
+            do while i + count <= n;
+                if colGroups[i + count] $/= cur;
+                    break;
+                endif;
+                count = count + 1;
+            endo;
+        endif;
+
+        if first;
+            labels = cur;
+            spans = count;
+            first = 0;
+        else;
+            labels = labels $| cur;
+            spans = spans | count;
+        endif;
+
+        i = i + count;
+    endo;
+
+    retp(labels, spans);
+endp;
+
+proc (1) = ptColGroupRow(struct ptTable tbl);
+    local labels, spans, row, col, g;
+
+    row = ptBlankSA(1, rows(tbl.colGroups) + 1);
+    { labels, spans } = ptColGroupRuns(tbl.colGroups);
+
+    col = 2;
+    for g(1, rows(labels), 1);
+        row[col] = labels[g];
+        col = col + spans[g];
+    endfor;
+
+    retp(row);
+endp;
+
 proc (0) = ptCheckColAlign(colAlign, caller);
     local i, c;
 
@@ -145,6 +207,11 @@ proc (0) = ptValidateTable(struct ptTable tbl, caller);
 
     if rows(tbl.colNames) /= cols(tbl.body);
         errorlog caller $+ ": colNames must have one row for each table body column.";
+        end;
+    endif;
+
+    if ptHasColGroups(tbl.colGroups) and rows(tbl.colGroups) /= cols(tbl.body);
+        errorlog caller $+ ": colGroups must have one entry for each table body column.";
         end;
     endif;
 endp;
@@ -315,6 +382,7 @@ proc (1) = ptTableCreate(title);
     tbl.colNames = "";
     tbl.body = "";
     tbl.notes = "";
+    tbl.colGroups = "";
     tbl.fmt = ptFormatCreate();
 
     retp(tbl);
@@ -339,6 +407,12 @@ endp;
 proc (1) = ptSetColNames(struct ptTable tbl, colNames);
     colNames = ptLabelsToCol(colNames, cols(tbl.body), "ptSetColNames", "colNames");
     tbl.colNames = colNames;
+    retp(tbl);
+endp;
+
+proc (1) = ptSetColGroups(struct ptTable tbl, colGroups);
+    colGroups = ptLabelsToCol(colGroups, cols(tbl.body), "ptSetColGroups", "colGroups");
+    tbl.colGroups = colGroups;
     retp(tbl);
 endp;
 
@@ -526,6 +600,7 @@ proc (1) = ptCompareOptionsCreate();
     opts.mapFrom = "";
     opts.mapTo = "";
     opts.notes = "";
+    opts.colGroups = "";
 
     retp(opts);
 endp;
@@ -549,6 +624,11 @@ endp;
 
 proc (1) = ptCompareSetNotes(struct ptCompareOptions opts, notes);
     opts.notes = notes;
+    retp(opts);
+endp;
+
+proc (1) = ptCompareSetColGroups(struct ptCompareOptions opts, colGroups);
+    opts.colGroups = colGroups;
     retp(opts);
 endp;
 
@@ -713,6 +793,14 @@ proc (1) = ptModelCompareWith(struct ptModel models, struct ptCompareOptions opt
     tbl.body = body;
     tbl.fmt = models[1].fmt;
     tbl.notes = notes;
+
+    if ptHasColGroups(opts.colGroups);
+        if rows(opts.colGroups) /= n_models;
+            errorlog "ptModelCompareWith: colGroups must have one entry for each model.";
+            end;
+        endif;
+        tbl.colGroups = opts.colGroups;
+    endif;
 
     retp(tbl);
 endp;
@@ -991,6 +1079,10 @@ proc (1) = ptRenderMarkdown(struct ptTable tbl);
         out = "# " $+ tbl.title $+ "\n\n";
     endif;
 
+    if ptHasColGroups(tbl.colGroups);
+        out = out $+ ptJoinRow(ptColGroupRow(tbl), "|") $+ "\n";
+    endif;
+
     out = out $+ ptJoinRow(arr[1, .], "|") $+ "\n";
     sep = ptBlankSA(1, cols(arr));
     for i(1, cols(arr), 1);
@@ -1017,6 +1109,10 @@ proc (1) = ptRenderCsv(struct ptTable tbl);
 
     arr = ptRenderArray(tbl);
     out = "";
+
+    if ptHasColGroups(tbl.colGroups);
+        out = out $+ ptJoinRow(ptColGroupRow(tbl), ",") $+ "\n";
+    endif;
 
     for i(1, rows(arr), 1);
         out = out $+ ptJoinRow(arr[i, .], ",") $+ "\n";
@@ -1048,6 +1144,11 @@ proc (1) = ptRenderLatex(struct ptTable tbl);
         out = out $+ "\\label{" $+ tbl.fmt.label $+ "}\n";
     endif;
     out = out $+ "\\begin{tabular}{" $+ spec $+ "}\n\\toprule\n";
+
+    if ptHasColGroups(tbl.colGroups);
+        out = out $+ ptLatexColGroupHeader(tbl);
+    endif;
+
     out = out $+ ptJoinLatexRow(arr[1, .]) $+ " \\\\\n\\midrule\n";
 
     for i(2, rows(arr), 1);
@@ -1068,7 +1169,7 @@ proc (1) = ptRenderLatex(struct ptTable tbl);
 endp;
 
 proc (1) = ptRenderText(struct ptTable tbl);
-    local arr, out, i, j, n_rows, n_cols, widths, row, sep;
+    local arr, out, i, j, n_rows, n_cols, widths, row, sep, grpRow, grpLine;
 
     arr = ptRenderArray(tbl);
     n_rows = rows(arr);
@@ -1078,6 +1179,15 @@ proc (1) = ptRenderText(struct ptTable tbl);
     out = "";
     if tbl.title $/= "";
         out = tbl.title $+ "\n\n";
+    endif;
+
+    if ptHasColGroups(tbl.colGroups);
+        grpRow = ptColGroupRow(tbl);
+        grpLine = ptPadRight(grpRow[1], widths[1]);
+        for j(2, n_cols, 1);
+            grpLine = grpLine $+ "  " $+ ptPadRight(grpRow[j], widths[j]);
+        endfor;
+        out = out $+ grpLine $+ "\n";
     endif;
 
     for i(1, n_rows, 1);
@@ -1154,6 +1264,10 @@ proc (1) = ptRenderRtf(struct ptTable tbl);
     borders = "\\clbrdrt\\brdrs\\brdrw10\\clbrdrl\\brdrs\\brdrw10"
         $+ "\\clbrdrb\\brdrs\\brdrw10\\clbrdrr\\brdrs\\brdrw10";
 
+    if ptHasColGroups(tbl.colGroups);
+        out = out $+ ptRtfColGroupRow(tbl, widths, borders);
+    endif;
+
     for i(1, n_rows, 1);
         out = out $+ "\\trowd\\trgaph108\\trleft0\n";
         cellx = 0;
@@ -1194,7 +1308,13 @@ proc (1) = ptRenderHtml(struct ptTable tbl);
         out = out $+ "<caption>" $+ ptEscapeHtml(tbl.title) $+ "</caption>\n";
     endif;
 
-    out = out $+ "<thead>\n<tr>";
+    out = out $+ "<thead>\n";
+
+    if ptHasColGroups(tbl.colGroups);
+        out = out $+ ptHtmlColGroupRow(tbl);
+    endif;
+
+    out = out $+ "<tr>";
     for j(1, n_cols, 1);
         out = out $+ "<th>" $+ ptEscapeHtml(arr[1, j]) $+ "</th>";
     endfor;
@@ -1241,6 +1361,41 @@ proc (1) = ptJoinLatexRow(row);
     retp(out);
 endp;
 
+proc (1) = ptLatexColGroupHeader(struct ptTable tbl);
+    local labels, spans, out, col, g;
+
+    { labels, spans } = ptColGroupRuns(tbl.colGroups);
+
+    out = "";
+    col = 2;
+    for g(1, rows(labels), 1);
+        if labels[g] $== "";
+            if spans[g] == 1;
+                out = out $+ "";
+            else;
+                out = out $+ "\\multicolumn{" $+ sprintf("%d", spans[g]) $+ "}{c}{}";
+            endif;
+        else;
+            out = out $+ "\\multicolumn{" $+ sprintf("%d", spans[g]) $+ "}{c}{" $+ ptEscapeLatex(labels[g]) $+ "}";
+        endif;
+
+        if g < rows(labels);
+            out = out $+ " & ";
+        endif;
+    endfor;
+    out = " & " $+ out $+ " \\\\\n";
+
+    col = 2;
+    for g(1, rows(labels), 1);
+        if labels[g] $/= "";
+            out = out $+ "\\cmidrule(lr){" $+ sprintf("%d", col) $+ "-" $+ sprintf("%d", col + spans[g] - 1) $+ "}\n";
+        endif;
+        col = col + spans[g];
+    endfor;
+
+    retp(out);
+endp;
+
 proc (1) = ptEscapeLatex(s);
     s = strreplace(s, "\\", "\\textbackslash{}");
     s = strreplace(s, "_", "\\_");
@@ -1255,6 +1410,73 @@ proc (1) = ptEscapeRtf(s);
     s = strreplace(s, "{", "\\{");
     s = strreplace(s, "}", "\\}");
     retp(s);
+endp;
+
+proc (1) = ptRtfColGroupRow(struct ptTable tbl, widths, borders);
+    local labels, spans, row, out, cellx, j, g, col, n_cols, mergeFlags, cellText;
+
+    { labels, spans } = ptColGroupRuns(tbl.colGroups);
+    row = ptColGroupRow(tbl);
+
+    n_cols = cols(widths);
+    mergeFlags = zeros(1, n_cols);
+
+    col = 2;
+    for g(1, rows(labels), 1);
+        if spans[g] > 1;
+            mergeFlags[col] = 1;
+            for j(col + 1, col + spans[g] - 1, 1);
+                mergeFlags[j] = 2;
+            endfor;
+        endif;
+        col = col + spans[g];
+    endfor;
+
+    out = "\\trowd\\trgaph108\\trleft0\n";
+    cellx = 0;
+    for j(1, n_cols, 1);
+        cellx = cellx + (widths[j] * 120 + 200);
+        if mergeFlags[j] == 1;
+            out = out $+ "\\clmgf";
+        elseif mergeFlags[j] == 2;
+            out = out $+ "\\clmrg";
+        endif;
+        out = out $+ borders $+ "\\cellx" $+ ntos(cellx) $+ "\n";
+    endfor;
+
+    out = out $+ "\\pard\\intbl";
+    for j(1, n_cols, 1);
+        cellText = ptEscapeRtf(row[j]);
+        if mergeFlags[j] == 2;
+            out = out $+ "\\cell";
+        else;
+            if cellText $/= "";
+                cellText = "\\b " $+ cellText $+ "\\b0";
+            endif;
+            out = out $+ " " $+ cellText $+ "\\cell";
+        endif;
+    endfor;
+    out = out $+ "\\row\n";
+
+    retp(out);
+endp;
+
+proc (1) = ptHtmlColGroupRow(struct ptTable tbl);
+    local labels, spans, out, g;
+
+    { labels, spans } = ptColGroupRuns(tbl.colGroups);
+
+    out = "<tr><th></th>";
+    for g(1, rows(labels), 1);
+        if spans[g] == 1;
+            out = out $+ "<th>" $+ ptEscapeHtml(labels[g]) $+ "</th>";
+        else;
+            out = out $+ "<th colspan=\"" $+ sprintf("%d", spans[g]) $+ "\">" $+ ptEscapeHtml(labels[g]) $+ "</th>";
+        endif;
+    endfor;
+    out = out $+ "</tr>\n";
+
+    retp(out);
 endp;
 
 proc (1) = ptEscapeHtml(s);

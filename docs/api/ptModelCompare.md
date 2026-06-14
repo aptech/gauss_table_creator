@@ -37,6 +37,7 @@ Build with `ptCompareOptionsCreate()` and configure with:
 | `ptCompareSetGofOrder(opts, gofOrder)` | Same ordering behavior for goodness-of-fit rows. |
 | `ptCompareSetLabelMap(opts, mapFrom, mapTo)` | Renames term row labels for display only; matching against model term names (for alignment) is unaffected. |
 | `ptCompareSetNotes(opts, notes)` | Appends table-level notes after the significance note and any per-model notes. |
+| `ptCompareSetColGroups(opts, colGroups)` | One column-group label per model; sets `tbl.colGroups` so the comparison columns render with grouped/spanning headers (e.g. to label equation, quantile, or panel groups). |
 
 ## Example
 ```gauss

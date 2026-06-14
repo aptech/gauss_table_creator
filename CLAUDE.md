@@ -123,6 +123,7 @@ Current implemented/provisional public API includes:
 - `ptModelFrom`
 - `ptModelSetCI`, `ptModelSetStatRows`, `ptSetStatRows`, `ptModelSetNotes`
 - `ptSetLabel`, `ptModelSetLabel`, `ptSetColAlign`, `ptModelSetColAlign`
+- `ptSetColGroups`, `ptCompareSetColGroups`
 - `ptSetStars`, `ptModelSetStars`, `ptNoStars`, `ptModelNoStars`
 - `ptApplyPreset`, `ptModelApplyPreset` (`"journal"`, `"compact"`, `"plain"`, `"report"`)
 - `ptModelTable`
@@ -156,6 +157,9 @@ Optional add-on package adapters (separate source files, not wired into `ptModel
 - `ptCompareSetGofOrder(opts, gofOrder)`: same ordering behavior for GOF rows.
 - `ptCompareSetLabelMap(opts, mapFrom, mapTo)`: renames term row labels for display only (matching against model term names is unaffected).
 - `ptCompareSetNotes(opts, notes)`: table-level notes appended after the significance note and any per-model notes (set via `ptModelSetNotes`, prefixed with the model name when comparing more than one model).
+- `ptCompareSetColGroups(opts, colGroups)`: one label per model (must match the number of models), used as grouped/spanning column headers above the comparison columns — e.g. to label equation, quantile, or panel groupings.
+
+`ptTable.colGroups` / `ptSetColGroups(tbl, colGroups)` set one column-group label per body column (blank for ungrouped columns); contiguous equal labels form a span. Markdown/CSV/Text render a pseudo-span (label in the first column of the run, blanks elsewhere); LaTeX renders `\multicolumn`/`\cmidrule`; HTML renders `colspan`; RTF renders `\clmgf`/`\clmrg` cell merges.
 
 `ptModelCompare(models)` is equivalent to `ptModelCompareWith(models, ptCompareOptionsCreate())`.
 
