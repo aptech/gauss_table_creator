@@ -694,8 +694,8 @@ proc (1) = ptModelFromGlm(name, struct glmOut out);
     struct ptModel mdl;
 
     names = out.modelInfo.xNames;
-    if out.constantFlag;
-        names = "Constant" $| names;
+    if out.constantFlag and names[1] $== "CONSTANT";
+        names[1] = "Constant";
     endif;
 
     mdl = ptModelCreate(name, out.coef.estimates, out.coef.se);

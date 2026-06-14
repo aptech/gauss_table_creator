@@ -137,6 +137,23 @@ tbl = ptTableFrom(out);
 checkStringEqual(tbl.title, "OLS results", "olsmt struct dispatch");
 checkScalarEqual(cols(tbl.body), 1, "olsmt table columns");
 
+struct glmOut glmOutput;
+glmOutput = glm(getGAUSSHome() $+ "examples/auto.dat", "mpg ~ weight + length", "normal");
+
+struct ptTable glmTbl;
+glmTbl = ptTableFrom(glmOutput);
+checkStringEqual(glmTbl.title, "GLM results", "glm struct dispatch");
+checkScalarEqual(rows(glmTbl.body), 2 * rows(glmOutput.coef.estimates) + 4, "glm table row count includes GOF rows");
+
+struct dstatmtOut dstatOutput;
+dstatOutput = dstatmt(getGAUSSHome() $+ "examples/auto.dat", "mpg + weight + length");
+
+struct ptTable dstatTbl;
+dstatTbl = ptFromDstatmt(dstatOutput);
+checkStringEqual(dstatTbl.title, "Summary statistics", "dstatmt struct dispatch");
+checkScalarEqual(rows(dstatTbl.body), rows(dstatOutput.vnames), "dstatmt table row count matches variable count");
+checkScalarEqual(cols(dstatTbl.body), 6, "dstatmt table column count");
+
 export_base = "C:\\Users\\eclow\\Documents\\GitHub\\gauss_table_creator\\tests\\_pubtable_test";
 call deleteFile(export_base $+ ".md");
 call deleteFile(export_base $+ ".tex");
