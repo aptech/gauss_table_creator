@@ -123,6 +123,8 @@ Current implemented/provisional public API includes:
 - `ptModelFrom`
 - `ptModelSetCI`, `ptModelSetStatRows`, `ptSetStatRows`, `ptModelSetNotes`
 - `ptSetLabel`, `ptModelSetLabel`, `ptSetColAlign`, `ptModelSetColAlign`
+- `ptSetStars`, `ptModelSetStars`, `ptNoStars`, `ptModelNoStars`
+- `ptApplyPreset`, `ptModelApplyPreset` (`"journal"`, `"compact"`, `"plain"`, `"report"`)
 - `ptModelTable`
 - `ptModelCompare`, `ptModelCompareWith`
 - `ptCompareOptionsCreate`, `ptCompareSetTermOrder`, `ptCompareSetGofOrder`, `ptCompareSetLabelMap`, `ptCompareSetNotes`

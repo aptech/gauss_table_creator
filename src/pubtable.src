@@ -13,6 +13,51 @@ proc (1) = ptFormatCreate();
     retp(fmt);
 endp;
 
+proc (1) = ptPresetFormat(struct ptFormat fmt, preset);
+    if preset $== "journal";
+        fmt.digits = 3;
+        fmt.stars = 1;
+        fmt.starCutoffs = 0.10 | 0.05 | 0.01;
+        fmt.starSymbols = "+" $| "*" $| "**";
+        fmt.statisticWrapper = "paren";
+        fmt.statRows = "se";
+    elseif preset $== "compact";
+        fmt.digits = 2;
+        fmt.stars = 1;
+        fmt.starCutoffs = 0.10 | 0.05 | 0.01;
+        fmt.starSymbols = "+" $| "*" $| "**";
+        fmt.statisticWrapper = "paren";
+        fmt.statRows = "se";
+    elseif preset $== "plain";
+        fmt.digits = 3;
+        fmt.stars = 0;
+        fmt.statisticWrapper = "none";
+        fmt.statRows = "se";
+    elseif preset $== "report";
+        fmt.digits = 3;
+        fmt.stars = 1;
+        fmt.starCutoffs = 0.10 | 0.05 | 0.01;
+        fmt.starSymbols = "+" $| "*" $| "**";
+        fmt.statisticWrapper = "paren";
+        fmt.statRows = "se" $| "pvalue";
+    else;
+        errorlog "ptPresetFormat: unsupported preset '" $+ preset $+ "'. Supported presets are journal, compact, plain, report.";
+        end;
+    endif;
+
+    retp(fmt);
+endp;
+
+proc (1) = ptApplyPreset(struct ptTable tbl, preset);
+    tbl.fmt = ptPresetFormat(tbl.fmt, preset);
+    retp(tbl);
+endp;
+
+proc (1) = ptModelApplyPreset(struct ptModel mdl, preset);
+    mdl.fmt = ptPresetFormat(mdl.fmt, preset);
+    retp(mdl);
+endp;
+
 proc (1) = ptBlankSA(n_rows, n_cols);
     local out, i, j;
 
@@ -414,6 +459,23 @@ endp;
 
 proc (1) = ptModelSetLabel(struct ptModel mdl, label);
     mdl.fmt.label = label;
+    retp(mdl);
+endp;
+
+proc (1) = ptModelSetStars(struct ptModel mdl, cutoffs, symbols);
+    if rows(cutoffs) /= rows(symbols);
+        errorlog "ptModelSetStars: cutoffs and symbols must have the same number of rows.";
+        end;
+    endif;
+
+    mdl.fmt.stars = 1;
+    mdl.fmt.starCutoffs = cutoffs;
+    mdl.fmt.starSymbols = symbols;
+    retp(mdl);
+endp;
+
+proc (1) = ptModelNoStars(struct ptModel mdl);
+    mdl.fmt.stars = 0;
     retp(mdl);
 endp;
 

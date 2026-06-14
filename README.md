@@ -40,6 +40,19 @@ Supported table sources in this first version:
 
 Coefficient tables show one statistic row per term (standard errors by default). Use `ptModelSetStatRows(model, statRows)` (or `ptSetStatRows(tbl, statRows)`) to choose any combination of `"se"`, `"tstat"`, `"pvalue"`, and `"ci"`; confidence intervals require calling `ptModelSetCI(model, ciLower, ciUpper)` first.
 
+Significance stars use the default cutoffs `0.10`/`0.05`/`0.01` with symbols `"+"`/`"*"`/`"**"`. Use `ptModelSetStars(model, cutoffs, symbols)` (or `ptSetStars(tbl, cutoffs, symbols)`) for custom thresholds/symbols, and `ptModelNoStars(model)` (or `ptNoStars(tbl)`) to disable stars entirely.
+
+### Style presets
+
+`ptModelApplyPreset(model, preset)` / `ptApplyPreset(tbl, preset)` apply a bundle of `ptFormat` settings in one call:
+
+- `"journal"`: 3 digits, default significance stars, one `"se"` row, parenthesized statistics (the default settings).
+- `"compact"`: 2 digits, default significance stars, one `"se"` row, parenthesized statistics.
+- `"plain"`: 3 digits, no significance stars, one `"se"` row, no statistic wrapper.
+- `"report"`: 3 digits, default significance stars, `"se"` and `"pvalue"` rows, parenthesized statistics.
+
+Apply a preset before calling `ptModelTable`/`ptExport` so the chosen formatting is used when the table is rendered.
+
 For more control over model comparisons, build a `ptCompareOptions` struct with `ptCompareOptionsCreate()` and pass it to `ptModelCompareWith(models, opts)`:
 
 - `ptCompareSetTermOrder(opts, termOrder)` puts the listed terms first, in that order, with any remaining terms appended afterward.

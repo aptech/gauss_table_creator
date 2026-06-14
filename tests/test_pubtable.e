@@ -73,6 +73,37 @@ tbl = ptModelTable(mdl);
 checkStringEqual(tbl.body[1, 1], "1.200**", "significance stars");
 checkStringEqual(tbl.body[2, 1], "(0.100)", "standard error wrapper");
 
+struct ptModel starMdl;
+starMdl = ptModelSetStars(mdl, 0.10 | 0.05, "a" $| "b");
+tbl = ptModelTable(starMdl);
+checkStringEqual(tbl.body[1, 1], "1.200b", "custom significance symbols");
+
+starMdl = ptModelNoStars(mdl);
+tbl = ptModelTable(starMdl);
+checkStringEqual(tbl.body[1, 1], "1.200", "no significance stars");
+
+struct ptModel presetMdl;
+presetMdl = ptModelApplyPreset(mdl, "compact");
+tbl = ptModelTable(presetMdl);
+checkStringEqual(tbl.body[1, 1], "1.20**", "compact preset reduces digits");
+
+presetMdl = ptModelApplyPreset(mdl, "plain");
+tbl = ptModelTable(presetMdl);
+checkStringEqual(tbl.body[1, 1], "1.200", "plain preset disables stars");
+checkStringEqual(tbl.body[2, 1], "0.100", "plain preset removes statistic wrapper");
+
+presetMdl = ptModelApplyPreset(mdl, "report");
+tbl = ptModelTable(presetMdl);
+checkScalarEqual(rows(tbl.body), 6, "report preset adds pvalue statistic row");
+
+struct ptTable presetTbl;
+presetTbl = ptApplyPreset(ptTableFromMatrix(1.23456, "x", "Model 1", "Demo_table"), "compact");
+checkScalarEqual(presetTbl.fmt.digits, 2, "ptApplyPreset compact sets digits to 2");
+
+presetTbl = ptApplyPreset(presetTbl, "plain");
+checkScalarEqual(presetTbl.fmt.stars, 0, "ptApplyPreset plain disables stars");
+checkStringEqual(presetTbl.fmt.statisticWrapper, "none", "ptApplyPreset plain removes statistic wrapper");
+
 struct ptModel mdl2;
 mdl2 = ptModelCreate("Model2", 0.8 | 0.5, 0.05 | 0.3);
 mdl2 = ptModelSetNames(mdl2, "Constant" $| "z");

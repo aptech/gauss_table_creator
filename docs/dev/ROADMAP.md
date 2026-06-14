@@ -276,8 +276,8 @@ Support:
 
 Support:
 
-- [ ] Custom significance symbols
-- [ ] Custom significance thresholds
+- [x] Custom significance symbols (`ptSetStars`/`ptModelSetStars`, `ptNoStars`/`ptModelNoStars`)
+- [x] Custom significance thresholds (`ptSetStars`/`ptModelSetStars`)
 
 ## Workflow Enhancements
 
@@ -290,10 +290,13 @@ Support:
 
 Provide optional presets:
 
-- [ ] journal
-- [ ] compact
-- [ ] plain
-- [ ] report
+- [x] journal
+- [x] compact
+- [x] plain
+- [x] report
+
+Implemented via `ptApplyPreset(tbl, preset)` / `ptModelApplyPreset(mdl, preset)`, which set
+`ptFormat.digits`, `stars`/`starCutoffs`/`starSymbols`, `statRows`, and `statisticWrapper` together.
 
 ---
 
