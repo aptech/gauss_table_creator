@@ -1,0 +1,84 @@
+/*
+** pubtable_tsmt.src
+**
+** Optional pubtable adapters for tsmt (Time Series MT) results:
+** - arimamtOut (arimaFit)
+** - tsPanelEstimationOut (tspanel / tsPooledOLS / tsFixedEffects /
+**   tsBetween / tsRandomEffects)
+**
+** Requires `library tsmt;` and `#include tsmt.sdf` before this file,
+** in addition to pubtable.sdf / pubtable.src.
+*/
+
+proc (1) = ptModelFromArimamt(name, struct arimamtOut out);
+    local names, se, tstat, pval, p, q;
+    struct ptModel mdl;
+
+    p = out.p;
+    q = out.q;
+
+    names = "Constant";
+    if q > 0;
+        names = ("MA" $+ sprintf("%d", seqa(1, 1, q))) $| names;
+    endif;
+    if p > 0;
+        names = ("AR" $+ sprintf("%d", seqa(1, 1, p))) $| names;
+    endif;
+
+    se = real(sqrt(diag(out.vcb)));
+    tstat = out.b ./ se;
+    pval = 2 * cdfnc(abs(tstat));
+
+    mdl = ptModelCreate(name, out.b, se);
+    mdl = ptModelSetNames(mdl, names);
+    mdl = ptModelSetPValues(mdl, pval);
+    mdl = ptModelSetGOF(mdl, "Log-likelihood" $| "AIC" $| "SBC", out.ll | out.aic | out.sbc);
+
+    retp(mdl);
+endp;
+
+proc (1) = ptFromArimamt(struct arimamtOut out);
+    retp(ptModelTable(ptModelFromArimamt("ARIMA results", out)));
+endp;
+
+proc (1) = ptModelFromTsPanel(name, struct tsPanelEstimationOut out);
+    local names, k;
+    struct ptModel mdl;
+
+    k = rows(out.coef);
+
+    if out.hasconstant;
+        if k > 1;
+            names = "Constant" $| ("X" $+ sprintf("%d", seqa(1, 1, k - 1)));
+        else;
+            names = "Constant";
+        endif;
+    else;
+        names = "X" $+ sprintf("%d", seqa(1, 1, k));
+    endif;
+
+    mdl = ptModelCreate(name, out.coef, out.std_error);
+    mdl = ptModelSetNames(mdl, names);
+    mdl = ptModelSetPValues(mdl, out.pvt);
+    mdl = ptModelSetGOF(mdl, "N" $| "R-squared" $| "Adj R-squared", out.obs | out.r2 | out.adjr2);
+
+    retp(mdl);
+endp;
+
+proc (1) = ptFromTsPanel(struct tsPanelEstimationOut out);
+    local title;
+
+    if out.method $== "ols";
+        title = "Pooled OLS results";
+    elseif out.method $== "fe";
+        title = "Fixed effects results";
+    elseif out.method $== "between";
+        title = "Between results";
+    elseif out.method $== "re";
+        title = "Random effects results";
+    else;
+        title = "Panel results";
+    endif;
+
+    retp(ptModelTable(ptModelFromTsPanel(title, out)));
+endp;

@@ -1,0 +1,33 @@
+/*
+** pubtable_optmt.src
+**
+** Optional pubtable adapter for optmt (general optimization) results.
+**
+** struct optmtResults has no covariance matrix, so its parameters
+** cannot populate a standard ptModel estimate/SE table. Instead,
+** ptTableFromOptmt builds a simple parameter/estimate/gradient table
+** with the function value and return code reported as table notes.
+**
+** Requires `library optmt;` and `#include optmt.sdf` (which also
+** brings in `struct PV`) before this file, in addition to
+** pubtable.sdf / pubtable.src.
+*/
+
+proc (1) = ptTableFromOptmt(struct optmtResults out);
+    local names, estimates, gradient;
+    struct ptTable tbl;
+
+    names = pvGetParNames(out.par);
+    estimates = pvGetParVector(out.par);
+
+    gradient = out.gradient;
+    if rows(gradient) /= rows(estimates) or cols(gradient) /= 1;
+        gradient = miss(zeros(rows(estimates), 1), 0);
+    endif;
+
+    tbl = ptTableFromMatrix(estimates ~ gradient, names, "Estimate" $| "Gradient", "Optimization results");
+    tbl.notes = "Function value: " $+ sprintf("%g", out.fct)
+        $+ ", Return code: " $+ sprintf("%d", out.retcode);
+
+    retp(tbl);
+endp;

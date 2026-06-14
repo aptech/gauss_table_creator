@@ -140,6 +140,8 @@ Optional add-on package adapters (separate source files, not wired into `ptModel
 
 - `src/pubtable_maxlikmt.src`: `ptModelFromMaxlikmt`/`ptFromMaxlikmt` for `struct maxlikmtResults`. Requires `library maxlikmt;` and `#include maxlikmt.sdf` before including this file.
 - `src/pubtable_cmlmt.src`: `ptModelFromCmlmt`/`ptFromCmlmt` for `struct cmlmtResults`. Requires `library cmlmt;` and `#include cmlmt.sdf` before including this file.
+- `src/pubtable_tsmt.src`: `ptModelFromArimamt`/`ptFromArimamt` for `struct arimamtOut`, and `ptModelFromTsPanel`/`ptFromTsPanel` for `struct tsPanelEstimationOut`. Requires `library tsmt;` and `#include tsmt.sdf` before including this file; the tsPanel adapters additionally require `#include tspanel.src` (from the tsmt package source) since `tspanel`/`tsFixedEffects`/etc. are not part of the compiled tsmt library.
+- `src/pubtable_optmt.src`: `ptTableFromOptmt` for `struct optmtResults`, returning a parameter/estimate/gradient `ptTable` (no SE/p-value row, since `optmtResults` has no covariance matrix). Requires `library optmt;` and `#include optmt.sdf` before including this file.
 
 `ptModelCompare` aligns models on the union of their term names (in order of first appearance) and the union of their GOF row names, so models with different regressors can be compared side by side; missing cells render blank.
 

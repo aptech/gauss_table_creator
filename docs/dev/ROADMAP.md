@@ -112,6 +112,8 @@ Evaluate support for:
 - [x] `fglsOut`
 - [x] `cmlmt` (optional add-on package; `src/pubtable_cmlmt.src`, requires `library cmlmt;`)
 - [x] `maxlikmt` (optional add-on package; `src/pubtable_maxlikmt.src`, requires `library maxlikmt;`)
+- [x] `tsmt` (optional add-on package; `src/pubtable_tsmt.src`, covers `arimamtOut` and `tsPanelEstimationOut`; other tsmt result structs such as `varmamtOut`, `lsdvmtOut`, `switchmtOut` not yet covered)
+- [x] `optmt` (optional add-on package; `src/pubtable_optmt.src`, `ptTableFromOptmt` builds a parameter/estimate/gradient table since `optmtResults` has no covariance matrix for SE)
 
 ## Design Constraint
 

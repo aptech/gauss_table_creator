@@ -61,6 +61,8 @@ Optional add-on package adapters (not wired into `ptModelFrom`/`ptTableFrom`, si
 
 - `maxlikmtResults`: `ptModelFromMaxlikmt`/`ptFromMaxlikmt` in `src/pubtable_maxlikmt.src`. Requires `library maxlikmt;` and `#include maxlikmt.sdf` before including this file.
 - `cmlmtResults`: `ptModelFromCmlmt`/`ptFromCmlmt` in `src/pubtable_cmlmt.src`. Requires `library cmlmt;` and `#include cmlmt.sdf` before including this file.
+- `arimamtOut` and `tsPanelEstimationOut`: `ptModelFromArimamt`/`ptFromArimamt` and `ptModelFromTsPanel`/`ptFromTsPanel` in `src/pubtable_tsmt.src`. Requires `library tsmt;` and `#include tsmt.sdf` before including this file; `tsPanelEstimationOut` adapters also require `#include tspanel.src` from the tsmt package.
+- `optmtResults`: `ptTableFromOptmt` in `src/pubtable_optmt.src` builds a parameter/estimate/gradient table (no standard errors, since `optmtResults` has no covariance matrix). Requires `library optmt;` and `#include optmt.sdf` before including this file.
 
 Initial exporters:
 
