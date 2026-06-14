@@ -167,34 +167,39 @@ Add HTML export as a bridge to:
 
 Finalize names for:
 
-- [ ] setters
-- [ ] builders
-- [ ] renderers
-- [ ] exporters
+- [x] setters (`ptSet<X>` / `ptModelSet<X>`, consistent across `pubtable.src`)
+- [x] builders (`ptTableCreate`, `ptModelCreate`, `ptTableFromMatrix`, `ptCompareOptionsCreate`)
+- [x] renderers (`ptRenderMarkdown`/`ptRenderLatex`/`ptRenderCsv`/`ptRenderText`/`ptRenderRtf`/`ptRenderHtml`)
+- [x] exporters (`ptExport` dispatches on file extension to the renderers above)
 
 ## Options
 
 Evaluate:
 
-- [ ] `ptOptions`
-- [ ] extending `ptFormat`
+- [x] `ptOptions`
+- [x] extending `ptFormat`
 
-Use whichever produces the simplest API.
+Decision: extend `ptFormat` for per-table/per-model formatting (digits, stars, statRows, label, colAlign), and use a
+separate `ptCompareOptions` struct for comparison-specific configuration (term/GOF order, label map, notes). Both
+patterns are documented and in active use.
 
 ## Legacy Compatibility
 
 Provide compatibility wrappers where practical for:
 
-- [ ] `tableSet...`
-- [ ] `outputTable`
+- [x] `tableSet...` (retained in `src/pubtable_legacy_setters.src`)
+- [x] `outputTable` (retained in `src/pubtable_legacy_output.src`)
 
 ## Deprecation Policy
 
 Document:
 
-- [ ] Supported legacy APIs
-- [ ] Deprecated APIs
-- [ ] Removed APIs
+- [x] Supported legacy APIs
+- [x] Deprecated APIs
+- [x] Removed APIs
+
+Status: the legacy `tableControl`/`outputTable`/`tableSet...` API in `src/pubtable_legacy*.src` is fully retained and
+supported for migration; nothing in the modern `pt*` API has been deprecated or removed.
 
 ---
 
