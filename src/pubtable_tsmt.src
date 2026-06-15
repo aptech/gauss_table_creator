@@ -5,6 +5,12 @@
 ** - arimamtOut (arimaFit)
 ** - tsPanelEstimationOut (tspanel / tsPooledOLS / tsFixedEffects /
 **   tsBetween / tsRandomEffects)
+** - automtOut (autoregFit)
+** - varmamtOut (varmaFit)
+** - lsdvmtOut (lsdvFit)
+** - switchmtOut (switchFit)
+** - garchEstimation (garchFit)
+** - tscsmtOut (tscsFit)
 **
 ** Requires `library tsmt;` and `#include tsmt.sdf` before this file,
 ** in addition to pubtable.sdf / pubtable.src.
@@ -81,4 +87,196 @@ proc (1) = ptFromTsPanel(struct tsPanelEstimationOut out);
     endif;
 
     retp(ptModelTable(ptModelFromTsPanel(title, out)));
+endp;
+
+/*
+** automtOut (autoregFit): regression coefficients (coefs/vcb) followed by
+** autoregressive lag coefficients (phi/vcphi). Row names are generic since
+** automtOut does not carry the original variable names.
+*/
+proc (1) = ptModelFromAutomt(name, struct automtOut out);
+    local k, p, names, estimates, se, pval;
+    struct ptModel mdl;
+
+    k = rows(out.coefs);
+    p = rows(out.phi);
+
+    names = ("X" $+ sprintf("%d", seqa(1, 1, k))) $| ("AR" $+ sprintf("%d", seqa(1, 1, p)));
+    estimates = out.coefs | out.phi;
+    se = sqrt(diag(out.vcb)) | sqrt(diag(out.vcphi));
+    pval = 2 * cdfnc(abs(estimates ./ se));
+
+    mdl = ptModelCreate(name, estimates, se);
+    mdl = ptModelSetNames(mdl, names);
+    mdl = ptModelSetPValues(mdl, pval);
+    mdl = ptModelSetGOF(mdl, "N" $| "R-squared" $| "Sigma2" $| "-2*LogL", out.tobs | out.rsq | out.sigsq | out.chisq);
+
+    retp(mdl);
+endp;
+
+proc (1) = ptFromAutomt(struct automtOut out);
+    retp(ptModelTable(ptModelFromAutomt("Autoregression results", out)));
+endp;
+
+/*
+** varmamtOut (varmaFit): parameter vector / covariance follow the same
+** struct PV pattern as cmlmtResults / maxlikmtResults.
+*/
+proc (1) = ptModelFromVarmamt(name, struct varmamtOut out);
+    local names, estimates, se, pval;
+    struct ptModel mdl;
+
+    names = pvGetParNames(out.par);
+    estimates = pvGetParVector(out.par);
+    se = real(sqrt(diag(out.covpar)));
+    pval = 2 * cdfnc(abs(estimates ./ se));
+
+    mdl = ptModelCreate(name, estimates, se);
+    mdl = ptModelSetNames(mdl, names);
+    mdl = ptModelSetPValues(mdl, pval);
+    mdl = ptModelSetGOF(mdl, "AIC" $| "BIC", out.aic | out.bic);
+
+    retp(mdl);
+endp;
+
+proc (1) = ptFromVarmamt(struct varmamtOut out);
+    retp(ptModelTable(ptModelFromVarmamt("VARMA results", out)));
+endp;
+
+/*
+** lsdvmtOut (lsdvFit): autoregressive coefficients (autoCoefficients/
+** autoStderrs) followed by regression coefficients (regCoefficients/
+** regStderrs). Row names are generic since lsdvmtOut does not carry the
+** original variable names.
+*/
+proc (1) = ptModelFromLsdvmt(name, struct lsdvmtOut out);
+    local p, k, names, estimates, se, pval;
+    struct ptModel mdl;
+
+    p = rows(out.autoCoefficients);
+    k = rows(out.regCoefficients);
+
+    names = ("AR" $+ sprintf("%d", seqa(1, 1, p))) $| ("X" $+ sprintf("%d", seqa(1, 1, k)));
+    estimates = out.autoCoefficients | out.regCoefficients;
+    se = out.autoStderrs | out.regStderrs;
+    pval = 2 * cdfnc(abs(estimates ./ se));
+
+    mdl = ptModelCreate(name, estimates, se);
+    mdl = ptModelSetNames(mdl, names);
+    mdl = ptModelSetPValues(mdl, pval);
+    mdl = ptModelSetGOF(mdl, "N" $| "SS residual" $| "SS total", out.numObservations | out.SSresidual | out.SSTotal);
+
+    retp(mdl);
+endp;
+
+proc (1) = ptFromLsdvmt(struct lsdvmtOut out);
+    retp(ptModelTable(ptModelFromLsdvmt("LSDV results", out)));
+endp;
+
+/*
+** switchmtOut (switchFit): parameter vector / covariance follow the same
+** struct PV pattern as cmlmtResults / maxlikmtResults.
+*/
+proc (1) = ptModelFromSwitchmt(name, struct switchmtOut out);
+    local names, estimates, se, pval;
+    struct ptModel mdl;
+
+    names = pvGetParNames(out.par);
+    estimates = pvGetParVector(out.par);
+    se = real(sqrt(diag(out.covPar)));
+    pval = 2 * cdfnc(abs(estimates ./ se));
+
+    mdl = ptModelCreate(name, estimates, se);
+    mdl = ptModelSetNames(mdl, names);
+    mdl = ptModelSetPValues(mdl, pval);
+    mdl = ptModelSetGOF(mdl, "Log-likelihood", out.logl);
+
+    retp(mdl);
+endp;
+
+proc (1) = ptFromSwitchmt(struct switchmtOut out);
+    retp(ptModelTable(ptModelFromSwitchmt("Markov-switching results", out)));
+endp;
+
+/*
+** garchEstimation (garchFit): parameter vector / covariance follow the same
+** struct PV pattern as cmlmtResults / maxlikmtResults. SE comes from
+** out.moment (set to the parameter covariance when garchControl.covType
+** requests ML/QML standard errors).
+*/
+proc (1) = ptModelFromGarchmt(name, struct garchEstimation out);
+    local names, estimates, se, pval;
+    struct ptModel mdl;
+
+    names = pvGetParNames(out.par);
+    estimates = pvGetParVector(out.par);
+    se = real(sqrt(diag(out.moment)));
+    pval = 2 * cdfnc(abs(estimates ./ se));
+
+    mdl = ptModelCreate(name, estimates, se);
+    mdl = ptModelSetNames(mdl, names);
+    mdl = ptModelSetPValues(mdl, pval);
+    mdl = ptModelSetGOF(mdl, "N" $| "AIC" $| "BIC" $| "Function value", out.numObs | out.aic | out.bic | out.fct);
+
+    retp(mdl);
+endp;
+
+proc (1) = ptFromGarchmt(struct garchEstimation out);
+    retp(ptModelTable(ptModelFromGarchmt("GARCH results", out)));
+endp;
+
+/*
+** tscsmtOut (tscsFit): compares the within / dummy-variable (fixed-effects)
+** estimator (bdv/vcdv, no constant) against the error-components (random-
+** effects GLS) estimator (bec/vcec, includes a constant). Row names are
+** generic since tscsmtOut does not carry the original variable names; the
+** comparison aligns "Constant" (error-components only) against the shared
+** "x1".."xk" terms.
+*/
+proc (1) = ptModelFromTscsmtDV(name, struct tscsmtOut out);
+    local k, names, estimates, se, pval;
+    struct ptModel mdl;
+
+    k = rows(out.bdv);
+    names = "x" $+ sprintf("%d", seqa(1, 1, k));
+    estimates = out.bdv;
+    se = sqrt(diag(out.vcdv));
+    pval = 2 * cdfnc(abs(estimates ./ se));
+
+    mdl = ptModelCreate(name, estimates, se);
+    mdl = ptModelSetNames(mdl, names);
+    mdl = ptModelSetPValues(mdl, pval);
+
+    retp(mdl);
+endp;
+
+proc (1) = ptModelFromTscsmtEC(name, struct tscsmtOut out);
+    local k, names, estimates, se, pval;
+    struct ptModel mdl;
+
+    k = rows(out.bec) - 1;
+    names = "Constant" $| ("x" $+ sprintf("%d", seqa(1, 1, k)));
+    estimates = out.bec;
+    se = sqrt(diag(out.vcec));
+    pval = 2 * cdfnc(abs(estimates ./ se));
+
+    mdl = ptModelCreate(name, estimates, se);
+    mdl = ptModelSetNames(mdl, names);
+    mdl = ptModelSetPValues(mdl, pval);
+
+    retp(mdl);
+endp;
+
+proc (1) = ptFromTscsmt(struct tscsmtOut out);
+    struct ptModel models;
+    struct ptTable tbl;
+
+    models = reshape(ptModelFromTscsmtDV("Within (FE)", out), 2, 1);
+    models[2] = ptModelFromTscsmtEC("Error components (RE)", out);
+
+    tbl = ptModelCompare(models);
+    tbl = ptSetTitle(tbl, "Panel results");
+    tbl.stubName = "Term";
+
+    retp(tbl);
 endp;

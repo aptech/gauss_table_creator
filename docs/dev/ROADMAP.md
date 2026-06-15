@@ -112,7 +112,7 @@ Evaluate support for:
 - [x] `fglsOut`
 - [x] `cmlmt` (optional add-on package; `src/pubtable_cmlmt.src`, requires `library cmlmt;`)
 - [x] `maxlikmt` (optional add-on package; `src/pubtable_maxlikmt.src`, requires `library maxlikmt;`)
-- [x] `tsmt` (optional add-on package; `src/pubtable_tsmt.src`, covers `arimamtOut` and `tsPanelEstimationOut`; other tsmt result structs such as `varmamtOut`, `lsdvmtOut`, `switchmtOut` not yet covered)
+- [x] `tsmt` (optional add-on package; `src/pubtable_tsmt.src`, covers `arimamtOut`, `tsPanelEstimationOut`, `automtOut`, `varmamtOut`, `lsdvmtOut`, `switchmtOut`, `garchEstimation`, and `tscsmtOut`; `sbOut`/`TAROut` structural-break/threshold structs and the `tspanelOut` wrapper are not covered)
 - [x] `optmt` (optional add-on package; `src/pubtable_optmt.src`, `ptTableFromOptmt` builds a parameter/estimate/gradient table since `optmtResults` has no covariance matrix for SE)
 
 ## Design Constraint
@@ -337,10 +337,18 @@ Implemented via `ptApplyPreset(tbl, preset)` / `ptModelApplyPreset(mdl, preset)`
 Potential future integrations:
 
 - [x] QARDL reporting helpers
-- [ ] TSMT reporting helpers
+- [x] TSMT reporting helpers
 - [x] ARDL-family reporting adapters
 - [ ] Automatic model-summary generation
 - [ ] Publication-ready econometric reporting workflows
+
+TSMT reporting helpers implemented in `src/pubtable_tsmt.src`: `ptModelFromAutomt`/`ptFromAutomt`
+(`automtOut`), `ptModelFromVarmamt`/`ptFromVarmamt` (`varmamtOut`), `ptModelFromLsdvmt`/
+`ptFromLsdvmt` (`lsdvmtOut`), `ptModelFromSwitchmt`/`ptFromSwitchmt` (`switchmtOut`),
+`ptModelFromGarchmt`/`ptFromGarchmt` (`garchEstimation`), and `ptFromTscsmt` (`tscsmtOut`,
+comparing within/fixed-effects vs. error-components estimates), alongside the existing
+`arimamtOut`/`tsPanelEstimationOut` adapters. `sbOut`/`TAROut` (structural break / threshold AR)
+and the `tspanelOut` wrapper struct are not covered.
 
 Implemented via `src/pubtable_qardl.src` (optional add-on package adapter, requires `library qardl;`
 and `#include qardl.sdf`): `ptModelFromArdl`/`ptFromArdl` (`ardlOut`), `ptModelFromArdlECM`/
