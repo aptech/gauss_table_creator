@@ -49,6 +49,8 @@ Current/provisional modern API:
 
 `ptExportAll(tables, fname)` writes an array of `ptTable` structs to one file, dispatching on extension like `ptExport`: text-based formats (Markdown/CSV/Text/HTML) concatenate each table's rendered output, RTF merges them into a single document, and XLS/XLSX write each table to its own sheet.
 
+`ptExportAllFormats(tables, basename, exts)` batch-exports the same `ptTable` array to multiple formats in one call, writing `basename + "." + ext` via `ptExportAll` for each extension in `exts` (e.g. `"md" $| "tex" $| "html"`). Returns `0` if every format succeeded, otherwise the return code of the first failed format (remaining formats are still attempted).
+
 `ptSetColFormat(tbl, colDigits)` reformats already-rendered numeric cells column by column to a chosen decimal-digit count (one entry per body column, `""` leaves a column unchanged); it re-parses each cell with `strtof` and reapplies `ptFormatNumber`, so it works on plain numeric cells but not cells already wrapped with significance stars or statistic parentheses.
 
 `ptSetCellStyle(tbl, row, col, style)` marks a body cell (1-based) with `"bold"`, `"italic"`, `"bold italic"`, or `""`, stored in `ptTable.cellStyle`. Markdown, LaTeX, HTML, and RTF renderers apply the styling; CSV and plain text renderers ignore it.

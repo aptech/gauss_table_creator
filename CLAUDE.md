@@ -130,7 +130,7 @@ Current implemented/provisional public API includes:
 - `ptModelTable`
 - `ptModelCompare`, `ptModelCompareWith`
 - `ptCompareOptionsCreate`, `ptCompareSetTermOrder`, `ptCompareSetGofOrder`, `ptCompareSetLabelMap`, `ptCompareSetNotes`
-- `ptExport`, `ptExportAll`
+- `ptExport`, `ptExportAll`, `ptExportAllFormats`
 - `ptRenderMarkdown`, `ptRenderLatex`, `ptRenderCsv`, `ptRenderText`, `ptRenderRtf`, `ptRenderHtml`
 
 Current automatic adapters:
@@ -166,6 +166,8 @@ Optional add-on package adapters (separate source files, not wired into `ptModel
 `ptFormat.colAlign` / `ptSetColAlign`/`ptModelSetColAlign` (one `l`/`c`/`r` per column including the stub) now controls alignment in every renderer: Markdown emits a matching `:---`/`:---:`/`---:` alignment row, HTML adds `style="text-align:..."` to header/data cells, plain text left/center/right-pads columns, and LaTeX uses the string directly as the `tabular` column spec. Unset `colAlign` keeps the prior defaults (stub left, data right).
 
 `ptExportAll(tables, fname)` exports an array of `ptTable` structs to a single file, dispatching on extension like `ptExport`: Markdown/CSV/Text/HTML concatenate each table's rendered output (Markdown tables separated by a horizontal rule), RTF merges all tables into one `{\rtf1...}` document, and XLS/XLSX write each table to its own sheet.
+
+`ptExportAllFormats(tables, basename, exts)` batch-exports the same `ptTable` array to multiple formats in one call, calling `ptExportAll(tables, basename $+ "." $+ ext)` for each extension in `exts` (e.g. `"md" $| "tex" $| "html"`). Returns `0` if every format exported successfully, otherwise the return code of the first format that failed (remaining formats are still attempted).
 
 `ptSetColFormat(tbl, colDigits)` re-formats already-rendered numeric cells column by column, one decimal-digit count per body column (`""` leaves a column unchanged); it re-parses each cell with `strtof` and re-applies `ptFormatNumber`, so it only works cleanly on plain numeric cells, not cells already wrapped with significance stars or statistic parentheses.
 

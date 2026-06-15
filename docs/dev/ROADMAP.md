@@ -310,13 +310,19 @@ Support:
 Support:
 
 - [x] Multi-table export workflows
-- [ ] Batch reporting workflows
+- [x] Batch reporting workflows
 
 Implemented via `ptExportAll(tables, fname)`, where `tables` is a `ptTable` array (e.g.
 `reshape(tbl, n, 1)` with indexed assignment). It dispatches on file extension like `ptExport`:
 Markdown/CSV/Text/HTML concatenate each table's rendered output (Markdown tables are separated by a
 horizontal rule); RTF merges all tables into a single `{\rtf1...}` document; XLS/XLSX write each
 table to its own sheet (sheet `1`, `2`, ... via `SpreadsheetWrite`).
+
+`ptExportAllFormats(tables, basename, exts)` builds on `ptExportAll` for batch reporting: given the
+same `ptTable` array and a list of extensions (e.g. `"md" $| "tex" $| "html"`), it writes
+`basename + "." + ext` for each extension via `ptExportAll`, producing a full report in several
+formats with one call. Returns `0` if every format exported successfully, otherwise the return code
+of the first format that failed (the remaining formats are still attempted).
 
 ## Style Presets
 

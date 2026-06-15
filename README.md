@@ -109,6 +109,16 @@ Markdown, LaTeX, HTML, and RTF renderers apply the styling (`**bold**`, `\textbf
 - RTF: all tables are merged into a single `{\rtf1...}` document.
 - XLS/XLSX: each table is written to its own sheet (sheet `1`, `2`, ... via `SpreadsheetWrite`).
 
+### Batch reporting in multiple formats
+
+`ptExportAllFormats(tables, basename, exts)` builds on `ptExportAll` to produce a full report in several formats with one call:
+
+```gauss
+call ptExportAllFormats(tables, "results/report", "md" $| "tex" $| "html" $| "xlsx");
+```
+
+This writes `results/report.md`, `results/report.tex`, `results/report.html`, and `results/report.xlsx`, each via `ptExportAll`. It returns `0` if every format exported successfully, otherwise the return code of the first format that failed (the remaining formats are still attempted).
+
 Initial automatic adapters:
 
 - `olsmtOut`

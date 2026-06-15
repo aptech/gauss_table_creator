@@ -1844,3 +1844,26 @@ proc (1) = ptExportAll(struct ptTable tbl, fname);
     call ptWriteTextFile(fname, text);
     retp(0);
 endp;
+
+/*
+** ptExportAllFormats(tbl, basename, exts): batch-export a ptTable array to
+** several output formats in one call. For each extension in exts (e.g.
+** "md" $| "tex" $| "html"), writes basename + "." + extension via
+** ptExportAll. Returns 0 if every format exported successfully, otherwise
+** the return code of the first format that failed (export continues for
+** the remaining formats regardless).
+*/
+proc (1) = ptExportAllFormats(struct ptTable tbl, basename, exts);
+    local n, i, ret, err;
+
+    err = 0;
+    n = rows(exts);
+    for i(1, n, 1);
+        ret = ptExportAll(tbl, basename $+ "." $+ exts[i]);
+        if ret /= 0 and err == 0;
+            err = ret;
+        endif;
+    endfor;
+
+    retp(err);
+endp;

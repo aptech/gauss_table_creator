@@ -30,6 +30,17 @@ proc (0) = checkScalarNotMissing(actual, label);
     endif;
 endp;
 
+proc (0) = checkFileExists(fname, label);
+    local fh;
+
+    fh = fopen(fname, "r");
+    if fh <= 0;
+        errorlog label $+ " failed. File not found: " $+ fname;
+        end;
+    endif;
+    call close(fh);
+endp;
+
 struct ptTable tbl;
 tbl = ptTableFromMatrix(1.23456, "x", "Model 1", "Demo_table");
 
@@ -299,5 +310,14 @@ checkScalarEqual(ptExportAll(multiTbl, export_base $+ "_multi.md"), 0, "multi-ta
 checkScalarEqual(ptExportAll(multiTbl, export_base $+ "_multi.rtf"), 0, "multi-table rtf export");
 xls_ret = ptExportAll(multiTbl, export_base $+ "_multi.xls");
 checkScalarNotMissing(xls_ret, "multi-table xls export trapped return");
+
+call deleteFile(export_base $+ "_batch.md");
+call deleteFile(export_base $+ "_batch.tex");
+call deleteFile(export_base $+ "_batch.html");
+
+checkScalarEqual(ptExportAllFormats(multiTbl, export_base $+ "_batch", "md" $| "tex" $| "html"), 0, "batch report export to multiple formats");
+checkFileExists(export_base $+ "_batch.md", "batch report markdown file written");
+checkFileExists(export_base $+ "_batch.tex", "batch report latex file written");
+checkFileExists(export_base $+ "_batch.html", "batch report html file written");
 
 print "pubtable tests passed";
