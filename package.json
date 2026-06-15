@@ -1,5 +1,5 @@
 {
-    "author": "Erica Clower",
+    "author": "Eric Clower",
     "deps": [
     ],
     "description": "Provides tools for creating and exporting publication-quality GAUSS tables from matrices, summary statistics, and common estimation output structures.",
@@ -7,7 +7,7 @@
     ],
     "keywords": [
     ],
-    "license": "",
+    "license": "MIT",
     "name": "pubtable",
     "repo": "https://github.com/aptech/gauss_table_creator",
     "src": [
@@ -15,7 +15,12 @@
         "pubtable.src",
         "pubtable_legacy.sdf",
         "pubtable_legacy_output.src",
-        "pubtable_legacy_setters.src"
+        "pubtable_legacy_setters.src",
+        "pubtable_cmlmt.src",
+        "pubtable_maxlikmt.src",
+        "pubtable_optmt.src",
+        "pubtable_qardl.src",
+        "pubtable_tsmt.src"
     ],
-    "version": "0.2.0"
+    "version": "0.3.0-beta.1"
 }

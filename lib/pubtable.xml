@@ -5,4 +5,9 @@
 <source>pubtable_legacy.sdf</source>
 <source>pubtable_legacy_output.src</source>
 <source>pubtable_legacy_setters.src</source>
+<source>pubtable_cmlmt.src</source>
+<source>pubtable_maxlikmt.src</source>
+<source>pubtable_optmt.src</source>
+<source>pubtable_qardl.src</source>
+<source>pubtable_tsmt.src</source>
 </app>
