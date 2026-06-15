@@ -1,0 +1,382 @@
+/*
+** pubtable_qardl.src
+**
+** Optional pubtable adapters for the QARDL package (ARDL/QARDL/NARDL/CS-ARDL
+** family estimators):
+** - ardlOut / ardlECMOut       (ardl(), ardlECM())
+** - qardlOut / qardlECMOut     (qardl(), qardlECM() and variants)
+** - nardlOut / nardlECMOut     (nardl(), nardlECM())
+** - csardlOut / csardlECMOut   (csardl(), csardlECM())
+** - ardlFullOut / qardlFullOut / nardlFullOut / csardlFullOut
+**   (ardlFull(), qardlFull(), nardlFull(), csardlFull())
+**
+** Requires `library qardl;` and `#include qardl.sdf` before this file, in
+** addition to pubtable.sdf / pubtable.src.
+**
+** All adapters assume the typical ARDL case p >= 1 (an autoregressive lag
+** term is present); rows(out.phi) == 0 is not specially handled.
+*/
+
+/*
+** ardlOut: long-run beta, short-run phi, alpha (intercept), rho (speed of
+** adjustment). Matches the row set used by the package's own
+** saveARDLTable() for ardlOut.
+*/
+proc (1) = ptModelFromArdl(name, struct ardlOut out);
+    local p, names, estimates, se, pval;
+    struct ptModel mdl;
+
+    p = rows(out.phi);
+
+    names = ("beta_" $+ out.xvars) $| ("phi_l" $+ sprintf("%d", seqa(1, 1, p))) $| "alpha" $| "rho";
+    estimates = out.bigbt | out.phi | out.alpha | out.rho;
+    se = sqrt(diag(out.bigbt_cov)) | sqrt(diag(out.phi_cov)) | miss(zeros(2, 1), 0);
+    pval = 2 * cdfnc(abs(estimates ./ se));
+
+    mdl = ptModelCreate(name, estimates, se);
+    mdl = ptModelSetNames(mdl, names);
+    mdl = ptModelSetPValues(mdl, pval);
+    mdl = ptModelSetGOF(mdl, "N" $| "Sigma2", out.nobs | out.sigma2);
+
+    retp(mdl);
+endp;
+
+proc (1) = ptFromArdl(struct ardlOut out);
+    retp(ptModelTable(ptModelFromArdl("ARDL levels", out)));
+endp;
+
+/*
+** ardlECMOut: long-run beta (no SE, carried over from the levels estimator),
+** ECM intercept alpha, and speed of adjustment rho.
+*/
+proc (1) = ptModelFromArdlECM(name, struct ardlECMOut out);
+    local names, estimates, se, pval;
+    struct ptModel mdl;
+
+    names = ("beta_lr_" $+ out.xvars) $| "alpha" $| "rho";
+    estimates = out.beta_lr | out.alpha | out.rho;
+    se = miss(zeros(out.k, 1), 0) | sqrt(out.alpha_cov[1, 1]) | sqrt(out.rho_cov[1, 1]);
+    pval = 2 * cdfnc(abs(estimates ./ se));
+
+    mdl = ptModelCreate(name, estimates, se);
+    mdl = ptModelSetNames(mdl, names);
+    mdl = ptModelSetPValues(mdl, pval);
+    mdl = ptModelSetGOF(mdl, "N" $| "Sigma2" $| "OLS rho", out.nobs | out.sigma2 | out.rho_ols[1]);
+
+    retp(mdl);
+endp;
+
+proc (1) = ptFromArdlECM(struct ardlECMOut out);
+    retp(ptModelTable(ptModelFromArdlECM("ARDL ECM", out)));
+endp;
+
+/*
+** _ptQardlLevelsSE: replicates the covariance scaling used by qardl_pval()
+** / printQARDL() for qardlOut (see p_values_qardl.src / qardl.src
+** _qardlLevelsSE), since that helper is internal to the qardl package.
+*/
+proc (3) = _ptQardlLevelsSE(struct qardlOut out);
+    local scaleBeta, scaleShort, nRaw;
+
+    scaleBeta = 1;
+    scaleShort = 1;
+
+    if lower(out.covariance_type) $== "iid" and out.q > 0;
+        nRaw = out.sample_end - out.sample_start + 1;
+        if nRaw < 2;
+            nRaw = out.nobs + maxc(out.p | out.q);
+        endif;
+        scaleBeta = (nRaw - 1)^2;
+        scaleShort = nRaw - 1;
+    endif;
+
+    retp(sqrt(diag(out.bigbt_cov / scaleBeta)), sqrt(diag(out.phi_cov / scaleShort)), sqrt(diag(out.gamma_cov / scaleShort)));
+endp;
+
+proc (1) = _ptQardlTauLabel(tauVal);
+    retp("tau=" $+ ptFormatNumber(tauVal, 2));
+endp;
+
+/*
+** qardlOut: per-quantile long-run beta, short-run gamma, AR phi, alpha, rho.
+** tauIdx selects the quantile (1-based index into out.tau).
+*/
+proc (1) = ptModelFromQardl(name, struct qardlOut out, tauIdx);
+    local k, p, idxBeta, idxPhi, names, estimates, se, pval;
+    local seBeta, sePhi, seGamma;
+    struct ptModel mdl;
+
+    k = out.k;
+    p = rows(out.phi) / rows(out.tau);
+
+    { seBeta, sePhi, seGamma } = _ptQardlLevelsSE(out);
+
+    idxBeta = seqa((tauIdx - 1) * k + 1, 1, k);
+    idxPhi = seqa((tauIdx - 1) * p + 1, 1, p);
+
+    names = ("beta_" $+ out.xvars) $| ("gamma_" $+ out.xvars) $| ("phi_l" $+ sprintf("%d", seqa(1, 1, p))) $| "alpha" $| "rho";
+    estimates = out.bigbt[idxBeta] | out.gamma[idxBeta] | out.phi[idxPhi] | out.alpha[tauIdx] | out.rho[tauIdx];
+    se = seBeta[idxBeta] | seGamma[idxBeta] | sePhi[idxPhi] | miss(zeros(2, 1), 0);
+    pval = 2 * cdfnc(abs(estimates ./ se));
+
+    mdl = ptModelCreate(name, estimates, se);
+    mdl = ptModelSetNames(mdl, names);
+    mdl = ptModelSetPValues(mdl, pval);
+
+    retp(mdl);
+endp;
+
+/*
+** ptFromQardl: one comparison column per quantile in out.tau, via
+** ptModelCompare. Column headers are "tau=<value>".
+*/
+proc (1) = ptFromQardl(struct qardlOut out);
+    local ss, jj;
+    struct ptModel models;
+    struct ptTable tbl;
+
+    ss = rows(out.tau);
+    models = reshape(ptModelFromQardl(_ptQardlTauLabel(out.tau[1]), out, 1), ss, 1);
+
+    for jj(2, ss, 1);
+        models[jj] = ptModelFromQardl(_ptQardlTauLabel(out.tau[jj]), out, jj);
+    endfor;
+
+    tbl = ptModelCompare(models);
+    tbl = ptSetTitle(tbl, "QARDL results");
+    tbl.stubName = "Term";
+
+    retp(tbl);
+endp;
+
+/*
+** qardlECMOut: per-quantile long-run beta (shared across quantiles for
+** two-step ECM, per-quantile for UECM), ECM alpha, and rho.
+*/
+proc (1) = ptModelFromQardlECM(name, struct qardlECMOut out, tauIdx);
+    local betaLR, names, estimates, se, pval, seAlpha, seRho;
+    struct ptModel mdl;
+
+    if out.ecm_type $== "uecm";
+        betaLR = out.beta_lr[., tauIdx];
+    else;
+        betaLR = out.beta_lr;
+    endif;
+
+    seAlpha = sqrt(diag(out.alpha_cov));
+    seRho = sqrt(diag(out.rho_cov));
+
+    names = ("beta_lr_" $+ out.xvars) $| "alpha" $| "rho";
+    estimates = betaLR | out.alpha[tauIdx] | out.rho[tauIdx];
+    se = miss(zeros(out.k, 1), 0) | seAlpha[tauIdx] | seRho[tauIdx];
+    pval = 2 * cdfnc(abs(estimates ./ se));
+
+    mdl = ptModelCreate(name, estimates, se);
+    mdl = ptModelSetNames(mdl, names);
+    mdl = ptModelSetPValues(mdl, pval);
+
+    retp(mdl);
+endp;
+
+proc (1) = ptFromQardlECM(struct qardlECMOut out);
+    local ss, jj;
+    struct ptModel models;
+    struct ptTable tbl;
+
+    ss = rows(out.tau);
+    models = reshape(ptModelFromQardlECM(_ptQardlTauLabel(out.tau[1]), out, 1), ss, 1);
+
+    for jj(2, ss, 1);
+        models[jj] = ptModelFromQardlECM(_ptQardlTauLabel(out.tau[jj]), out, jj);
+    endfor;
+
+    tbl = ptModelCompare(models);
+    tbl = ptSetTitle(tbl, "QARDL-ECM results");
+    tbl.stubName = "Term";
+
+    retp(tbl);
+endp;
+
+/*
+** nardlOut: long-run positive/negative/control coefficients (bigbt =
+** [beta_pos; beta_neg; beta_control]), short-run phi, alpha, rho. Matches
+** the row set used by the package's own saveARDLTable() for nardlOut.
+*/
+proc (1) = ptModelFromNardl(name, struct nardlOut out);
+    local p, names, estimates, se, pval;
+    struct ptModel mdl;
+
+    p = rows(out.phi);
+
+    names = ("beta_pos_" $+ out.decomp_vars) $| ("beta_neg_" $+ out.decomp_vars);
+    if out.ncontrol > 0;
+        names = names $| ("beta_control_" $+ out.control_vars);
+    endif;
+    names = names $| ("phi_l" $+ sprintf("%d", seqa(1, 1, p))) $| "alpha" $| "rho";
+
+    estimates = out.bigbt | out.phi | out.alpha | out.rho;
+    se = sqrt(diag(out.bigbt_cov)) | sqrt(diag(out.phi_cov)) | miss(zeros(2, 1), 0);
+    pval = 2 * cdfnc(abs(estimates ./ se));
+
+    mdl = ptModelCreate(name, estimates, se);
+    mdl = ptModelSetNames(mdl, names);
+    mdl = ptModelSetPValues(mdl, pval);
+    mdl = ptModelSetGOF(mdl, "N" $| "Sigma2" $| "Bounds F-stat", out.nobs | out.sigma2 | out.bounds_fstat);
+
+    retp(mdl);
+endp;
+
+proc (1) = ptFromNardl(struct nardlOut out);
+    retp(ptModelTable(ptModelFromNardl("NARDL levels", out)));
+endp;
+
+/*
+** nardlECMOut: long-run positive/negative/control coefficients (no SE,
+** carried over from the levels estimator), ECM alpha, and rho.
+*/
+proc (1) = ptModelFromNardlECM(name, struct nardlECMOut out);
+    local names, estimates, se, pval;
+    struct ptModel mdl;
+
+    names = ("beta_pos_" $+ out.decomp_vars) $| ("beta_neg_" $+ out.decomp_vars);
+    estimates = out.beta_pos | out.beta_neg;
+    if out.ncontrol > 0;
+        names = names $| ("beta_control_" $+ out.control_vars);
+        estimates = estimates | out.beta_control;
+    endif;
+    names = names $| "alpha" $| "rho";
+    estimates = estimates | out.alpha | out.rho;
+
+    se = miss(zeros(rows(estimates) - 2, 1), 0) | sqrt(out.alpha_cov[1, 1]) | sqrt(out.rho_cov[1, 1]);
+    pval = 2 * cdfnc(abs(estimates ./ se));
+
+    mdl = ptModelCreate(name, estimates, se);
+    mdl = ptModelSetNames(mdl, names);
+    mdl = ptModelSetPValues(mdl, pval);
+    mdl = ptModelSetGOF(mdl, "N" $| "Sigma2" $| "OLS rho", out.nobs | out.sigma2 | out.rho_ols[1]);
+
+    retp(mdl);
+endp;
+
+proc (1) = ptFromNardlECM(struct nardlECMOut out);
+    retp(ptModelTable(ptModelFromNardlECM("NARDL ECM", out)));
+endp;
+
+/*
+** csardlOut: pooled CS-ARDL long-run beta, short-run phi, alpha, rho.
+** Same row layout as ardlOut.
+*/
+proc (1) = ptModelFromCsardl(name, struct csardlOut out);
+    local p, names, estimates, se, pval;
+    struct ptModel mdl;
+
+    p = rows(out.phi);
+
+    names = ("beta_" $+ out.xvars) $| ("phi_l" $+ sprintf("%d", seqa(1, 1, p))) $| "alpha" $| "rho";
+    estimates = out.bigbt | out.phi | out.alpha | out.rho;
+    se = sqrt(diag(out.bigbt_cov)) | sqrt(diag(out.phi_cov)) | miss(zeros(2, 1), 0);
+    pval = 2 * cdfnc(abs(estimates ./ se));
+
+    mdl = ptModelCreate(name, estimates, se);
+    mdl = ptModelSetNames(mdl, names);
+    mdl = ptModelSetPValues(mdl, pval);
+    mdl = ptModelSetGOF(mdl, "N" $| "Sigma2" $| "Units", out.nobs | out.sigma2 | out.nunits);
+
+    retp(mdl);
+endp;
+
+proc (1) = ptFromCsardl(struct csardlOut out);
+    retp(ptModelTable(ptModelFromCsardl("CS-ARDL levels", out)));
+endp;
+
+/*
+** csardlECMOut: pooled long-run beta (no SE), ECM alpha, and rho.
+** Same row layout as ardlECMOut.
+*/
+proc (1) = ptModelFromCsardlECM(name, struct csardlECMOut out);
+    local names, estimates, se, pval;
+    struct ptModel mdl;
+
+    names = ("beta_lr_" $+ out.xvars) $| "alpha" $| "rho";
+    estimates = out.beta_lr | out.alpha | out.rho;
+    se = miss(zeros(out.k, 1), 0) | sqrt(out.alpha_cov[1, 1]) | sqrt(out.rho_cov[1, 1]);
+    pval = 2 * cdfnc(abs(estimates ./ se));
+
+    mdl = ptModelCreate(name, estimates, se);
+    mdl = ptModelSetNames(mdl, names);
+    mdl = ptModelSetPValues(mdl, pval);
+    mdl = ptModelSetGOF(mdl, "N" $| "Sigma2" $| "Units" $| "OLS rho", out.nobs | out.sigma2 | out.nunits | out.rho_ols[1]);
+
+    retp(mdl);
+endp;
+
+proc (1) = ptFromCsardlECM(struct csardlECMOut out);
+    retp(ptModelTable(ptModelFromCsardlECM("CS-ARDL ECM", out)));
+endp;
+
+/*
+** Full workflow outputs bundle a levels estimator (and, except for ARDL, an
+** ECM estimator). ptTablesFromXFull return a 2x1 struct ptTable array
+** (levels, ECM) suitable for ptExportAll(); ardlFullOut has no separate ECM
+** estimator, so ptFromArdlFull returns a single table.
+*/
+proc (1) = ptFromArdlFull(struct ardlFullOut out);
+    retp(ptModelTable(ptModelFromArdl("ARDL levels", out.ar)));
+endp;
+
+proc (1) = ptTablesFromQardlFull(struct qardlFullOut out);
+    struct ptTable tbls;
+
+    tbls = reshape(ptFromQardl(out.qa), 2, 1);
+    tbls[2] = ptFromQardlECM(out.ecm);
+
+    retp(tbls);
+endp;
+
+proc (1) = ptTablesFromNardlFull(struct nardlFullOut out);
+    struct ptTable tbls;
+
+    tbls = reshape(ptFromNardl(out.na), 2, 1);
+    tbls[2] = ptFromNardlECM(out.ecm);
+
+    retp(tbls);
+endp;
+
+proc (1) = ptTablesFromCsardlFull(struct csardlFullOut out);
+    struct ptTable tbls;
+
+    tbls = reshape(ptFromCsardl(out.csa), 2, 1);
+    tbls[2] = ptFromCsardlECM(out.ecm);
+
+    retp(tbls);
+endp;
+
+/*
+** ptFromArdlFamily: convenience dispatcher for the single-table adapters
+** above, using isStructType. qardlFullOut/nardlFullOut/csardlFullOut are
+** not included since they need the 2-table ptTablesFromXFull form.
+*/
+proc (1) = ptFromArdlFamily(x);
+    if isStructType(x, "ardlOut");
+        retp(ptFromArdl(x));
+    elseif isStructType(x, "ardlECMOut");
+        retp(ptFromArdlECM(x));
+    elseif isStructType(x, "qardlOut");
+        retp(ptFromQardl(x));
+    elseif isStructType(x, "qardlECMOut");
+        retp(ptFromQardlECM(x));
+    elseif isStructType(x, "nardlOut");
+        retp(ptFromNardl(x));
+    elseif isStructType(x, "nardlECMOut");
+        retp(ptFromNardlECM(x));
+    elseif isStructType(x, "csardlOut");
+        retp(ptFromCsardl(x));
+    elseif isStructType(x, "csardlECMOut");
+        retp(ptFromCsardlECM(x));
+    elseif isStructType(x, "ardlFullOut");
+        retp(ptFromArdlFull(x));
+    endif;
+
+    errorlog "ptFromArdlFamily: unsupported QARDL output structure.";
+    end;
+endp;

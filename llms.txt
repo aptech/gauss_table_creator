@@ -71,6 +71,7 @@ Optional add-on package adapters (separate files, not wired into `ptModelFrom`/`
 - `src/pubtable_cmlmt.src`: `ptModelFromCmlmt`/`ptFromCmlmt` for `cmlmtResults` (requires `library cmlmt;` + `#include cmlmt.sdf`)
 - `src/pubtable_tsmt.src`: `ptModelFromArimamt`/`ptFromArimamt` for `arimamtOut`, and `ptModelFromTsPanel`/`ptFromTsPanel` for `tsPanelEstimationOut` (requires `library tsmt;` + `#include tsmt.sdf`; the tsPanel adapters also need `#include tspanel.src`)
 - `src/pubtable_optmt.src`: `ptTableFromOptmt` for `optmtResults`, a parameter/estimate/gradient table with no SE row since `optmtResults` has no covariance matrix (requires `library optmt;` + `#include optmt.sdf`)
+- `src/pubtable_qardl.src`: QARDL package (ARDL/QARDL/NARDL/CS-ARDL family) adapters (requires `library qardl;` + `#include qardl.sdf`): `ptModelFromArdl`/`ptFromArdl` (`ardlOut`), `ptModelFromArdlECM`/`ptFromArdlECM` (`ardlECMOut`), `ptModelFromQardl`/`ptFromQardl` and `ptModelFromQardlECM`/`ptFromQardlECM` (`qardlOut`/`qardlECMOut`, one `ptModelCompare` column per quantile in `out.tau`), `ptModelFromNardl`/`ptFromNardl` and `ptModelFromNardlECM`/`ptFromNardlECM` (`nardlOut`/`nardlECMOut`), `ptModelFromCsardl`/`ptFromCsardl` and `ptModelFromCsardlECM`/`ptFromCsardlECM` (`csardlOut`/`csardlECMOut`), `ptFromArdlFull`/`ptTablesFromQardlFull`/`ptTablesFromNardlFull`/`ptTablesFromCsardlFull` for the `*Full` workflow outputs, and the `ptFromArdlFamily` dispatcher
 
 Current exporters:
 

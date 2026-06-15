@@ -336,8 +336,19 @@ Implemented via `ptApplyPreset(tbl, preset)` / `ptModelApplyPreset(mdl, preset)`
 
 Potential future integrations:
 
-- [ ] QARDL reporting helpers
+- [x] QARDL reporting helpers
 - [ ] TSMT reporting helpers
-- [ ] ARDL-family reporting adapters
+- [x] ARDL-family reporting adapters
 - [ ] Automatic model-summary generation
 - [ ] Publication-ready econometric reporting workflows
+
+Implemented via `src/pubtable_qardl.src` (optional add-on package adapter, requires `library qardl;`
+and `#include qardl.sdf`): `ptModelFromArdl`/`ptFromArdl` (`ardlOut`), `ptModelFromArdlECM`/
+`ptFromArdlECM` (`ardlECMOut`), `ptModelFromQardl`/`ptFromQardl` and `ptModelFromQardlECM`/
+`ptFromQardlECM` (`qardlOut`/`qardlECMOut`, one comparison column per quantile via
+`ptModelCompare`), `ptModelFromNardl`/`ptFromNardl` and `ptModelFromNardlECM`/`ptFromNardlECM`
+(`nardlOut`/`nardlECMOut`), `ptModelFromCsardl`/`ptFromCsardl` and `ptModelFromCsardlECM`/
+`ptFromCsardlECM` (`csardlOut`/`csardlECMOut`), `ptFromArdlFull` and `ptTablesFromQardlFull`/
+`ptTablesFromNardlFull`/`ptTablesFromCsardlFull` for the `*Full` workflow outputs, and the
+`ptFromArdlFamily` dispatcher. Diagnostic/Wald/rolling/QIRF/selection/AutoCase/SparseGETS output
+structs are not covered.
