@@ -49,6 +49,10 @@ Current/provisional modern API:
 
 `ptExportAll(tables, fname)` writes an array of `ptTable` structs to one file, dispatching on extension like `ptExport`: text-based formats (Markdown/CSV/Text/HTML) concatenate each table's rendered output, RTF merges them into a single document, and XLS/XLSX write each table to its own sheet.
 
+`ptSetColFormat(tbl, colDigits)` reformats already-rendered numeric cells column by column to a chosen decimal-digit count (one entry per body column, `""` leaves a column unchanged); it re-parses each cell with `strtof` and reapplies `ptFormatNumber`, so it works on plain numeric cells but not cells already wrapped with significance stars or statistic parentheses.
+
+`ptSetCellStyle(tbl, row, col, style)` marks a body cell (1-based) with `"bold"`, `"italic"`, `"bold italic"`, or `""`, stored in `ptTable.cellStyle`. Markdown, LaTeX, HTML, and RTF renderers apply the styling; CSV and plain text renderers ignore it.
+
 `ptModelSetStars(model, cutoffs, symbols)` / `ptSetStars(tbl, cutoffs, symbols)` set custom significance cutoffs/symbols (default `0.10`/`0.05`/`0.01` -> `"+"`/`"*"`/`"**"`); `ptModelNoStars(model)` / `ptNoStars(tbl)` disable stars.
 
 `ptModelApplyPreset(model, preset)` / `ptApplyPreset(tbl, preset)` apply a bundle of `ptFormat` settings for one of `"journal"`, `"compact"`, `"plain"`, or `"report"` (digits, significance stars, statRows, and statistic wrapper).

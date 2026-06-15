@@ -278,15 +278,25 @@ spanning-header rendering groups comparison columns by equation, quantile, or pa
 Support:
 
 - [x] Alignment controls
-- [ ] Number formatting
-- [ ] Cell-level styling
+- [x] Number formatting
+- [x] Cell-level styling
 
 `ptFormat.colAlign` / `ptSetColAlign`/`ptModelSetColAlign` (one `l`/`c`/`r` per column, including the
 stub) now drives alignment in every renderer, not just LaTeX: Markdown emits the corresponding
 `:---`/`:---:`/`---:` alignment row, HTML adds `style="text-align:..."` to `<th>`/`<td>`, and plain
 text left/center/right-pads each column. When `colAlign` is unset, the previous defaults (stub
-left-aligned, data columns right-aligned) are unchanged. Number formatting and cell-level styling
-remain unimplemented.
+left-aligned, data columns right-aligned) are unchanged.
+
+`ptSetColFormat(tbl, colDigits)` re-formats already-rendered numeric cells in `tbl.body`, applying
+a per-column decimal-digit count (one entry per body column; `""` leaves a column unchanged). It
+re-parses each cell with `strtof` and re-applies `ptFormatNumber`, so it works on plain numeric
+cells but not cells already wrapped with significance stars or statistic parentheses.
+
+`ptSetCellStyle(tbl, row, col, style)` marks an individual body cell (1-based row/col into
+`tbl.body`) with `"bold"`, `"italic"`, `"bold italic"`, or `""` (no styling), stored in the new
+`tbl.cellStyle` string array. Markdown, LaTeX, HTML, and RTF renderers apply the styling
+(`**bold**`, `\textbf{...}`, `<strong>...</strong>`, `\b ... \b0`, etc.); CSV and plain text
+renderers ignore `cellStyle` since those formats cannot represent styled text.
 
 ## Significance Controls
 

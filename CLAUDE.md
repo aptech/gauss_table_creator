@@ -124,6 +124,7 @@ Current implemented/provisional public API includes:
 - `ptModelSetCI`, `ptModelSetStatRows`, `ptSetStatRows`, `ptModelSetNotes`
 - `ptSetLabel`, `ptModelSetLabel`, `ptSetColAlign`, `ptModelSetColAlign`
 - `ptSetColGroups`, `ptCompareSetColGroups`
+- `ptSetColFormat`, `ptSetCellStyle`
 - `ptSetStars`, `ptModelSetStars`, `ptNoStars`, `ptModelNoStars`
 - `ptApplyPreset`, `ptModelApplyPreset` (`"journal"`, `"compact"`, `"plain"`, `"report"`)
 - `ptModelTable`
@@ -164,6 +165,10 @@ Optional add-on package adapters (separate source files, not wired into `ptModel
 `ptFormat.colAlign` / `ptSetColAlign`/`ptModelSetColAlign` (one `l`/`c`/`r` per column including the stub) now controls alignment in every renderer: Markdown emits a matching `:---`/`:---:`/`---:` alignment row, HTML adds `style="text-align:..."` to header/data cells, plain text left/center/right-pads columns, and LaTeX uses the string directly as the `tabular` column spec. Unset `colAlign` keeps the prior defaults (stub left, data right).
 
 `ptExportAll(tables, fname)` exports an array of `ptTable` structs to a single file, dispatching on extension like `ptExport`: Markdown/CSV/Text/HTML concatenate each table's rendered output (Markdown tables separated by a horizontal rule), RTF merges all tables into one `{\rtf1...}` document, and XLS/XLSX write each table to its own sheet.
+
+`ptSetColFormat(tbl, colDigits)` re-formats already-rendered numeric cells column by column, one decimal-digit count per body column (`""` leaves a column unchanged); it re-parses each cell with `strtof` and re-applies `ptFormatNumber`, so it only works cleanly on plain numeric cells, not cells already wrapped with significance stars or statistic parentheses.
+
+`ptTable.cellStyle` / `ptSetCellStyle(tbl, row, col, style)` marks an individual body cell with `"bold"`, `"italic"`, `"bold italic"`, or `""`. Markdown, LaTeX, HTML, and RTF renderers apply the corresponding styling; CSV and plain text renderers ignore `cellStyle` since they cannot represent styled text.
 
 `ptModelCompare(models)` is equivalent to `ptModelCompareWith(models, ptCompareOptionsCreate())`.
 

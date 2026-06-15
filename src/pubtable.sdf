@@ -17,6 +17,7 @@ struct ptTable {
     string array body;
     string array notes;
     string array colGroups;
+    string array cellStyle;
     struct ptFormat fmt;
 };
 

@@ -249,6 +249,26 @@ local alignLines;
 alignLines = strsplit(ptRenderText(alignTbl), "\n");
 checkScalarEqual(strlen(alignLines[3]), strlen(alignLines[5]), "text rendering with colAlign aligns header and data row widths");
 
+struct ptTable fmtTbl;
+fmtTbl = ptTableFromMatrix(1.23456~7.891, "x", "A" $| "B", "Format_table");
+checkStringEqual(fmtTbl.body[1, 1], "1.235", "default 3-digit formatting before colFormat");
+
+fmtTbl = ptSetColFormat(fmtTbl, "0" $| "");
+checkStringEqual(fmtTbl.body[1, 1], "1", "ptSetColFormat overrides digits for first column");
+checkStringEqual(fmtTbl.body[1, 2], "7.891", "ptSetColFormat leaves unlisted column unchanged");
+
+fmtTbl = ptSetCellStyle(fmtTbl, 1, 2, "bold");
+checkStringContains(ptRenderMarkdown(fmtTbl), "**7.891**", "markdown bold cell styling");
+checkStringContains(ptRenderLatex(fmtTbl), "\\textbf{7.891}", "latex bold cell styling");
+checkStringContains(ptRenderHtml(fmtTbl), "<strong>7.891</strong>", "html bold cell styling");
+checkStringContains(ptRenderRtf(fmtTbl), "\\b 7.891\\b0", "rtf bold cell styling");
+
+fmtTbl = ptSetCellStyle(fmtTbl, 1, 1, "bold italic");
+checkStringContains(ptRenderMarkdown(fmtTbl), "***1***", "markdown bold italic cell styling");
+checkStringContains(ptRenderLatex(fmtTbl), "\\textbf{\\textit{1}}", "latex bold italic cell styling");
+checkStringContains(ptRenderHtml(fmtTbl), "<strong><em>1</em></strong>", "html bold italic cell styling");
+checkStringContains(ptRenderRtf(fmtTbl), "\\b\\i 1\\i0\\b0", "rtf bold italic cell styling");
+
 struct ptTable multiTbl;
 multiTbl = reshape(ptTableFromMatrix(1.1, "x", "Model 1", "Table One"), 2, 1);
 multiTbl[2] = ptTableFromMatrix(2.2, "y", "Model 2", "Table Two");

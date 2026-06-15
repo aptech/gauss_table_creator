@@ -444,6 +444,7 @@ proc (1) = ptTableCreate(title);
     tbl.body = "";
     tbl.notes = "";
     tbl.colGroups = "";
+    tbl.cellStyle = "";
     tbl.fmt = ptFormatCreate();
 
     retp(tbl);
@@ -519,6 +520,115 @@ proc (1) = ptSetColAlign(struct ptTable tbl, colAlign);
     call ptCheckColAlign(colAlign, "ptSetColAlign");
     tbl.fmt.colAlign = colAlign;
     retp(tbl);
+endp;
+
+proc (1) = ptSetColFormat(struct ptTable tbl, colDigits);
+    local n_cols, i, j;
+
+    n_cols = cols(tbl.body);
+    colDigits = ptLabelsToCol(colDigits, n_cols, "ptSetColFormat", "colDigits");
+
+    for j(1, n_cols, 1);
+        if colDigits[j] $/= "";
+            for i(1, rows(tbl.body), 1);
+                if tbl.body[i, j] $/= "";
+                    tbl.body[i, j] = ptFormatNumber(strtof(tbl.body[i, j]), strtof(colDigits[j]));
+                endif;
+            endfor;
+        endif;
+    endfor;
+
+    retp(tbl);
+endp;
+
+proc (1) = ptHasCellStyle(struct ptTable tbl);
+    retp(rows(tbl.cellStyle) == rows(tbl.body) and cols(tbl.cellStyle) == cols(tbl.body));
+endp;
+
+proc (0) = ptCheckCellStyle(style, caller);
+    if style $/= "" and style $/= "bold" and style $/= "italic" and style $/= "bold italic";
+        errorlog caller $+ ": style must be '', 'bold', 'italic', or 'bold italic'.";
+        end;
+    endif;
+endp;
+
+proc (1) = ptSetCellStyle(struct ptTable tbl, row, col, style);
+    call ptCheckCellStyle(style, "ptSetCellStyle");
+
+    if row < 1 or row > rows(tbl.body) or col < 1 or col > cols(tbl.body);
+        errorlog "ptSetCellStyle: row and col must be within the table body dimensions.";
+        end;
+    endif;
+
+    if not ptHasCellStyle(tbl);
+        tbl.cellStyle = ptBlankSA(rows(tbl.body), cols(tbl.body));
+    endif;
+
+    tbl.cellStyle[row, col] = style;
+    retp(tbl);
+endp;
+
+proc (1) = ptCellStyleRow(struct ptTable tbl, i);
+    local n_cols, j, styles;
+
+    n_cols = cols(tbl.body);
+    styles = ptBlankSA(1, n_cols + 1);
+
+    if ptHasCellStyle(tbl);
+        for j(1, n_cols, 1);
+            styles[j + 1] = tbl.cellStyle[i, j];
+        endfor;
+    endif;
+
+    retp(styles);
+endp;
+
+proc (1) = ptStyleMarkdown(text, style);
+    if style $== "bold";
+        retp("**" $+ text $+ "**");
+    elseif style $== "italic";
+        retp("*" $+ text $+ "*");
+    elseif style $== "bold italic";
+        retp("***" $+ text $+ "***");
+    else;
+        retp(text);
+    endif;
+endp;
+
+proc (1) = ptStyleLatex(text, style);
+    if style $== "bold";
+        retp("\\textbf{" $+ text $+ "}");
+    elseif style $== "italic";
+        retp("\\textit{" $+ text $+ "}");
+    elseif style $== "bold italic";
+        retp("\\textbf{\\textit{" $+ text $+ "}}");
+    else;
+        retp(text);
+    endif;
+endp;
+
+proc (1) = ptStyleHtml(text, style);
+    if style $== "bold";
+        retp("<strong>" $+ text $+ "</strong>");
+    elseif style $== "italic";
+        retp("<em>" $+ text $+ "</em>");
+    elseif style $== "bold italic";
+        retp("<strong><em>" $+ text $+ "</em></strong>");
+    else;
+        retp(text);
+    endif;
+endp;
+
+proc (1) = ptStyleRtf(text, style);
+    if style $== "bold";
+        retp("\\b " $+ text $+ "\\b0");
+    elseif style $== "italic";
+        retp("\\i " $+ text $+ "\\i0");
+    elseif style $== "bold italic";
+        retp("\\b\\i " $+ text $+ "\\i0\\b0");
+    else;
+        retp(text);
+    endif;
 endp;
 
 proc (1) = ptTableFromMatrix(x, rowNames, colNames, title);
@@ -1131,7 +1241,7 @@ proc (1) = ptRenderArray(struct ptTable tbl);
 endp;
 
 proc (1) = ptRenderMarkdown(struct ptTable tbl);
-    local arr, out, sep, i;
+    local arr, out, sep, i, j, row, styles;
 
     arr = ptRenderArray(tbl);
     out = "";
@@ -1156,7 +1266,14 @@ proc (1) = ptRenderMarkdown(struct ptTable tbl);
     out = out $+ ptJoinRow(sep, "|") $+ "\n";
 
     for i(2, rows(arr), 1);
-        out = out $+ ptJoinRow(arr[i, .], "|") $+ "\n";
+        row = arr[i, .];
+        styles = ptCellStyleRow(tbl, i - 1);
+        for j(1, cols(arr), 1);
+            if styles[j] $/= "";
+                row[j] = ptStyleMarkdown(row[j], styles[j]);
+            endif;
+        endfor;
+        out = out $+ ptJoinRow(row, "|") $+ "\n";
     endfor;
 
     if tbl.notes[1] $/= "";
@@ -1217,7 +1334,7 @@ proc (1) = ptRenderLatex(struct ptTable tbl);
     out = out $+ ptJoinLatexRow(arr[1, .]) $+ " \\\\\n\\midrule\n";
 
     for i(2, rows(arr), 1);
-        out = out $+ ptJoinLatexRow(arr[i, .]) $+ " \\\\\n";
+        out = out $+ ptJoinLatexRowStyled(arr[i, .], ptCellStyleRow(tbl, i - 1)) $+ " \\\\\n";
     endfor;
 
     out = out $+ "\\bottomrule\n\\end{tabular}\n";
@@ -1312,7 +1429,7 @@ proc (1) = ptRepeatChar(ch, n);
 endp;
 
 proc (1) = ptRenderRtf(struct ptTable tbl);
-    local arr, out, i, j, n_rows, n_cols, widths, borders, cellx, cellText;
+    local arr, out, i, j, n_rows, n_cols, widths, borders, cellx, cellText, styles;
 
     arr = ptRenderArray(tbl);
     n_rows = rows(arr);
@@ -1340,11 +1457,17 @@ proc (1) = ptRenderRtf(struct ptTable tbl);
             out = out $+ borders $+ "\\cellx" $+ ntos(cellx) $+ "\n";
         endfor;
 
+        if i > 1;
+            styles = ptCellStyleRow(tbl, i - 1);
+        endif;
+
         out = out $+ "\\pard\\intbl";
         for j(1, n_cols, 1);
             cellText = ptEscapeRtf(arr[i, j]);
             if i == 1;
                 cellText = "\\b " $+ cellText $+ "\\b0";
+            elseif styles[j] $/= "";
+                cellText = ptStyleRtf(cellText, styles[j]);
             endif;
             out = out $+ " " $+ cellText $+ "\\cell";
         endfor;
@@ -1362,7 +1485,7 @@ proc (1) = ptRenderRtf(struct ptTable tbl);
 endp;
 
 proc (1) = ptRenderHtml(struct ptTable tbl);
-    local arr, out, i, j, n_cols;
+    local arr, out, i, j, n_cols, styles, cellText;
 
     arr = ptRenderArray(tbl);
     n_cols = cols(arr);
@@ -1385,9 +1508,14 @@ proc (1) = ptRenderHtml(struct ptTable tbl);
     out = out $+ "</tr>\n</thead>\n<tbody>\n";
 
     for i(2, rows(arr), 1);
+        styles = ptCellStyleRow(tbl, i - 1);
         out = out $+ "<tr><th scope=\"row\"" $+ ptHtmlAlignAttr(tbl, 1, n_cols) $+ ">" $+ ptEscapeHtml(arr[i, 1]) $+ "</th>";
         for j(2, n_cols, 1);
-            out = out $+ "<td" $+ ptHtmlAlignAttr(tbl, j, n_cols) $+ ">" $+ ptEscapeHtml(arr[i, j]) $+ "</td>";
+            cellText = ptEscapeHtml(arr[i, j]);
+            if styles[j] $/= "";
+                cellText = ptStyleHtml(cellText, styles[j]);
+            endif;
+            out = out $+ "<td" $+ ptHtmlAlignAttr(tbl, j, n_cols) $+ ">" $+ cellText $+ "</td>";
         endfor;
         out = out $+ "</tr>\n";
     endfor;
@@ -1420,6 +1548,26 @@ proc (1) = ptJoinLatexRow(row);
     out = ptEscapeLatex(row[1]);
     for j(2, cols(row), 1);
         out = out $+ " & " $+ ptEscapeLatex(row[j]);
+    endfor;
+
+    retp(out);
+endp;
+
+proc (1) = ptJoinLatexRowStyled(row, styles);
+    local out, j, cell;
+
+    cell = ptEscapeLatex(row[1]);
+    if styles[1] $/= "";
+        cell = ptStyleLatex(cell, styles[1]);
+    endif;
+    out = cell;
+
+    for j(2, cols(row), 1);
+        cell = ptEscapeLatex(row[j]);
+        if styles[j] $/= "";
+            cell = ptStyleLatex(cell, styles[j]);
+        endif;
+        out = out $+ " & " $+ cell;
     endfor;
 
     retp(out);

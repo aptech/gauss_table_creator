@@ -83,6 +83,24 @@ Markdown, CSV, and plain text render a pseudo-span (the label appears in the fir
 
 Leaving `colAlign` unset keeps the previous defaults: the stub column left-aligned and data columns right-aligned.
 
+### Number formatting and cell styling
+
+`ptSetColFormat(tbl, colDigits)` re-formats the body cells of one or more columns to a chosen number of decimal digits (one entry per body column, `""` to leave a column unchanged):
+
+```gauss
+tbl = ptSetColFormat(tbl, "0" $| "2");
+```
+
+It re-parses each already-rendered numeric cell with `strtof` and reformats it with `ptFormatNumber`, so it works on plain numeric tables but not on cells already wrapped with significance stars or statistic parentheses.
+
+`ptSetCellStyle(tbl, row, col, style)` marks an individual body cell (1-based row/col) as `"bold"`, `"italic"`, `"bold italic"`, or `""`:
+
+```gauss
+tbl = ptSetCellStyle(tbl, 1, 2, "bold");
+```
+
+Markdown, LaTeX, HTML, and RTF renderers apply the styling (`**bold**`, `\textbf{...}`, `<strong>...</strong>`, `\b ... \b0`); CSV and plain text renderers ignore cell styling since those formats can't represent it.
+
 ### Exporting multiple tables to one file
 
 `ptExportAll(tables, fname)` writes an array of `ptTable` structs (e.g. `reshape(tbl, n, 1)` with indexed assignment) to a single file, dispatching on extension like `ptExport`:
