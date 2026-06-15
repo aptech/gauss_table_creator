@@ -129,7 +129,7 @@ Current implemented/provisional public API includes:
 - `ptModelTable`
 - `ptModelCompare`, `ptModelCompareWith`
 - `ptCompareOptionsCreate`, `ptCompareSetTermOrder`, `ptCompareSetGofOrder`, `ptCompareSetLabelMap`, `ptCompareSetNotes`
-- `ptExport`
+- `ptExport`, `ptExportAll`
 - `ptRenderMarkdown`, `ptRenderLatex`, `ptRenderCsv`, `ptRenderText`, `ptRenderRtf`, `ptRenderHtml`
 
 Current automatic adapters:
@@ -160,6 +160,10 @@ Optional add-on package adapters (separate source files, not wired into `ptModel
 - `ptCompareSetColGroups(opts, colGroups)`: one label per model (must match the number of models), used as grouped/spanning column headers above the comparison columns — e.g. to label equation, quantile, or panel groupings.
 
 `ptTable.colGroups` / `ptSetColGroups(tbl, colGroups)` set one column-group label per body column (blank for ungrouped columns); contiguous equal labels form a span. Markdown/CSV/Text render a pseudo-span (label in the first column of the run, blanks elsewhere); LaTeX renders `\multicolumn`/`\cmidrule`; HTML renders `colspan`; RTF renders `\clmgf`/`\clmrg` cell merges.
+
+`ptFormat.colAlign` / `ptSetColAlign`/`ptModelSetColAlign` (one `l`/`c`/`r` per column including the stub) now controls alignment in every renderer: Markdown emits a matching `:---`/`:---:`/`---:` alignment row, HTML adds `style="text-align:..."` to header/data cells, plain text left/center/right-pads columns, and LaTeX uses the string directly as the `tabular` column spec. Unset `colAlign` keeps the prior defaults (stub left, data right).
+
+`ptExportAll(tables, fname)` exports an array of `ptTable` structs to a single file, dispatching on extension like `ptExport`: Markdown/CSV/Text/HTML concatenate each table's rendered output (Markdown tables separated by a horizontal rule), RTF merges all tables into one `{\rtf1...}` document, and XLS/XLSX write each table to its own sheet.
 
 `ptModelCompare(models)` is equivalent to `ptModelCompareWith(models, ptCompareOptionsCreate())`.
 

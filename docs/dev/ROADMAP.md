@@ -277,9 +277,16 @@ spanning-header rendering groups comparison columns by equation, quantile, or pa
 
 Support:
 
-- [ ] Alignment controls
+- [x] Alignment controls
 - [ ] Number formatting
 - [ ] Cell-level styling
+
+`ptFormat.colAlign` / `ptSetColAlign`/`ptModelSetColAlign` (one `l`/`c`/`r` per column, including the
+stub) now drives alignment in every renderer, not just LaTeX: Markdown emits the corresponding
+`:---`/`:---:`/`---:` alignment row, HTML adds `style="text-align:..."` to `<th>`/`<td>`, and plain
+text left/center/right-pads each column. When `colAlign` is unset, the previous defaults (stub
+left-aligned, data columns right-aligned) are unchanged. Number formatting and cell-level styling
+remain unimplemented.
 
 ## Significance Controls
 
@@ -292,8 +299,14 @@ Support:
 
 Support:
 
-- [ ] Multi-table export workflows
+- [x] Multi-table export workflows
 - [ ] Batch reporting workflows
+
+Implemented via `ptExportAll(tables, fname)`, where `tables` is a `ptTable` array (e.g.
+`reshape(tbl, n, 1)` with indexed assignment). It dispatches on file extension like `ptExport`:
+Markdown/CSV/Text/HTML concatenate each table's rendered output (Markdown tables are separated by a
+horizontal rule); RTF merges all tables into a single `{\rtf1...}` document; XLS/XLSX write each
+table to its own sheet (sheet `1`, `2`, ... via `SpreadsheetWrite`).
 
 ## Style Presets
 

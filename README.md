@@ -73,6 +73,24 @@ tbl = ptSetColGroups(tbl, "Sample A" $| "Sample A" $| "Sample B" $| "Sample B");
 
 Markdown, CSV, and plain text render a pseudo-span (the label appears in the first column of the run, with blanks for the remaining spanned columns); LaTeX renders `\multicolumn{n}{c}{...}` with a `\cmidrule(lr){...}` underneath; HTML renders `<th colspan="n">`; RTF renders merged header cells via `\clmgf`/`\clmrg`.
 
+### Column alignment everywhere
+
+`ptSetColAlign(tbl, colAlign)` / `ptModelSetColAlign(model, colAlign)` previously only affected LaTeX output. The same `colAlign` string (one `l`/`c`/`r` per column, including the stub column) now also controls:
+
+- Markdown: emits a matching alignment row (`:---`, `:---:`, `---:`).
+- HTML: adds `style="text-align:left|center|right"` to header and data cells.
+- Plain text: left/center/right-pads each column.
+
+Leaving `colAlign` unset keeps the previous defaults: the stub column left-aligned and data columns right-aligned.
+
+### Exporting multiple tables to one file
+
+`ptExportAll(tables, fname)` writes an array of `ptTable` structs (e.g. `reshape(tbl, n, 1)` with indexed assignment) to a single file, dispatching on extension like `ptExport`:
+
+- Markdown/CSV/plain text/HTML: each table's rendered output is concatenated (Markdown tables are separated by a horizontal rule).
+- RTF: all tables are merged into a single `{\rtf1...}` document.
+- XLS/XLSX: each table is written to its own sheet (sheet `1`, `2`, ... via `SpreadsheetWrite`).
+
 Initial automatic adapters:
 
 - `olsmtOut`

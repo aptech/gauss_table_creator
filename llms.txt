@@ -45,6 +45,10 @@ Current/provisional modern API:
 
 `ptSetColGroups(tbl, colGroups)` sets one column-group label per body column (blank for ungrouped columns); contiguous equal labels form a span, rendered as a pseudo-span in Markdown/CSV/Text, `\multicolumn`/`\cmidrule` in LaTeX, `colspan` in HTML, and `\clmgf`/`\clmrg` cell merges in RTF.
 
+`ptSetColAlign(tbl, colAlign)` / `ptModelSetColAlign(model, colAlign)` (one `l`/`c`/`r` per column including the stub) now drives alignment in every renderer: Markdown gets a matching alignment row (`:---`/`:---:`/`---:`), HTML cells get `style="text-align:..."`, plain text columns are left/center/right-padded, and LaTeX uses the string as the `tabular` column spec. Leaving `colAlign` unset keeps the previous defaults (stub left, data right).
+
+`ptExportAll(tables, fname)` writes an array of `ptTable` structs to one file, dispatching on extension like `ptExport`: text-based formats (Markdown/CSV/Text/HTML) concatenate each table's rendered output, RTF merges them into a single document, and XLS/XLSX write each table to its own sheet.
+
 `ptModelSetStars(model, cutoffs, symbols)` / `ptSetStars(tbl, cutoffs, symbols)` set custom significance cutoffs/symbols (default `0.10`/`0.05`/`0.01` -> `"+"`/`"*"`/`"**"`); `ptModelNoStars(model)` / `ptNoStars(tbl)` disable stars.
 
 `ptModelApplyPreset(model, preset)` / `ptApplyPreset(tbl, preset)` apply a bundle of `ptFormat` settings for one of `"journal"`, `"compact"`, `"plain"`, or `"report"` (digits, significance stars, statRows, and statistic wrapper).

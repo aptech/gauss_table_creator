@@ -51,6 +51,8 @@ checkStringContains(ptRenderRtf(tbl), "\\cellx", "rtf table cell definition");
 checkStringContains(ptRenderRtf(tbl), "\\b Model 1\\b0\\cell", "rtf bold header cell");
 checkStringContains(ptRenderRtf(tbl), "1.235\\cell", "rtf data cell");
 checkStringEqual(ptEscapeRtf("a\\b{c}"), "a\\\\b\\{c\\}", "rtf escaping");
+checkStringEqual(ptStripRtfHeader("{\\rtf1\\ansi\nbody}\n"), "body}\n", "rtf header strip");
+checkStringEqual(ptStripRtfFooter("body}\n"), "body", "rtf footer strip");
 
 checkStringContains(ptRenderHtml(tbl), "<caption>Demo_table</caption>", "html caption");
 checkStringContains(ptRenderHtml(tbl), "<th>Model 1</th>", "html column header");
@@ -235,6 +237,22 @@ checkStringEqual(cmpTbl2.colGroups[1], "Set A", "compare colGroups first model l
 checkStringEqual(cmpTbl2.colGroups[2], "Set B", "compare colGroups second model label");
 checkStringContains(ptRenderMarkdown(cmpTbl2), "Set A", "compare markdown group header");
 
+struct ptTable alignTbl;
+alignTbl = ptSetColAlign(grpTbl, "lcrrc");
+checkStringContains(ptRenderMarkdown(alignTbl), ":---:", "markdown center alignment marker");
+checkStringContains(ptRenderMarkdown(alignTbl), "---:", "markdown right alignment marker");
+checkStringContains(ptRenderHtml(alignTbl), "style=\"text-align:center\"", "html center alignment style");
+checkStringContains(ptRenderHtml(alignTbl), "style=\"text-align:right\"", "html right alignment style");
+checkStringContains(ptRenderHtml(alignTbl), "style=\"text-align:left\"", "html left alignment style");
+
+local alignLines;
+alignLines = strsplit(ptRenderText(alignTbl), "\n");
+checkScalarEqual(strlen(alignLines[3]), strlen(alignLines[5]), "text rendering with colAlign aligns header and data row widths");
+
+struct ptTable multiTbl;
+multiTbl = reshape(ptTableFromMatrix(1.1, "x", "Model 1", "Table One"), 2, 1);
+multiTbl[2] = ptTableFromMatrix(2.2, "y", "Model 2", "Table Two");
+
 export_base = "C:\\Users\\eclow\\Documents\\GitHub\\gauss_table_creator\\tests\\_pubtable_test";
 call deleteFile(export_base $+ ".md");
 call deleteFile(export_base $+ ".tex");
@@ -252,5 +270,14 @@ checkScalarEqual(ptExport(tbl, export_base $+ ".rtf"), 0, "rtf export");
 checkScalarEqual(ptExport(tbl, export_base $+ ".html"), 0, "html export");
 xls_ret = ptExport(tbl, export_base $+ ".xls");
 checkScalarNotMissing(xls_ret, "xls export trapped return");
+
+call deleteFile(export_base $+ "_multi.md");
+call deleteFile(export_base $+ "_multi.rtf");
+call deleteFile(export_base $+ "_multi.xls");
+
+checkScalarEqual(ptExportAll(multiTbl, export_base $+ "_multi.md"), 0, "multi-table markdown export");
+checkScalarEqual(ptExportAll(multiTbl, export_base $+ "_multi.rtf"), 0, "multi-table rtf export");
+xls_ret = ptExportAll(multiTbl, export_base $+ "_multi.xls");
+checkScalarNotMissing(xls_ret, "multi-table xls export trapped return");
 
 print "pubtable tests passed";
