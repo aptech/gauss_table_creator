@@ -129,31 +129,32 @@ Initial automatic adapters:
 
 ### Auto-loading optional adapters
 
-Adapters for optional GAUSS packages (cmlmt, maxlikmt, optmt, tsmt) are auto-detected and loaded without any manual `#include` lines. `pubtable.src` includes the configuration automatically. The first time you include `pubtable.src` after installing the package, it silently detects which optional libraries are installed and writes the configuration. On the next include, all available adapters load automatically.
+Adapters for optional GAUSS packages (cmlmt, maxlikmt, optmt, tsmt) are auto-detected. The first time `pubtable.src` is loaded on an installed package, it silently checks which optional libraries are present and writes `pubtable_config.sdf` with the appropriate `#define` entries. No explicit call to `ptSetup()` is needed for installed packages.
 
-For installed packages this is completely automatic. For development installations (git clones, not installed via the package manager), run `ptSetupAt` once with the path to the `src/` directory:
-
-```gauss
-call ptSetupAt("C:/path/to/gauss_table_creator/src/");
-```
-
-To re-run detection manually (e.g. after installing a new optional library), call `ptSetup()`:
-
-```gauss
-call ptSetup();   /* re-detects installed libraries and updates pubtable_config.sdf */
-```
-
-When using an optional adapter, include the corresponding library and its `.sdf` before `pubtable.src` as normal — the adapter loads automatically:
+To activate the adapters, include the generated config before `pubtable.src` in your programs:
 
 ```gauss
 library pubtable;
 library cmlmt;
 #include cmlmt.sdf
+#include pubtable_config.sdf   /* generated automatically on first load */
 #include pubtable.sdf
-#include pubtable.src   /* cmlmt adapter auto-loads if detected */
+#include pubtable.src          /* cmlmt adapter loads because PT_USE_CMLMT is defined */
 ```
 
-qardl is auto-detected via the `QARDL_SDF_INCLUDED` guard in `qardl.sdf` — just include `qardl.sdf` before `pubtable.src` as usual.
+For development installations (git clones not installed via the package manager), run `ptSetupAt` once with the path to the `src/` directory:
+
+```gauss
+call ptSetupAt("C:/path/to/gauss_table_creator/src/");
+```
+
+To force re-detection after installing a new optional library, call `ptSetup()`:
+
+```gauss
+call ptSetup();
+```
+
+qardl is auto-detected via the `QARDL_SDF_INCLUDED` guard in `qardl.sdf` — just include `qardl.sdf` before `pubtable.src`; no config entry needed.
 
 Optional add-on package adapters (not wired into `ptModelFrom`/`ptTableFrom`, since they require packages that may not be installed):
 
