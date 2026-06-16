@@ -1,12 +1,20 @@
 /*
 ** pubtable_maxlikmt.src
 **
-** Optional pubtable adapter for maxlikmt results.
+** Optional pubtable adapter for maxlikmt results. Activated when
+** PT_USE_MAXLIKMT is defined in pubtable.dec.
 **
-** Requires `library maxlikmt;` and `#include maxlikmt.sdf` (which also
-** brings in `struct PV`) before this file, in addition to
-** pubtable.sdf / pubtable.src.
+** To use: run pubtableSet() once, then include pubtable.dec before
+** pubtable.src in your program. Also load the maxlikmt library and its
+** SDF before pubtable.src:
+**   library maxlikmt;
+**   #include maxlikmt.sdf
+**   #include pubtable.dec
+**   #include pubtable.sdf
+**   #include pubtable.src
 */
+#ifDef PT_USE_MAXLIKMT
+#include maxlikmt.sdf
 
 proc (1) = ptModelFromMaxlikmt(name, struct maxlikmtResults out);
     local names, estimates, se, tstat, pval;
@@ -29,3 +37,4 @@ endp;
 proc (1) = ptFromMaxlikmt(struct maxlikmtResults out);
     retp(ptModelTable(ptModelFromMaxlikmt("Maximum likelihood results", out)));
 endp;
+#endIf

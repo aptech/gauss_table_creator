@@ -12,9 +12,19 @@
 ** - garchEstimation (garchFit)
 ** - tscsmtOut (tscsFit)
 **
-** Requires `library tsmt;` and `#include tsmt.sdf` before this file,
-** in addition to pubtable.sdf / pubtable.src.
+** Activated when PT_USE_TSMT is defined in pubtable.dec. To use: run
+** pubtableSet() once, then include pubtable.dec before pubtable.src:
+**   library tsmt;
+**   #include tsmt.sdf
+**   #include pubtable.dec
+**   #include pubtable.sdf
+**   #include pubtable.src
+**
+** The tsPanelEstimationOut adapters also require #include tspanel.src
+** from the tsmt package source directory.
 */
+#ifDef PT_USE_TSMT
+#include tsmt.sdf
 
 proc (1) = ptModelFromArimamt(name, struct arimamtOut out);
     local names, se, tstat, pval, p, q;
@@ -280,3 +290,4 @@ proc (1) = ptFromTscsmt(struct tscsmtOut out);
 
     retp(tbl);
 endp;
+#endIf

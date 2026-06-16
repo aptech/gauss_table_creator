@@ -141,17 +141,24 @@ Initial automatic adapters:
 
 ### Auto-loading optional adapters
 
-Adapters for optional GAUSS packages (cmlmt, maxlikmt, optmt, tsmt) are auto-detected. The first time `pubtable.src` is loaded on an installed package, it silently checks which optional libraries are present and writes `pubtable_config.sdf` with the appropriate `#define` entries. No explicit call to `ptSetup()` is needed for installed packages.
+Adapters for optional GAUSS packages (cmlmt, maxlikmt, optmt, tsmt) are activated via `pubtable.dec`, a declaration file that ships with the library. Run `pubtableSet()` once after installing pubtable and any optional libraries to write the appropriate `#define` entries to `pubtable.dec`:
 
-To activate the adapters, include the generated config before `pubtable.src` in your programs:
+```gauss
+library pubtable;
+#include pubtable.sdf
+#include pubtable.src
+call pubtableSet();
+```
+
+Then include `pubtable.dec` before `pubtable.src` in your programs to activate the adapters:
 
 ```gauss
 library pubtable;
 library cmlmt;
 #include cmlmt.sdf
-#include pubtable_config.sdf   /* generated automatically on first load */
+#include pubtable.dec   /* written by pubtableSet() — defines PT_USE_CMLMT etc. */
 #include pubtable.sdf
-#include pubtable.src          /* cmlmt adapter loads because PT_USE_CMLMT is defined */
+#include pubtable.src   /* cmlmt adapter loads because PT_USE_CMLMT is defined */
 ```
 
 For development installations (git clones not installed via the package manager), run `ptSetupAt` once with the path to the `src/` directory:
@@ -160,13 +167,9 @@ For development installations (git clones not installed via the package manager)
 call ptSetupAt("C:/path/to/gauss_table_creator/src/");
 ```
 
-To force re-detection after installing a new optional library, call `ptSetup()`:
+Re-run `pubtableSet()` after installing or removing optional libraries.
 
-```gauss
-call ptSetup();
-```
-
-qardl is auto-detected via the `QARDL_SDF_INCLUDED` guard in `qardl.sdf` — just include `qardl.sdf` before `pubtable.src`; no config entry needed.
+qardl is auto-detected via the `QARDL_SDF_INCLUDED` guard in `qardl.sdf` — just include `qardl.sdf` before `pubtable.src`; no `pubtable.dec` entry needed.
 
 Optional add-on package adapters (not wired into `ptModelFrom`/`ptTableFrom`, since they require packages that may not be installed):
 

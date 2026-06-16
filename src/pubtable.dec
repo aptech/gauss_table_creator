@@ -1,0 +1,24 @@
+/* pubtable.dec
+**
+** Declaration file for the pubtable library.
+**
+** Run pubtableSet() once after installing pubtable and any optional GAUSS
+** libraries (cmlmt, maxlikmt, optmt, tsmt). The function detects which
+** libraries are installed and writes this file with the appropriate #define
+** entries.
+**
+** Add '#include pubtable.dec' before '#include pubtable.src' in your
+** programs to activate optional adapters:
+**
+**   library pubtable;
+**   library cmlmt;
+**   #include cmlmt.sdf
+**   #include pubtable.dec
+**   #include pubtable.sdf
+**   #include pubtable.src
+**
+** This template ships with the package. The generated version is
+** machine-specific and should not be committed to shared source control.
+*/
+
+declare matrix _pubtable_ver = { 0, 3, 0 };

@@ -10,12 +10,17 @@
 ** - ardlFullOut / qardlFullOut / nardlFullOut / csardlFullOut
 **   (ardlFull(), qardlFull(), nardlFull(), csardlFull())
 **
-** Requires `library qardl;` and `#include qardl.sdf` before this file, in
-** addition to pubtable.sdf / pubtable.src.
+** Activated when QARDL_SDF_INCLUDED is defined (set by qardl.sdf's own
+** include guard). To use: include qardl.sdf before pubtable.src:
+**   library qardl;
+**   #include qardl.sdf
+**   #include pubtable.sdf
+**   #include pubtable.src
 **
 ** All adapters assume the typical ARDL case p >= 1 (an autoregressive lag
 ** term is present); rows(out.phi) == 0 is not specially handled.
 */
+#ifDef QARDL_SDF_INCLUDED
 
 /*
 ** ardlOut: long-run beta, short-run phi, alpha (intercept), rho (speed of
@@ -380,3 +385,4 @@ proc (1) = ptFromArdlFamily(x);
     errorlog "ptFromArdlFamily: unsupported QARDL output structure.";
     end;
 endp;
+#endIf

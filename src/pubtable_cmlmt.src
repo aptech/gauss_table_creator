@@ -2,12 +2,19 @@
 ** pubtable_cmlmt.src
 **
 ** Optional pubtable adapter for cmlmt (constrained maximum likelihood)
-** results.
+** results. Activated when PT_USE_CMLMT is defined in pubtable.dec.
 **
-** Requires `library cmlmt;` and `#include cmlmt.sdf` (which also brings
-** in `struct PV`) before this file, in addition to pubtable.sdf /
-** pubtable.src.
+** To use: run pubtableSet() once, then include pubtable.dec before
+** pubtable.src in your program. Also load the cmlmt library and its
+** SDF before pubtable.src:
+**   library cmlmt;
+**   #include cmlmt.sdf
+**   #include pubtable.dec
+**   #include pubtable.sdf
+**   #include pubtable.src
 */
+#ifDef PT_USE_CMLMT
+#include cmlmt.sdf
 
 proc (1) = ptModelFromCmlmt(name, struct cmlmtResults out);
     local names, estimates, se, tstat, pval;
@@ -30,3 +37,4 @@ endp;
 proc (1) = ptFromCmlmt(struct cmlmtResults out);
     retp(ptModelTable(ptModelFromCmlmt("Constrained ML results", out)));
 endp;
+#endIf

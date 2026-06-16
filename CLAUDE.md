@@ -132,7 +132,7 @@ Current implemented/provisional public API includes:
 - `ptCompareOptionsCreate`, `ptCompareSetTermOrder`, `ptCompareSetGofOrder`, `ptCompareSetLabelMap`, `ptCompareSetNotes`
 - `ptExport`, `ptExportAll`, `ptExportAllFormats`
 - `ptRenderMarkdown`, `ptRenderLatex`, `ptRenderCsv`, `ptRenderText`, `ptRenderRtf`, `ptRenderHtml`
-- `ptSetup`, `ptSetupAt` (setup helpers for optional adapter auto-loading)
+- `pubtableSet` (primary setup function), `ptSetup` (alias for `pubtableSet`), `ptSetupAt` (dev-path variant)
 
 Current automatic adapters:
 
@@ -142,7 +142,11 @@ Current automatic adapters:
 - `dstatmtOut`
 - `fglsOut`
 
-`ptSetup()` / `ptSetupAt(srcDir)` detect installed optional GAUSS libraries at runtime via `fopen(getGAUSSHome() $+ "pkgs/X/src/X.sdf", "r")` and write `pubtable_config.sdf` with `#define PT_USE_X` sentinels for each detected library (cmlmt, maxlikmt, optmt, tsmt). An auto-loading block at the bottom of `pubtable.src` checks `#ifDef PT_USE_X` (and `QARDL_SDF_INCLUDED` for qardl) and auto-includes the corresponding adapter `.src`. Users run `ptSetup()` once after installing the package, then add `#include pubtable_config.sdf` before `pubtable.sdf` in their programs. qardl is detected via `QARDL_SDF_INCLUDED` (set by `qardl.sdf`'s own include guard) and requires no config entry. `src/pubtable_config.sdf` ships as an empty template; the generated version is machine-specific and should not be committed to source control. `_ptSetupSilent()` runs as top-level code at the end of `pubtable.src` — on first load of an installed package it silently auto-generates the config (checks for the "Auto-generated" marker via `fgets`, only runs if `pkgs/pubtable/src/pubtable.src` exists); the config takes effect on the next `#include pubtable.src`. Note: `#include pubtable_config.sdf` cannot be embedded in `pubtable.src` itself because GAUSS's preprocessor searches the working directory (not the including file's directory) for relative paths in nested includes, making the path unreliable in the explicit `#include` workflow.
+`pubtableSet()` detects installed optional GAUSS libraries at runtime via `fopen(getGAUSSHome() $+ "pkgs/X/src/X.sdf", "r")` and writes `pubtable.dec` with `declare matrix _pubtable_ver = {0, 3, 0};` plus `#define PT_USE_X` sentinels for each detected library (cmlmt, maxlikmt, optmt, tsmt). `ptSetup()` is an alias for `pubtableSet()`; `ptSetupAt(srcDir)` writes `pubtable.dec` to a specified directory (for dev/git-clone installs). `src/pubtable.dec` ships as a template with just the version declaration; the generated version is machine-specific and should not be committed to source control.
+
+Each adapter source file (`pubtable_cmlmt.src`, `pubtable_maxlikmt.src`, `pubtable_optmt.src`, `pubtable_tsmt.src`) wraps its entire body in `#ifDef PT_USE_X / #endIf`. The qardl adapter (`pubtable_qardl.src`) is wrapped in `#ifDef QARDL_SDF_INCLUDED / #endIf` (set by `qardl.sdf`'s own include guard). All adapter files are included unconditionally at the bottom of `pubtable.src`; the guards inside them make the includes safe when the corresponding library is not present.
+
+Users run `pubtableSet()` once after installing the package, then add `#include pubtable.dec` before `pubtable.src` in their programs to activate adapters. `_ptSetupSilent()` runs as top-level code at the end of `pubtable.src` — on first load of an installed package it silently auto-generates `pubtable.dec` (checks for "Auto-generated" marker via `fgets`, only runs if `pkgs/pubtable/src/pubtable.src` exists).
 
 Optional add-on package adapters (separate source files, not wired into `ptModelFrom`/`ptTableFrom` since the underlying packages may not be installed):
 

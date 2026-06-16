@@ -2,16 +2,24 @@
 ** pubtable_optmt.src
 **
 ** Optional pubtable adapter for optmt (general optimization) results.
+** Activated when PT_USE_OPTMT is defined in pubtable.dec.
 **
 ** struct optmtResults has no covariance matrix, so its parameters
 ** cannot populate a standard ptModel estimate/SE table. Instead,
 ** ptTableFromOptmt builds a simple parameter/estimate/gradient table
 ** with the function value and return code reported as table notes.
 **
-** Requires `library optmt;` and `#include optmt.sdf` (which also
-** brings in `struct PV`) before this file, in addition to
-** pubtable.sdf / pubtable.src.
+** To use: run pubtableSet() once, then include pubtable.dec before
+** pubtable.src in your program. Also load the optmt library and its
+** SDF before pubtable.src:
+**   library optmt;
+**   #include optmt.sdf
+**   #include pubtable.dec
+**   #include pubtable.sdf
+**   #include pubtable.src
 */
+#ifDef PT_USE_OPTMT
+#include optmt.sdf
 
 proc (1) = ptTableFromOptmt(struct optmtResults out);
     local names, estimates, gradient;
@@ -31,3 +39,4 @@ proc (1) = ptTableFromOptmt(struct optmtResults out);
 
     retp(tbl);
 endp;
+#endIf
