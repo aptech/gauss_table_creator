@@ -67,6 +67,8 @@ Current adapters:
 - `dstatmtOut`
 - `fglsOut`
 
+`ptSetup()` detects installed optional GAUSS libraries at runtime (via `fopen(getGAUSSHome()...)`) and writes `src/pubtable_config.sdf` with `#define PT_USE_X` entries for each found library (cmlmt, maxlikmt, optmt, tsmt). `ptSetupAt(srcDir)` does the same to a custom directory. After generating the config, users include `#include pubtable_config.sdf` before `pubtable.sdf`/`pubtable.src`; the auto-loading block at the bottom of `pubtable.src` then includes the corresponding adapter .src files via `#ifDef PT_USE_X`. qardl is auto-detected via the `QARDL_SDF_INCLUDED` guard in `qardl.sdf` and does not need a config entry.
+
 Optional add-on package adapters (separate files, not wired into `ptModelFrom`/`ptTableFrom`):
 
 - `src/pubtable_maxlikmt.src`: `ptModelFromMaxlikmt`/`ptFromMaxlikmt` for `maxlikmtResults` (requires `library maxlikmt;` + `#include maxlikmt.sdf`)

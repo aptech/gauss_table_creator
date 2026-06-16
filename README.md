@@ -127,6 +127,36 @@ Initial automatic adapters:
 - `dstatmtOut`
 - `fglsOut`
 
+### Auto-loading optional adapters with `ptSetup()`
+
+Adapters for optional GAUSS packages (cmlmt, maxlikmt, optmt, tsmt) can be auto-detected and loaded without manual `#include` lines. Run `ptSetup()` once after installing pubtable:
+
+```gauss
+library pubtable;
+#include pubtable.sdf
+#include pubtable.src
+call ptSetup();   /* detects installed optional libraries and writes pubtable_config.sdf */
+```
+
+For development installations (git clones, not installed via the package manager), use `ptSetupAt` with the path to the `src/` directory:
+
+```gauss
+call ptSetupAt("C:/path/to/gauss_table_creator/src/");
+```
+
+After generating the config, add one line before your other `#include` statements in your programs:
+
+```gauss
+library pubtable;
+library cmlmt;
+#include cmlmt.sdf
+#include pubtable_config.sdf   /* enables adapters for all detected libraries */
+#include pubtable.sdf
+#include pubtable.src
+```
+
+qardl is auto-detected via the `QARDL_SDF_INCLUDED` guard in `qardl.sdf` and does not need a config entry — just include `qardl.sdf` before `pubtable.src` as usual.
+
 Optional add-on package adapters (not wired into `ptModelFrom`/`ptTableFrom`, since they require packages that may not be installed):
 
 - `maxlikmtResults`: `ptModelFromMaxlikmt`/`ptFromMaxlikmt` in `src/pubtable_maxlikmt.src`. Requires `library maxlikmt;` and `#include maxlikmt.sdf` before including this file.

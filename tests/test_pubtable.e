@@ -320,4 +320,11 @@ checkFileExists(export_base $+ "_batch.md", "batch report markdown file written"
 checkFileExists(export_base $+ "_batch.tex", "batch report latex file written");
 checkFileExists(export_base $+ "_batch.html", "batch report html file written");
 
+/* ptSetup / ptSetupAt: write config to tests/ dir to avoid modifying src/ */
+ptSetupTest = "C:/Users/eclow/Documents/GitHub/gauss_table_creator/tests/";
+call deleteFile(ptSetupTest $+ "pubtable_config.sdf");
+checkScalarEqual(ptSetupAt(ptSetupTest), 0, "ptSetupAt returns 0");
+checkFileExists(ptSetupTest $+ "pubtable_config.sdf", "ptSetupAt writes config file");
+call deleteFile(ptSetupTest $+ "pubtable_config.sdf");
+
 print "pubtable tests passed";

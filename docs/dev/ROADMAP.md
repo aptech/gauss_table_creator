@@ -115,6 +115,17 @@ Evaluate support for:
 - [x] `tsmt` (optional add-on package; `src/pubtable_tsmt.src`, covers `arimamtOut`, `tsPanelEstimationOut`, `automtOut`, `varmamtOut`, `lsdvmtOut`, `switchmtOut`, `garchEstimation`, and `tscsmtOut`; `sbOut`/`TAROut` structural-break/threshold structs and the `tspanelOut` wrapper are not covered)
 - [x] `optmt` (optional add-on package; `src/pubtable_optmt.src`, `ptTableFromOptmt` builds a parameter/estimate/gradient table since `optmtResults` has no covariance matrix for SE)
 
+## Auto-loading with ptSetup()
+
+Optional adapter auto-loading is implemented via:
+
+- [x] `ptSetup()` / `ptSetupAt(srcDir)`: detect installed optional libraries via `fopen(getGAUSSHome()...)` and write `pubtable_config.sdf` with `#define PT_USE_X` entries.
+- [x] Auto-loading block at the bottom of `pubtable.src`: `#ifDef PT_USE_CMLMT` / `#ifDef PT_USE_MAXLIKMT` / `#ifDef PT_USE_OPTMT` / `#ifDef PT_USE_TSMT` — includes the adapter `.src` when the sentinel is defined.
+- [x] qardl: auto-detected via `QARDL_SDF_INCLUDED` (the include guard in `qardl.sdf`) — no config entry needed.
+- [x] `src/pubtable_config.sdf`: default empty template ships with the package; `ptSetup()` overwrites it with detected library sentinels.
+
+Users run `ptSetup()` once after install, then add `#include pubtable_config.sdf` before `pubtable.sdf` in their programs to enable all available adapters automatically.
+
 ## Design Constraint
 
 Adapters should remain explicit.

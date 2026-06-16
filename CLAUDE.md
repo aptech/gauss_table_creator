@@ -132,6 +132,7 @@ Current implemented/provisional public API includes:
 - `ptCompareOptionsCreate`, `ptCompareSetTermOrder`, `ptCompareSetGofOrder`, `ptCompareSetLabelMap`, `ptCompareSetNotes`
 - `ptExport`, `ptExportAll`, `ptExportAllFormats`
 - `ptRenderMarkdown`, `ptRenderLatex`, `ptRenderCsv`, `ptRenderText`, `ptRenderRtf`, `ptRenderHtml`
+- `ptSetup`, `ptSetupAt` (setup helpers for optional adapter auto-loading)
 
 Current automatic adapters:
 
@@ -140,6 +141,8 @@ Current automatic adapters:
 - `gmmOut` through `ptModelFrom`
 - `dstatmtOut`
 - `fglsOut`
+
+`ptSetup()` / `ptSetupAt(srcDir)` detect installed optional GAUSS libraries at runtime via `fopen(getGAUSSHome() $+ "pkgs/X/src/X.sdf", "r")` and write `pubtable_config.sdf` with `#define PT_USE_X` sentinels for each detected library (cmlmt, maxlikmt, optmt, tsmt). An auto-loading block at the bottom of `pubtable.src` checks `#ifDef PT_USE_X` (and `QARDL_SDF_INCLUDED` for qardl) and auto-includes the corresponding adapter `.src`. Users run `ptSetup()` once after installing the package, then add `#include pubtable_config.sdf` before `pubtable.sdf` in their programs. qardl is detected via `QARDL_SDF_INCLUDED` (set by `qardl.sdf`'s own include guard) and requires no config entry. `src/pubtable_config.sdf` ships as an empty template; the generated version is machine-specific and should not be committed to source control.
 
 Optional add-on package adapters (separate source files, not wired into `ptModelFrom`/`ptTableFrom` since the underlying packages may not be installed):
 
