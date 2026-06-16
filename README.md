@@ -127,35 +127,33 @@ Initial automatic adapters:
 - `dstatmtOut`
 - `fglsOut`
 
-### Auto-loading optional adapters with `ptSetup()`
+### Auto-loading optional adapters
 
-Adapters for optional GAUSS packages (cmlmt, maxlikmt, optmt, tsmt) can be auto-detected and loaded without manual `#include` lines. Run `ptSetup()` once after installing pubtable:
+Adapters for optional GAUSS packages (cmlmt, maxlikmt, optmt, tsmt) are auto-detected and loaded without any manual `#include` lines. `pubtable.src` includes the configuration automatically. The first time you include `pubtable.src` after installing the package, it silently detects which optional libraries are installed and writes the configuration. On the next include, all available adapters load automatically.
 
-```gauss
-library pubtable;
-#include pubtable.sdf
-#include pubtable.src
-call ptSetup();   /* detects installed optional libraries and writes pubtable_config.sdf */
-```
-
-For development installations (git clones, not installed via the package manager), use `ptSetupAt` with the path to the `src/` directory:
+For installed packages this is completely automatic. For development installations (git clones, not installed via the package manager), run `ptSetupAt` once with the path to the `src/` directory:
 
 ```gauss
 call ptSetupAt("C:/path/to/gauss_table_creator/src/");
 ```
 
-After generating the config, add one line before your other `#include` statements in your programs:
+To re-run detection manually (e.g. after installing a new optional library), call `ptSetup()`:
+
+```gauss
+call ptSetup();   /* re-detects installed libraries and updates pubtable_config.sdf */
+```
+
+When using an optional adapter, include the corresponding library and its `.sdf` before `pubtable.src` as normal — the adapter loads automatically:
 
 ```gauss
 library pubtable;
 library cmlmt;
 #include cmlmt.sdf
-#include pubtable_config.sdf   /* enables adapters for all detected libraries */
 #include pubtable.sdf
-#include pubtable.src
+#include pubtable.src   /* cmlmt adapter auto-loads if detected */
 ```
 
-qardl is auto-detected via the `QARDL_SDF_INCLUDED` guard in `qardl.sdf` and does not need a config entry — just include `qardl.sdf` before `pubtable.src` as usual.
+qardl is auto-detected via the `QARDL_SDF_INCLUDED` guard in `qardl.sdf` — just include `qardl.sdf` before `pubtable.src` as usual.
 
 Optional add-on package adapters (not wired into `ptModelFrom`/`ptTableFrom`, since they require packages that may not be installed):
 
