@@ -185,4 +185,4 @@ Modern examples are in `examples/model_table_ols.e`, `examples/model_comparison.
 - [docs/migration.md](docs/migration.md): mapping from the legacy `tableControl`/`tableSet...`/`outputTable` workflow to the modern `pt*` API.
 
 ## Authors
-*  Erica Clower - [Aptech Systems, Inc](www.aptech.com)
+*  Eric Clower - [IMPLAN](www.aptech.com)
