@@ -8,11 +8,13 @@ general overview and quick-start examples.
 
 Command reference for the core modern entry points:
 
-- [ptTableFromMatrix](api/ptTableFromMatrix.md) — build a table from a matrix plus row/column labels.
-- [ptTableFrom](api/ptTableFrom.md) — build a table directly from a supported GAUSS output struct.
-- [ptModelFrom](api/ptModelFrom.md) — build a `ptModel` from a supported GAUSS estimation output.
-- [ptModelCompare](api/ptModelCompare.md) — side-by-side model comparison tables, including `ptModelCompareWith`/`ptCompareOptions`.
-- [ptExport](api/ptExport.md) — render and write a table, dispatching on file extension.
+| Function | Description |
+| --- | --- |
+| [ptTableFromMatrix](api/ptTableFromMatrix.md) | Build a table from a matrix plus row/column labels. |
+| [ptTableFrom](api/ptTableFrom.md) | Build a table directly from a supported GAUSS output struct. |
+| [ptModelFrom](api/ptModelFrom.md) | Build a `ptModel` from a supported GAUSS estimation output. |
+| [ptModelCompare](api/ptModelCompare.md) | Create side-by-side model comparison tables, including `ptModelCompareWith`/`ptCompareOptions`. |
+| [ptExport](api/ptExport.md) | Render and write a table, dispatching on file extension. |
 
 Setters (`ptSet*`/`ptModelSet*`), renderers (`ptRender*`), and adapters (`ptModelFrom...`/`ptFrom...`)
 are documented inline in `src/pubtable.src` and demonstrated in `examples/`; see `llms.txt` and the
@@ -34,4 +36,6 @@ modern `pt*` API documented above and in the top-level `README.md`.
 
 ## Development docs (`docs/dev/`)
 
-- [ROADMAP.md](dev/ROADMAP.md) — project roadmap and status.
+| Document | Description |
+| --- | --- |
+| [ROADMAP.md](dev/ROADMAP.md) | Project roadmap and status. |
