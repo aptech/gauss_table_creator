@@ -16,6 +16,7 @@
         "pubtable_legacy.sdf",
         "pubtable_legacy_output.src",
         "pubtable_legacy_setters.src",
+        "pubtable.dec",
         "pubtable_cmlmt.src",
         "pubtable_maxlikmt.src",
         "pubtable_optmt.src",
