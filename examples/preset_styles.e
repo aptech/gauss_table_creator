@@ -5,10 +5,10 @@
 ** statistic-row / star configuration on the same OLS model.
 **
 ** Presets:
-**   "journal"  -- 3 digits, +/*/** stars at 0.10/0.05/0.01, SE in parens
-**   "compact"  -- 2 digits, +/*/** stars at 0.10/0.05/0.01, SE in parens
+**   "journal"  -- 3 digits, +/ * / ** stars at 0.10/0.05/0.01, SE in parens
+**   "compact"  -- 2 digits, +/ * / ** stars at 0.10/0.05/0.01, SE in parens
 **   "plain"    -- 3 digits, no stars, SE without parentheses
-**   "report"   -- 3 digits, +/*/** stars at 0.10/0.05/0.01, SE + p-value rows
+**   "report"   -- 3 digits, +/ * / ** stars at 0.10/0.05/0.01, SE + p-value rows
 **
 ** Steps:
 **   1. Estimate the model.
