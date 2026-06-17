@@ -1039,7 +1039,7 @@ proc (1) = ptModelFromOlsmt(name, struct olsmtOut out);
     mdl = ptModelCreate(name, out.b, se);
     mdl = ptModelSetNames(mdl, names);
     mdl = ptModelSetPValues(mdl, pval);
-    mdl = ptModelSetGOF(mdl, "N" $| "R-squared" $| "DF Residual", rows(out.resid) | out.rsq | out.df);
+    mdl = ptModelSetGOF(mdl, "N" $| "R-squared" $| "DF Residual", (out.df + rows(out.b)) | out.rsq | out.df);
 
     retp(mdl);
 endp;
@@ -1063,7 +1063,7 @@ proc (1) = ptModelFromFgls(name, struct fglsOut out);
     mdl = ptModelSetNames(mdl, names);
     mdl = ptModelSetPValues(mdl, out.pvt);
     mdl = ptModelSetCI(mdl, out.ci[., 1], out.ci[., 2]);
-    mdl = ptModelSetGOF(mdl, "N" $| "R-squared" $| "DF Residual", rows(out.resid) | out.rsq | out.df);
+    mdl = ptModelSetGOF(mdl, "N" $| "R-squared" $| "DF Residual", (out.df + rows(out.beta_fgls)) | out.rsq | out.df);
 
     retp(mdl);
 endp;
@@ -1251,10 +1251,10 @@ proc (1) = ptRenderMarkdown(struct ptTable tbl);
     endif;
 
     if ptHasColGroups(tbl.colGroups);
-        out = out $+ ptJoinRow(ptColGroupRow(tbl), "|") $+ "\n";
+        out = out $+ "|" $+ ptJoinRow(ptColGroupRow(tbl), "|") $+ "|\n";
     endif;
 
-    out = out $+ ptJoinRow(arr[1, .], "|") $+ "\n";
+    out = out $+ "|" $+ ptJoinRow(arr[1, .], "|") $+ "|\n";
     sep = ptBlankSA(1, cols(arr));
     for i(1, cols(arr), 1);
         if tbl.fmt.colAlign $/= "";
@@ -1263,7 +1263,7 @@ proc (1) = ptRenderMarkdown(struct ptTable tbl);
             sep[i] = "---";
         endif;
     endfor;
-    out = out $+ ptJoinRow(sep, "|") $+ "\n";
+    out = out $+ "|" $+ ptJoinRow(sep, "|") $+ "|\n";
 
     for i(2, rows(arr), 1);
         row = arr[i, .];
@@ -1273,7 +1273,7 @@ proc (1) = ptRenderMarkdown(struct ptTable tbl);
                 row[j] = ptStyleMarkdown(row[j], styles[j]);
             endif;
         endfor;
-        out = out $+ ptJoinRow(row, "|") $+ "\n";
+        out = out $+ "|" $+ ptJoinRow(row, "|") $+ "|\n";
     endfor;
 
     if tbl.notes[1] $/= "";
