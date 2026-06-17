@@ -833,7 +833,7 @@ proc (1) = ptModelTable(struct ptModel mdl);
 
     for i(1, n_gof, 1);
         row_names[rows_per_term * n_terms + i] = mdl.gofNames[i];
-        body[rows_per_term * n_terms + i, 1] = ptFormatNumber(mdl.gofValues[i], mdl.fmt.digits);
+        body[rows_per_term * n_terms + i, 1] = ptFormatGOFValue(mdl.gofValues[i], mdl.fmt.digits);
     endfor;
 
     tbl = ptTableCreate(mdl.name);
@@ -940,7 +940,7 @@ proc (1) = ptModelCompareWith(struct ptModel models, struct ptCompareOptions opt
             if idx == 0;
                 body[row, j] = "";
             else;
-                body[row, j] = ptFormatNumber(models[j].gofValues[idx], models[j].fmt.digits);
+                body[row, j] = ptFormatGOFValue(models[j].gofValues[idx], models[j].fmt.digits);
             endif;
         endfor;
     endfor;
@@ -1113,9 +1113,14 @@ proc (1) = ptFromDstatmt(struct dstatmtOut out);
     local body;
     struct ptTable tbl;
 
-    body = out.mean ~ out.std ~ out.min ~ out.max ~ out.valid ~ out.missing;
+    /* Continuous columns use default digit formatting; count columns are integers. */
+    body = ptFormatMatrix(out.mean ~ out.std ~ out.min ~ out.max, 3);
+    body = body $~ ptFormatMatrix(out.valid ~ out.missing, 0);
 
-    tbl = ptTableFromMatrix(body, out.vnames, "Mean" $| "Std. Dev." $| "Min" $| "Max" $| "Valid" $| "Missing", "Summary statistics");
+    tbl = ptTableCreate("Summary statistics");
+    tbl.rowNames = ptLabelsToCol(out.vnames, rows(out.mean), "ptFromDstatmt", "vnames");
+    tbl.colNames = "Mean" $| "Std. Dev." $| "Min" $| "Max" $| "Valid" $| "Missing";
+    tbl.body = body;
     tbl.stubName = "Variable";
 
     retp(tbl);
@@ -1140,6 +1145,18 @@ proc (1) = ptFormatNumber(x, digits);
     endif;
 
     retp(sprintf("%." $+ sprintf("%d", digits) $+ "f", x));
+endp;
+
+/* Format a GOF/count value: whole numbers render as integers ("74"),
+** fractional values use the standard digit count ("0.661"). */
+proc (1) = ptFormatGOFValue(x, digits);
+    if scalmiss(x);
+        retp("");
+    endif;
+    if x == floor(x);
+        retp(sprintf("%.0f", x));
+    endif;
+    retp(ptFormatNumber(x, digits));
 endp;
 
 proc (1) = ptFormatEstimate(x, pval, struct ptFormat fmt);

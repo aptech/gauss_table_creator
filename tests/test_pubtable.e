@@ -138,7 +138,7 @@ checkStringEqual(cmpTbl.rowNames[7], "N", "model comparison GOF row from second 
 checkStringEqual(cmpTbl.body[3, 2], "", "blank cell for term missing from second model");
 checkStringEqual(cmpTbl.body[5, 1], "", "blank cell for term missing from first model");
 checkStringEqual(cmpTbl.body[7, 1], "", "blank cell for GOF missing from first model");
-checkStringEqual(cmpTbl.body[7, 2], "100.000", "GOF value present for second model");
+checkStringEqual(cmpTbl.body[7, 2], "100", "GOF value present for second model (integer)");
 
 struct ptModel statMdl;
 statMdl = ptModelCreate("StatRows", 1.2 | 0.4, 0.1 | 0.2);
