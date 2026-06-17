@@ -10,7 +10,6 @@ ctl.output = 0;
 fname = getGAUSSHome() $+ "examples/auto.dat";
 out = olsmt(ctl, fname, "mpg ~ weight + length");
 
-struct ptTable tbl;
 tbl = ptTableFrom(out);
 tbl = ptSetTitle(tbl, "OLS Regression");
 

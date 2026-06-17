@@ -10,19 +10,10 @@
 ** Prerequisites:
 **   1. Run pubtableSet() once to generate pubtable.dec with PT_USE_MAXLIKMT.
 **   2. maxlikmt must be installed: library maxlikmt must load without error.
-**
-** Include order matters: maxlikmt.sdf must come before pubtable.dec so that
-** the maxlikmt structs are defined before pubtable.src loads the adapter.
 */
 
 new;
-library maxlikmt;
-library pubtable;
-
-#include maxlikmt.sdf
-#include pubtable.dec
-#include pubtable.sdf
-#include pubtable.src
+library maxlikmt, pubtable;
 
 /* --- Normal log-likelihood ----------------------------------------------- */
 proc lnorm(struct PV p, struct DS d, ind);
@@ -71,11 +62,9 @@ struct maxlikmtResults out;
 out = maxlikmt(&lnorm, p0, d0, c0);
 
 /* --- Build pubtable output ---------------------------------------------- */
-struct ptModel mdl;
 mdl = ptModelFromMaxlikmt("Normal MLE", out);
 mdl = ptModelSetNotes(mdl, "Dependent variable: mpg.  Estimates match OLS.");
 
-struct ptTable tbl;
 tbl = ptModelTable(mdl);
 tbl = ptSetTitle(tbl, "Normal MLE (equivalent to OLS)");
 

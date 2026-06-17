@@ -1,4 +1,4 @@
-/*
+*
 ** pubtable_tsmt.src
 **
 ** Optional pubtable adapters for tsmt (Time Series MT) results:
@@ -26,7 +26,7 @@
 #ifDef PT_USE_TSMT
 #include tsmt.sdf
 
-proc (1) = ptModelFromArimamt(name, struct arimamtOut out);
+proc (struct ptModel) = ptModelFromArimamt(name, struct arimamtOut out);
     local names, se, tstat, pval, p, q;
     struct ptModel mdl;
 
@@ -53,11 +53,11 @@ proc (1) = ptModelFromArimamt(name, struct arimamtOut out);
     retp(mdl);
 endp;
 
-proc (1) = ptFromArimamt(struct arimamtOut out);
+proc (struct ptTable) = ptFromArimamt(struct arimamtOut out);
     retp(ptModelTable(ptModelFromArimamt("ARIMA results", out)));
 endp;
 
-proc (1) = ptModelFromTsPanel(name, struct tsPanelEstimationOut out);
+proc (struct ptModel) = ptModelFromTsPanel(name, struct tsPanelEstimationOut out);
     local names, k;
     struct ptModel mdl;
 
@@ -81,7 +81,7 @@ proc (1) = ptModelFromTsPanel(name, struct tsPanelEstimationOut out);
     retp(mdl);
 endp;
 
-proc (1) = ptFromTsPanel(struct tsPanelEstimationOut out);
+proc (struct ptTable) = ptFromTsPanel(struct tsPanelEstimationOut out);
     local title;
 
     if out.method $== "ols";
@@ -104,7 +104,7 @@ endp;
 ** autoregressive lag coefficients (phi/vcphi). Row names are generic since
 ** automtOut does not carry the original variable names.
 */
-proc (1) = ptModelFromAutomt(name, struct automtOut out);
+proc (struct ptModel) = ptModelFromAutomt(name, struct automtOut out);
     local k, p, names, estimates, se, pval;
     struct ptModel mdl;
 
@@ -124,7 +124,7 @@ proc (1) = ptModelFromAutomt(name, struct automtOut out);
     retp(mdl);
 endp;
 
-proc (1) = ptFromAutomt(struct automtOut out);
+proc (struct ptTable) = ptFromAutomt(struct automtOut out);
     retp(ptModelTable(ptModelFromAutomt("Autoregression results", out)));
 endp;
 
@@ -132,7 +132,7 @@ endp;
 ** varmamtOut (varmaFit): parameter vector / covariance follow the same
 ** struct PV pattern as cmlmtResults / maxlikmtResults.
 */
-proc (1) = ptModelFromVarmamt(name, struct varmamtOut out);
+proc (struct ptModel) = ptModelFromVarmamt(name, struct varmamtOut out);
     local names, estimates, se, pval;
     struct ptModel mdl;
 
@@ -149,7 +149,7 @@ proc (1) = ptModelFromVarmamt(name, struct varmamtOut out);
     retp(mdl);
 endp;
 
-proc (1) = ptFromVarmamt(struct varmamtOut out);
+proc (struct ptTable) = ptFromVarmamt(struct varmamtOut out);
     retp(ptModelTable(ptModelFromVarmamt("VARMA results", out)));
 endp;
 
@@ -159,7 +159,7 @@ endp;
 ** regStderrs). Row names are generic since lsdvmtOut does not carry the
 ** original variable names.
 */
-proc (1) = ptModelFromLsdvmt(name, struct lsdvmtOut out);
+proc (struct ptModel) = ptModelFromLsdvmt(name, struct lsdvmtOut out);
     local p, k, names, estimates, se, pval;
     struct ptModel mdl;
 
@@ -179,7 +179,7 @@ proc (1) = ptModelFromLsdvmt(name, struct lsdvmtOut out);
     retp(mdl);
 endp;
 
-proc (1) = ptFromLsdvmt(struct lsdvmtOut out);
+proc (struct ptTable) = ptFromLsdvmt(struct lsdvmtOut out);
     retp(ptModelTable(ptModelFromLsdvmt("LSDV results", out)));
 endp;
 
@@ -187,7 +187,7 @@ endp;
 ** switchmtOut (switchFit): parameter vector / covariance follow the same
 ** struct PV pattern as cmlmtResults / maxlikmtResults.
 */
-proc (1) = ptModelFromSwitchmt(name, struct switchmtOut out);
+proc (struct ptModel) = ptModelFromSwitchmt(name, struct switchmtOut out);
     local names, estimates, se, pval;
     struct ptModel mdl;
 
@@ -204,7 +204,7 @@ proc (1) = ptModelFromSwitchmt(name, struct switchmtOut out);
     retp(mdl);
 endp;
 
-proc (1) = ptFromSwitchmt(struct switchmtOut out);
+proc (struct ptTable) = ptFromSwitchmt(struct switchmtOut out);
     retp(ptModelTable(ptModelFromSwitchmt("Markov-switching results", out)));
 endp;
 
@@ -214,7 +214,7 @@ endp;
 ** out.moment (set to the parameter covariance when garchControl.covType
 ** requests ML/QML standard errors).
 */
-proc (1) = ptModelFromGarchmt(name, struct garchEstimation out);
+proc (struct ptModel) = ptModelFromGarchmt(name, struct garchEstimation out);
     local names, estimates, se, pval;
     struct ptModel mdl;
 
@@ -231,7 +231,7 @@ proc (1) = ptModelFromGarchmt(name, struct garchEstimation out);
     retp(mdl);
 endp;
 
-proc (1) = ptFromGarchmt(struct garchEstimation out);
+proc (struct ptTable) = ptFromGarchmt(struct garchEstimation out);
     retp(ptModelTable(ptModelFromGarchmt("GARCH results", out)));
 endp;
 
@@ -243,7 +243,7 @@ endp;
 ** comparison aligns "Constant" (error-components only) against the shared
 ** "x1".."xk" terms.
 */
-proc (1) = ptModelFromTscsmtDV(name, struct tscsmtOut out);
+proc (struct ptModel) = ptModelFromTscsmtDV(name, struct tscsmtOut out);
     local k, names, estimates, se, pval;
     struct ptModel mdl;
 
@@ -260,7 +260,7 @@ proc (1) = ptModelFromTscsmtDV(name, struct tscsmtOut out);
     retp(mdl);
 endp;
 
-proc (1) = ptModelFromTscsmtEC(name, struct tscsmtOut out);
+proc (struct ptModel) = ptModelFromTscsmtEC(name, struct tscsmtOut out);
     local k, names, estimates, se, pval;
     struct ptModel mdl;
 
@@ -277,7 +277,7 @@ proc (1) = ptModelFromTscsmtEC(name, struct tscsmtOut out);
     retp(mdl);
 endp;
 
-proc (1) = ptFromTscsmt(struct tscsmtOut out);
+proc (struct ptTable) = ptFromTscsmt(struct tscsmtOut out);
     struct ptModel models;
     struct ptTable tbl;
 

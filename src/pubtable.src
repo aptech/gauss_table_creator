@@ -1,4 +1,4 @@
-proc (1) = ptFormatCreate();
+proc (struct ptFormat) = ptFormatCreate();
     struct ptFormat fmt;
 
     fmt.digits = 3;
@@ -13,7 +13,7 @@ proc (1) = ptFormatCreate();
     retp(fmt);
 endp;
 
-proc (1) = ptPresetFormat(struct ptFormat fmt, preset);
+proc (struct ptFormat) = ptPresetFormat(struct ptFormat fmt, preset);
     if preset $== "journal";
         fmt.digits = 3;
         fmt.stars = 1;
@@ -48,12 +48,12 @@ proc (1) = ptPresetFormat(struct ptFormat fmt, preset);
     retp(fmt);
 endp;
 
-proc (1) = ptApplyPreset(struct ptTable tbl, preset);
+proc (struct ptTable) = ptApplyPreset(struct ptTable tbl, preset);
     tbl.fmt = ptPresetFormat(tbl.fmt, preset);
     retp(tbl);
 endp;
 
-proc (1) = ptModelApplyPreset(struct ptModel mdl, preset);
+proc (struct ptModel) = ptModelApplyPreset(struct ptModel mdl, preset);
     mdl.fmt = ptPresetFormat(mdl.fmt, preset);
     retp(mdl);
 endp;
@@ -434,7 +434,7 @@ proc (0) = ptValidateModel(struct ptModel mdl, caller);
     endif;
 endp;
 
-proc (1) = ptTableCreate(title);
+proc (struct ptTable) = ptTableCreate(title);
     struct ptTable tbl;
 
     tbl.title = title;
@@ -450,51 +450,51 @@ proc (1) = ptTableCreate(title);
     retp(tbl);
 endp;
 
-proc (1) = ptSetTitle(struct ptTable tbl, title);
+proc (struct ptTable) = ptSetTitle(struct ptTable tbl, title);
     tbl.title = title;
     retp(tbl);
 endp;
 
-proc (1) = ptSetStubName(struct ptTable tbl, stubName);
+proc (struct ptTable) = ptSetStubName(struct ptTable tbl, stubName);
     tbl.stubName = stubName;
     retp(tbl);
 endp;
 
-proc (1) = ptSetRowNames(struct ptTable tbl, rowNames);
+proc (struct ptTable) = ptSetRowNames(struct ptTable tbl, rowNames);
     rowNames = ptLabelsToCol(rowNames, rows(tbl.body), "ptSetRowNames", "rowNames");
     tbl.rowNames = rowNames;
     retp(tbl);
 endp;
 
-proc (1) = ptSetColNames(struct ptTable tbl, colNames);
+proc (struct ptTable) = ptSetColNames(struct ptTable tbl, colNames);
     colNames = ptLabelsToCol(colNames, cols(tbl.body), "ptSetColNames", "colNames");
     tbl.colNames = colNames;
     retp(tbl);
 endp;
 
-proc (1) = ptSetColGroups(struct ptTable tbl, colGroups);
+proc (struct ptTable) = ptSetColGroups(struct ptTable tbl, colGroups);
     colGroups = ptLabelsToCol(colGroups, cols(tbl.body), "ptSetColGroups", "colGroups");
     tbl.colGroups = colGroups;
     retp(tbl);
 endp;
 
-proc (1) = ptSetBody(struct ptTable tbl, body);
+proc (struct ptTable) = ptSetBody(struct ptTable tbl, body);
     tbl.body = body;
     retp(tbl);
 endp;
 
-proc (1) = ptSetNotes(struct ptTable tbl, notes);
+proc (struct ptTable) = ptSetNotes(struct ptTable tbl, notes);
     tbl.notes = notes;
     retp(tbl);
 endp;
 
-proc (1) = ptSetDigits(struct ptTable tbl, digits);
+proc (struct ptTable) = ptSetDigits(struct ptTable tbl, digits);
     call ptCheckDigits(digits, "ptSetDigits");
     tbl.fmt.digits = digits;
     retp(tbl);
 endp;
 
-proc (1) = ptSetStars(struct ptTable tbl, cutoffs, symbols);
+proc (struct ptTable) = ptSetStars(struct ptTable tbl, cutoffs, symbols);
     if rows(cutoffs) /= rows(symbols);
         errorlog "ptSetStars: cutoffs and symbols must have the same number of rows.";
         end;
@@ -506,23 +506,23 @@ proc (1) = ptSetStars(struct ptTable tbl, cutoffs, symbols);
     retp(tbl);
 endp;
 
-proc (1) = ptNoStars(struct ptTable tbl);
+proc (struct ptTable) = ptNoStars(struct ptTable tbl);
     tbl.fmt.stars = 0;
     retp(tbl);
 endp;
 
-proc (1) = ptSetLabel(struct ptTable tbl, label);
+proc (struct ptTable) = ptSetLabel(struct ptTable tbl, label);
     tbl.fmt.label = label;
     retp(tbl);
 endp;
 
-proc (1) = ptSetColAlign(struct ptTable tbl, colAlign);
+proc (struct ptTable) = ptSetColAlign(struct ptTable tbl, colAlign);
     call ptCheckColAlign(colAlign, "ptSetColAlign");
     tbl.fmt.colAlign = colAlign;
     retp(tbl);
 endp;
 
-proc (1) = ptSetColFormat(struct ptTable tbl, colDigits);
+proc (struct ptTable) = ptSetColFormat(struct ptTable tbl, colDigits);
     local n_cols, i, j;
 
     n_cols = cols(tbl.body);
@@ -552,7 +552,7 @@ proc (0) = ptCheckCellStyle(style, caller);
     endif;
 endp;
 
-proc (1) = ptSetCellStyle(struct ptTable tbl, row, col, style);
+proc (struct ptTable) = ptSetCellStyle(struct ptTable tbl, row, col, style);
     call ptCheckCellStyle(style, "ptSetCellStyle");
 
     if row < 1 or row > rows(tbl.body) or col < 1 or col > cols(tbl.body);
@@ -631,7 +631,7 @@ proc (1) = ptStyleRtf(text, style);
     endif;
 endp;
 
-proc (1) = ptTableFromMatrix(x, rowNames, colNames, title);
+proc (struct ptTable) = ptTableFromMatrix(x, rowNames, colNames, title);
     struct ptTable tbl;
 
     tbl = ptTableCreate(title);
@@ -642,7 +642,7 @@ proc (1) = ptTableFromMatrix(x, rowNames, colNames, title);
     retp(tbl);
 endp;
 
-proc (1) = ptModelCreate(name, estimates, stdErrors);
+proc (struct ptModel) = ptModelCreate(name, estimates, stdErrors);
     struct ptModel mdl;
 
     if rows(estimates) < 1 or cols(estimates) /= 1;
@@ -670,12 +670,12 @@ proc (1) = ptModelCreate(name, estimates, stdErrors);
     retp(mdl);
 endp;
 
-proc (1) = ptModelSetNames(struct ptModel mdl, termNames);
+proc (struct ptModel) = ptModelSetNames(struct ptModel mdl, termNames);
     mdl.termNames = ptLabelsToCol(termNames, rows(mdl.estimates), "ptModelSetNames", "termNames");
     retp(mdl);
 endp;
 
-proc (1) = ptModelSetPValues(struct ptModel mdl, pValues);
+proc (struct ptModel) = ptModelSetPValues(struct ptModel mdl, pValues);
     if rows(pValues) /= rows(mdl.estimates) or cols(pValues) /= cols(mdl.estimates);
         errorlog "ptModelSetPValues: pValues must have the same dimensions as estimates.";
         end;
@@ -685,7 +685,7 @@ proc (1) = ptModelSetPValues(struct ptModel mdl, pValues);
     retp(mdl);
 endp;
 
-proc (1) = ptModelSetGOF(struct ptModel mdl, gofNames, gofValues);
+proc (struct ptModel) = ptModelSetGOF(struct ptModel mdl, gofNames, gofValues);
     if cols(gofValues) /= 1;
         errorlog "ptModelSetGOF: gofValues must be a column vector.";
         end;
@@ -696,18 +696,18 @@ proc (1) = ptModelSetGOF(struct ptModel mdl, gofNames, gofValues);
     retp(mdl);
 endp;
 
-proc (1) = ptModelSetDigits(struct ptModel mdl, digits);
+proc (struct ptModel) = ptModelSetDigits(struct ptModel mdl, digits);
     call ptCheckDigits(digits, "ptModelSetDigits");
     mdl.fmt.digits = digits;
     retp(mdl);
 endp;
 
-proc (1) = ptModelSetLabel(struct ptModel mdl, label);
+proc (struct ptModel) = ptModelSetLabel(struct ptModel mdl, label);
     mdl.fmt.label = label;
     retp(mdl);
 endp;
 
-proc (1) = ptModelSetStars(struct ptModel mdl, cutoffs, symbols);
+proc (struct ptModel) = ptModelSetStars(struct ptModel mdl, cutoffs, symbols);
     if rows(cutoffs) /= rows(symbols);
         errorlog "ptModelSetStars: cutoffs and symbols must have the same number of rows.";
         end;
@@ -719,18 +719,18 @@ proc (1) = ptModelSetStars(struct ptModel mdl, cutoffs, symbols);
     retp(mdl);
 endp;
 
-proc (1) = ptModelNoStars(struct ptModel mdl);
+proc (struct ptModel) = ptModelNoStars(struct ptModel mdl);
     mdl.fmt.stars = 0;
     retp(mdl);
 endp;
 
-proc (1) = ptModelSetColAlign(struct ptModel mdl, colAlign);
+proc (struct ptModel) = ptModelSetColAlign(struct ptModel mdl, colAlign);
     call ptCheckColAlign(colAlign, "ptModelSetColAlign");
     mdl.fmt.colAlign = colAlign;
     retp(mdl);
 endp;
 
-proc (1) = ptModelSetCI(struct ptModel mdl, ciLower, ciUpper);
+proc (struct ptModel) = ptModelSetCI(struct ptModel mdl, ciLower, ciUpper);
     if rows(ciLower) /= rows(mdl.estimates) or cols(ciLower) /= 1;
         errorlog "ptModelSetCI: ciLower must be a column vector matching estimates.";
         end;
@@ -746,24 +746,24 @@ proc (1) = ptModelSetCI(struct ptModel mdl, ciLower, ciUpper);
     retp(mdl);
 endp;
 
-proc (1) = ptModelSetStatRows(struct ptModel mdl, statRows);
+proc (struct ptModel) = ptModelSetStatRows(struct ptModel mdl, statRows);
     call ptCheckStatRows(statRows, "ptModelSetStatRows");
     mdl.fmt.statRows = statRows;
     retp(mdl);
 endp;
 
-proc (1) = ptSetStatRows(struct ptTable tbl, statRows);
+proc (struct ptTable) = ptSetStatRows(struct ptTable tbl, statRows);
     call ptCheckStatRows(statRows, "ptSetStatRows");
     tbl.fmt.statRows = statRows;
     retp(tbl);
 endp;
 
-proc (1) = ptModelSetNotes(struct ptModel mdl, notes);
+proc (struct ptModel) = ptModelSetNotes(struct ptModel mdl, notes);
     mdl.notes = notes;
     retp(mdl);
 endp;
 
-proc (1) = ptCompareOptionsCreate();
+proc (struct ptCompareOptions) = ptCompareOptionsCreate();
     struct ptCompareOptions opts;
 
     opts.termOrder = "";
@@ -776,34 +776,34 @@ proc (1) = ptCompareOptionsCreate();
     retp(opts);
 endp;
 
-proc (1) = ptCompareSetTermOrder(struct ptCompareOptions opts, termOrder);
+proc (struct ptCompareOptions) = ptCompareSetTermOrder(struct ptCompareOptions opts, termOrder);
     opts.termOrder = termOrder;
     retp(opts);
 endp;
 
-proc (1) = ptCompareSetGofOrder(struct ptCompareOptions opts, gofOrder);
+proc (struct ptCompareOptions) = ptCompareSetGofOrder(struct ptCompareOptions opts, gofOrder);
     opts.gofOrder = gofOrder;
     retp(opts);
 endp;
 
-proc (1) = ptCompareSetLabelMap(struct ptCompareOptions opts, mapFrom, mapTo);
+proc (struct ptCompareOptions) = ptCompareSetLabelMap(struct ptCompareOptions opts, mapFrom, mapTo);
     call ptCheckLabelMap(mapFrom, mapTo, "ptCompareSetLabelMap");
     opts.mapFrom = mapFrom;
     opts.mapTo = mapTo;
     retp(opts);
 endp;
 
-proc (1) = ptCompareSetNotes(struct ptCompareOptions opts, notes);
+proc (struct ptCompareOptions) = ptCompareSetNotes(struct ptCompareOptions opts, notes);
     opts.notes = notes;
     retp(opts);
 endp;
 
-proc (1) = ptCompareSetColGroups(struct ptCompareOptions opts, colGroups);
+proc (struct ptCompareOptions) = ptCompareSetColGroups(struct ptCompareOptions opts, colGroups);
     opts.colGroups = colGroups;
     retp(opts);
 endp;
 
-proc (1) = ptModelTable(struct ptModel mdl);
+proc (struct ptTable) = ptModelTable(struct ptModel mdl);
     local n_terms, n_gof, n_stat, rows_per_term, body, row_names, i, k, base;
     struct ptTable tbl;
 
@@ -847,11 +847,11 @@ proc (1) = ptModelTable(struct ptModel mdl);
     retp(tbl);
 endp;
 
-proc (1) = ptModelCompare(struct ptModel models);
+proc (struct ptTable) = ptModelCompare(struct ptModel models);
     retp(ptModelCompareWith(models, ptCompareOptionsCreate()));
 endp;
 
-proc (1) = ptModelCompareWith(struct ptModel models, struct ptCompareOptions opts);
+proc (struct ptTable) = ptModelCompareWith(struct ptModel models, struct ptCompareOptions opts);
     local n_models, n_terms, n_gof, n_stat, rows_per_term, n_rows, body, row_names, col_names, i, j, k, row, base;
     local term_names, gof_names, display_names, notes;
     local idx;
@@ -976,7 +976,7 @@ proc (1) = ptModelCompareWith(struct ptModel models, struct ptCompareOptions opt
     retp(tbl);
 endp;
 
-proc (1) = ptTableFrom(x);
+proc (struct ptTable) = ptTableFrom(x);
     struct ptTable tbl;
 
     if isStructType(x, "olsmtOut");
@@ -995,7 +995,7 @@ proc (1) = ptTableFrom(x);
     retp(tbl);
 endp;
 
-proc (1) = ptModelFrom(name, x);
+proc (struct ptModel) = ptModelFrom(name, x);
     struct ptModel mdl;
 
     if isStructType(x, "olsmtOut");
@@ -1014,7 +1014,7 @@ proc (1) = ptModelFrom(name, x);
     retp(mdl);
 endp;
 
-proc (1) = ptModelFromOlsmt(name, struct olsmtOut out);
+proc (struct ptModel) = ptModelFromOlsmt(name, struct olsmtOut out);
     local se, pval, df, names, tstat;
     struct ptModel mdl;
 
@@ -1044,13 +1044,13 @@ proc (1) = ptModelFromOlsmt(name, struct olsmtOut out);
     retp(mdl);
 endp;
 
-proc (1) = ptFromOlsmt(struct olsmtOut out);
+proc (struct ptTable) = ptFromOlsmt(struct olsmtOut out);
     struct ptModel mdl;
     mdl = ptModelFromOlsmt("OLS results", out);
     retp(ptModelTable(mdl));
 endp;
 
-proc (1) = ptModelFromFgls(name, struct fglsOut out);
+proc (struct ptModel) = ptModelFromFgls(name, struct fglsOut out);
     local names;
     struct ptModel mdl;
 
@@ -1068,13 +1068,13 @@ proc (1) = ptModelFromFgls(name, struct fglsOut out);
     retp(mdl);
 endp;
 
-proc (1) = ptFromFgls(struct fglsOut out);
+proc (struct ptTable) = ptFromFgls(struct fglsOut out);
     struct ptModel mdl;
     mdl = ptModelFromFgls("FGLS results", out);
     retp(ptModelTable(mdl));
 endp;
 
-proc (1) = ptModelFromGlm(name, struct glmOut out);
+proc (struct ptModel) = ptModelFromGlm(name, struct glmOut out);
     local names;
     struct ptModel mdl;
 
@@ -1091,13 +1091,13 @@ proc (1) = ptModelFromGlm(name, struct glmOut out);
     retp(mdl);
 endp;
 
-proc (1) = ptFromGlm(struct glmOut out);
+proc (struct ptTable) = ptFromGlm(struct glmOut out);
     struct ptModel mdl;
     mdl = ptModelFromGlm("GLM results", out);
     retp(ptModelTable(mdl));
 endp;
 
-proc (1) = ptModelFromGmm(name, struct gmmOut out);
+proc (struct ptModel) = ptModelFromGmm(name, struct gmmOut out);
     local se;
     struct ptModel mdl;
 
@@ -1109,7 +1109,7 @@ proc (1) = ptModelFromGmm(name, struct gmmOut out);
     retp(mdl);
 endp;
 
-proc (1) = ptFromDstatmt(struct dstatmtOut out);
+proc (struct ptTable) = ptFromDstatmt(struct dstatmtOut out);
     local body;
     struct ptTable tbl;
 

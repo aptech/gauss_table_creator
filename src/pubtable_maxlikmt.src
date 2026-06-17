@@ -1,4 +1,4 @@
-/*
+*
 ** pubtable_maxlikmt.src
 **
 ** Optional pubtable adapter for maxlikmt results. Activated when
@@ -16,7 +16,7 @@
 #ifDef PT_USE_MAXLIKMT
 #include maxlikmt.sdf
 
-proc (1) = ptModelFromMaxlikmt(name, struct maxlikmtResults out);
+proc (struct ptModel) = ptModelFromMaxlikmt(name, struct maxlikmtResults out);
     local names, estimates, se, tstat, pval;
     struct ptModel mdl;
 
@@ -34,7 +34,7 @@ proc (1) = ptModelFromMaxlikmt(name, struct maxlikmtResults out);
     retp(mdl);
 endp;
 
-proc (1) = ptFromMaxlikmt(struct maxlikmtResults out);
+proc (struct ptTable) = ptFromMaxlikmt(struct maxlikmtResults out);
     retp(ptModelTable(ptModelFromMaxlikmt("Maximum likelihood results", out)));
 endp;
 #endIf

@@ -1,4 +1,4 @@
-/*
+*
 ** pubtable_cmlmt.src
 **
 ** Optional pubtable adapter for cmlmt (constrained maximum likelihood)
@@ -16,7 +16,7 @@
 #ifDef PT_USE_CMLMT
 #include cmlmt.sdf
 
-proc (1) = ptModelFromCmlmt(name, struct cmlmtResults out);
+proc (struct ptModel) = ptModelFromCmlmt(name, struct cmlmtResults out);
     local names, estimates, se, tstat, pval;
     struct ptModel mdl;
 
@@ -34,7 +34,7 @@ proc (1) = ptModelFromCmlmt(name, struct cmlmtResults out);
     retp(mdl);
 endp;
 
-proc (1) = ptFromCmlmt(struct cmlmtResults out);
+proc (struct ptTable) = ptFromCmlmt(struct cmlmtResults out);
     retp(ptModelTable(ptModelFromCmlmt("Constrained ML results", out)));
 endp;
 #endIf

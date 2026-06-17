@@ -14,13 +14,8 @@
 */
 
 new;
-library tsmt;
-library pubtable;
+library tsmt, pubtable;
 
-#include tsmt.sdf
-#include pubtable.dec
-#include pubtable.sdf
-#include pubtable.src
 
 /* --- Simulate a stationary AR(1) series --------------------------------- */
 rndseed 12345;
@@ -32,19 +27,16 @@ for i(2, n, 1);
 endfor;
 
 /* Control struct: suppress printed output from arimaFit */
-struct arimamtControl ctl;
-ctl = arimamtControlCreate();
-ctl.output = 0;
+ctl = arimaControlCreate();
+ctl.quiet = 1;
 
 /* --- ARIMA(1,0,0) ------------------------------------------------------- */
-struct arimamtOut ar1;
 ar1 = arimaFit(y, 1, 0, 0, ctl);
 
 struct ptModel ar1Mdl;
 ar1Mdl = ptModelFromArimamt("AR(1)", ar1);
 
 /* --- ARIMA(2,0,0) ------------------------------------------------------- */
-struct arimamtOut ar2;
 ar2 = arimaFit(y, 2, 0, 0, ctl);
 
 struct ptModel ar2Mdl;

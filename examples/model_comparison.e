@@ -16,7 +16,6 @@ struct ptModel models;
 models = reshape(ptModelFrom("Model 1", out1), 2, 1);
 models[2] = ptModelFrom("Model 2", out2);
 
-struct ptTable tbl;
 tbl = ptModelCompare(models);
 tbl = ptSetTitle(tbl, "Model Comparison");
 

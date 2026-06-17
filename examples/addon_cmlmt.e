@@ -10,19 +10,10 @@
 ** Prerequisites:
 **   1. Run pubtableSet() once to generate pubtable.dec with PT_USE_CMLMT.
 **   2. cmlmt must be installed: library cmlmt must load without error.
-**
-** Include order matters: cmlmt.sdf must come before pubtable.dec so that
-** the cmlmt structs are defined before pubtable.src loads the adapter.
 */
 
 new;
-library cmlmt;
-library pubtable;
-
-#include cmlmt.sdf
-#include pubtable.dec
-#include pubtable.sdf
-#include pubtable.src
+library cmlmt, pubtable;
 
 /* --- Poisson log-likelihood --------------------------------------------- */
 proc lpsn(struct PV p, struct DS d, ind);
@@ -64,11 +55,9 @@ struct cmlmtResults out;
 out = cmlmt(&lpsn, p0, d0, c0);
 
 /* --- Build pubtable output ---------------------------------------------- */
-struct ptModel mdl;
 mdl = ptModelFromCmlmt("Poisson (b1 = b2)", out);
 mdl = ptModelSetNotes(mdl, "Equality constraint: b1 = b2.  Data: cmlmtpsn.");
 
-struct ptTable tbl;
 tbl = ptModelTable(mdl);
 tbl = ptSetTitle(tbl, "Constrained Poisson MLE");
 

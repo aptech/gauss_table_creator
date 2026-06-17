@@ -26,56 +26,47 @@ ctl.output = 0;
 
 out = olsmt(ctl, getGAUSSHome() $+ "examples/auto.dat", "mpg ~ weight + length");
 
-/* Build base model and pre-compute confidence intervals */
-struct ptModel mdl;
+/* Build base model and pre-compute confidence intervals.
+** No 'struct ptModel' or 'struct ptTable' declarations needed —
+** pubtable procs declare their return types so GAUSS infers them. */
 mdl = ptModelFrom("", out);
 mdl = ptModelSetCI(mdl, out.b - 1.96 .* out.stderr, out.b + 1.96 .* out.stderr);
 mdl = ptModelSetNotes(mdl, "Dependent variable: mpg");
 
 /* --- journal (default) ------------------------------------------------- */
-struct ptModel jMdl;
 jMdl = ptModelApplyPreset(mdl, "journal");
 jMdl.name = "Coeff.";
 
-struct ptTable jTbl;
 jTbl = ptModelTable(jMdl);
 jTbl = ptSetTitle(jTbl, "Journal preset (default)");
 
 /* --- compact ------------------------------------------------------------ */
-struct ptModel cMdl;
 cMdl = ptModelApplyPreset(mdl, "compact");
 cMdl.name = "Coeff.";
 
-struct ptTable cTbl;
 cTbl = ptModelTable(cMdl);
 cTbl = ptSetTitle(cTbl, "Compact preset");
 
 /* --- plain -------------------------------------------------------------- */
-struct ptModel pMdl;
 pMdl = ptModelApplyPreset(mdl, "plain");
 pMdl.name = "Coeff.";
 
-struct ptTable pTbl;
 pTbl = ptModelTable(pMdl);
 pTbl = ptSetTitle(pTbl, "Plain preset");
 
 /* --- report ------------------------------------------------------------- */
-struct ptModel rMdl;
 rMdl = ptModelApplyPreset(mdl, "report");
 rMdl.name = "Coeff.";
 
-struct ptTable rTbl;
 rTbl = ptModelTable(rMdl);
 rTbl = ptSetTitle(rTbl, "Report preset (SE + p-value)");
 
 /* --- custom: t-stat + CI, stricter stars -------------------------------- */
-struct ptModel xMdl;
 xMdl = mdl;
 xMdl.name = "Coeff.";
 xMdl = ptModelSetStatRows(xMdl, "tstat" $| "ci");
 xMdl = ptModelSetStars(xMdl, 0.05 | 0.01 | 0.001, "*" $| "**" $| "***");
 
-struct ptTable xTbl;
 xTbl = ptModelTable(xMdl);
 xTbl = ptSetTitle(xTbl, "Custom: t-stat rows, 95 pct CI, stricter stars");
 

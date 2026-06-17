@@ -1,4 +1,4 @@
-/*
+*
 ** pubtable_optmt.src
 **
 ** Optional pubtable adapter for optmt (general optimization) results.
@@ -21,7 +21,7 @@
 #ifDef PT_USE_OPTMT
 #include optmt.sdf
 
-proc (1) = ptTableFromOptmt(struct optmtResults out);
+proc (struct ptTable) = ptTableFromOptmt(struct optmtResults out);
     local names, estimates, gradient;
     struct ptTable tbl;
 
