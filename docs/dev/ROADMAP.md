@@ -119,12 +119,13 @@ Evaluate support for:
 
 Optional adapter auto-loading is implemented via:
 
-- [x] `ptSetup()` / `ptSetupAt(srcDir)`: detect installed optional libraries via `fopen(getGAUSSHome()...)` and write `pubtable_config.sdf` with `#define PT_USE_X` entries.
-- [x] Auto-loading block at the bottom of `pubtable.src`: `#ifDef PT_USE_CMLMT` / `#ifDef PT_USE_MAXLIKMT` / `#ifDef PT_USE_OPTMT` / `#ifDef PT_USE_TSMT` — includes the adapter `.src` when the sentinel is defined.
-- [x] qardl: auto-detected via `QARDL_SDF_INCLUDED` (the include guard in `qardl.sdf`) — no config entry needed.
-- [x] `src/pubtable_config.sdf`: default empty template ships with the package; `ptSetup()` overwrites it with detected library sentinels.
+- [x] `ptSetup()` / `ptSetupAt(srcDir)`: detect installed optional libraries via `fopen(getGAUSSHome()...)` and write `pubtable.dec` with `#define PT_USE_X` entries.
+- [x] All adapter `.src` files are included unconditionally at the bottom of `pubtable.src`. Each file uses `#ifDef PT_USE_X` for the real implementation and a `#else` block of `_library_missing_error` stubs, so calling an adapter without the library installed produces a diagnostic error instead of "procedure not found".
+- [x] qardl: auto-detected via `QARDL_SDF_INCLUDED` (the include guard in `qardl.sdf`) — no `pubtable.dec` entry needed; same `#ifDef / #else` stub pattern used.
+- [x] `src/pubtable.dec`: default template ships with the package; `ptSetup()` overwrites it with detected library sentinels. Machine-specific — not committed to source control.
+- [x] `_library_missing_error(funcname, libname)`: defined unconditionally in `pubtable_optmt.src`; called by all adapter stubs.
 
-Users run `ptSetup()` once after install, then add `#include pubtable_config.sdf` before `pubtable.sdf` in their programs to enable all available adapters automatically.
+Users run `ptSetup()` once after install, then add `#include pubtable.dec` before `pubtable.src` in their programs to enable all available adapters automatically.
 
 ## Design Constraint
 
@@ -229,9 +230,25 @@ Add documentation for:
 
 - [x] `ptTableFromMatrix` (`docs/api/ptTableFromMatrix.md`)
 - [x] `ptTableFrom` (`docs/api/ptTableFrom.md`)
+- [x] `ptTableCreate` (`docs/api/ptTableCreate.md`)
 - [x] `ptModelFrom` (`docs/api/ptModelFrom.md`)
+- [x] `ptModelCreate` (`docs/api/ptModelCreate.md`)
 - [x] `ptModelCompare` (`docs/api/ptModelCompare.md`, includes `ptModelCompareWith`/`ptCompareOptions`)
+- [x] `ptCompareOptions` (`docs/api/ptCompareOptions.md`, covers `ptCompareOptionsCreate` and all `ptCompareSet*`)
 - [x] `ptExport` (`docs/api/ptExport.md`)
+- [x] `ptExportAll` / `ptExportAllFormats` (`docs/api/ptExportAll.md`)
+- [x] Table setters (`docs/api/ptTableSetters.md`, covers all `ptSet*` / `ptNoStars` / `ptSetStatRows`)
+- [x] Model setters (`docs/api/ptModelSetters.md`, covers all `ptModelSet*` / `ptModelNoStars`)
+- [x] `ptModelTable` (`docs/api/ptModelTable.md`)
+- [x] `ptApplyPreset` / `ptModelApplyPreset` (`docs/api/ptApplyPreset.md`)
+- [x] Renderers (`docs/api/ptRender.md`, covers all 6 `ptRender*` procs)
+- [x] `pubtableSet` / `ptSetup` / `ptSetupAt` (`docs/api/pubtableSet.md`)
+- [x] Built-in adapters (`docs/api/ptAdaptersBuiltin.md`, covers olsmt/fgls/glm/gmm/dstatmt)
+- [x] tsmt adapters (`docs/api/ptAdaptersTsmt.md`)
+- [x] cmlmt adapter (`docs/api/ptAdaptersCmlmt.md`)
+- [x] maxlikmt adapter (`docs/api/ptAdaptersMaxlikmt.md`)
+- [x] optmt adapter (`docs/api/ptAdaptersOptmt.md`)
+- [x] qardl adapters (`docs/api/ptAdaptersQardl.md`)
 
 ## Examples
 
@@ -240,11 +257,11 @@ Add examples covering:
 - [x] Summary statistics tables (`examples/summary_table.e` via `ptTableFromMatrix`; `examples/summary_statistics_dstatmt.e` via `ptFromDstatmt`)
 - [x] Model comparison tables (`examples/model_comparison.e`)
 - [x] Custom matrix tables (`examples/summary_table.e`)
-- [x] Markdown export (`examples/export_formats.e`)
-- [x] LaTeX export (`examples/export_formats.e`)
-- [x] HTML export (`examples/export_formats.e`)
-- [x] CSV export (`examples/export_formats.e`)
-- [x] XLSX export (`examples/export_formats.e`)
+- [x] All export formats (`examples/export_formats.e` — Markdown, LaTeX, CSV, text, RTF, HTML, XLS, XLSX)
+- [x] Style presets and custom formatting (`examples/preset_styles.e` — journal/compact/plain/report presets and custom star/stat-row config)
+- [x] tsmt add-on adapter (`examples/addon_tsmt.e` — ARIMA comparison via `ptModelFromArimamt`)
+- [x] cmlmt add-on adapter (`examples/addon_cmlmt.e` — constrained Poisson MLE via `ptModelFromCmlmt`)
+- [x] maxlikmt add-on adapter (`examples/addon_maxlikmt.e` — Normal MLE via `ptModelFromMaxlikmt`)
 
 ## Migration Guide
 

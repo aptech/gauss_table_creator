@@ -21,7 +21,6 @@ ctl.output = 0;
 
 out = olsmt(ctl, getGAUSSHome() $+ "examples/auto.dat", "mpg ~ weight + length");
 
-struct ptTable tbl;
 tbl = ptTableFrom(out);
 tbl = ptSetTitle(tbl, "OLS Regression");
 
@@ -232,7 +231,7 @@ Older application-wizard installation is retained as a provisional legacy workfl
 Note: this installation section is provisional while the package is being modernized.
 
 ### Examples
-Modern examples are in `examples/model_table_ols.e`, `examples/model_comparison.e`, `examples/summary_table.e`, `examples/summary_statistics_dstatmt.e`, and `examples/export_formats.e`. Older `tableSet*.e` examples are retained as legacy references.
+Modern examples are in `examples/model_table_ols.e`, `examples/model_comparison.e`, `examples/summary_table.e`, `examples/summary_statistics_dstatmt.e`, `examples/export_formats.e`, `examples/preset_styles.e`, `examples/addon_tsmt.e`, `examples/addon_cmlmt.e`, and `examples/addon_maxlikmt.e`. Older `tableSet*.e` examples are retained as legacy references.
 
 ### Further documentation
 

@@ -1,4 +1,4 @@
-*
+/*
 ** pubtable_cmlmt.src
 **
 ** Optional pubtable adapter for cmlmt (constrained maximum likelihood)
@@ -37,4 +37,18 @@ endp;
 proc (struct ptTable) = ptFromCmlmt(struct cmlmtResults out);
     retp(ptModelTable(ptModelFromCmlmt("Constrained ML results", out)));
 endp;
+#else
+
+proc (struct ptModel) = ptModelFromCmlmt(...);
+    struct ptModel mdl;
+    _library_missing_error(currentprocname(), "Cmlmt");
+    retp(mdl);
+endp;
+
+proc (struct ptTable) = ptFromCmlmt(...);
+    struct ptTable tbl;
+    _library_missing_error(currentprocname(), "Cmlmt");
+    retp(tbl);
+endp;
+
 #endIf

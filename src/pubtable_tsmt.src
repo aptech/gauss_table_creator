@@ -1,4 +1,4 @@
-*
+/*
 ** pubtable_tsmt.src
 **
 ** Optional pubtable adapters for tsmt (Time Series MT) results:
@@ -290,4 +290,108 @@ proc (struct ptTable) = ptFromTscsmt(struct tscsmtOut out);
 
     retp(tbl);
 endp;
+#else
+
+proc (struct ptModel) = ptModelFromArimamt(...);
+    struct ptModel mdl;
+    _library_missing_error(currentprocname(), "Tsmt");
+    retp(mdl);
+endp;
+
+proc (struct ptTable) = ptFromArimamt(...);
+    struct ptTable tbl;
+    _library_missing_error(currentprocname(), "Tsmt");
+    retp(tbl);
+endp;
+
+proc (struct ptModel) = ptModelFromTsPanel(...);
+    struct ptModel mdl;
+    _library_missing_error(currentprocname(), "Tsmt");
+    retp(mdl);
+endp;
+
+proc (struct ptTable) = ptFromTsPanel(...);
+    struct ptTable tbl;
+    _library_missing_error(currentprocname(), "Tsmt");
+    retp(tbl);
+endp;
+
+proc (struct ptModel) = ptModelFromAutomt(...);
+    struct ptModel mdl;
+    _library_missing_error(currentprocname(), "Tsmt");
+    retp(mdl);
+endp;
+
+proc (struct ptTable) = ptFromAutomt(...);
+    struct ptTable tbl;
+    _library_missing_error(currentprocname(), "Tsmt");
+    retp(tbl);
+endp;
+
+proc (struct ptModel) = ptModelFromVarmamt(...);
+    struct ptModel mdl;
+    _library_missing_error(currentprocname(), "Tsmt");
+    retp(mdl);
+endp;
+
+proc (struct ptTable) = ptFromVarmamt(...);
+    struct ptTable tbl;
+    _library_missing_error(currentprocname(), "Tsmt");
+    retp(tbl);
+endp;
+
+proc (struct ptModel) = ptModelFromLsdvmt(...);
+    struct ptModel mdl;
+    _library_missing_error(currentprocname(), "Tsmt");
+    retp(mdl);
+endp;
+
+proc (struct ptTable) = ptFromLsdvmt(...);
+    struct ptTable tbl;
+    _library_missing_error(currentprocname(), "Tsmt");
+    retp(tbl);
+endp;
+
+proc (struct ptModel) = ptModelFromSwitchmt(...);
+    struct ptModel mdl;
+    _library_missing_error(currentprocname(), "Tsmt");
+    retp(mdl);
+endp;
+
+proc (struct ptTable) = ptFromSwitchmt(...);
+    struct ptTable tbl;
+    _library_missing_error(currentprocname(), "Tsmt");
+    retp(tbl);
+endp;
+
+proc (struct ptModel) = ptModelFromGarchmt(...);
+    struct ptModel mdl;
+    _library_missing_error(currentprocname(), "Tsmt");
+    retp(mdl);
+endp;
+
+proc (struct ptTable) = ptFromGarchmt(...);
+    struct ptTable tbl;
+    _library_missing_error(currentprocname(), "Tsmt");
+    retp(tbl);
+endp;
+
+proc (struct ptModel) = ptModelFromTscsmtDV(...);
+    struct ptModel mdl;
+    _library_missing_error(currentprocname(), "Tsmt");
+    retp(mdl);
+endp;
+
+proc (struct ptModel) = ptModelFromTscsmtEC(...);
+    struct ptModel mdl;
+    _library_missing_error(currentprocname(), "Tsmt");
+    retp(mdl);
+endp;
+
+proc (struct ptTable) = ptFromTscsmt(...);
+    struct ptTable tbl;
+    _library_missing_error(currentprocname(), "Tsmt");
+    retp(tbl);
+endp;
+
 #endIf

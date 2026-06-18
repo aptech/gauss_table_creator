@@ -2038,25 +2038,11 @@ endp;
 **     #include pubtable.sdf
 **     #include pubtable.src
 */
-#ifDef QARDL_SDF_INCLUDED
 #include pubtable_qardl.src
-#endif
-
-#ifDef PT_USE_CMLMT
 #include pubtable_cmlmt.src
-#endif
-
-#ifDef PT_USE_MAXLIKMT
 #include pubtable_maxlikmt.src
-#endif
-
-#ifDef PT_USE_OPTMT
 #include pubtable_optmt.src
-#endif
-
-#ifDef PT_USE_TSMT
 #include pubtable_tsmt.src
-#endif
 
 /* Auto-generate pubtable.dec if the package is installed and it has not
 ** been generated yet. Takes effect on the next program run. */

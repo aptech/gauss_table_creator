@@ -1,4 +1,4 @@
-*
+/*
 ** pubtable_qardl.src
 **
 ** Optional pubtable adapters for the QARDL package (ARDL/QARDL/NARDL/CS-ARDL
@@ -385,4 +385,132 @@ proc (struct ptTable) = ptFromArdlFamily(x);
     errorlog "ptFromArdlFamily: unsupported QARDL output structure.";
     end;
 endp;
+#else
+
+proc (struct ptModel) = ptModelFromArdl(...);
+    struct ptModel mdl;
+    _library_missing_error(currentprocname(), "QARDL");
+    retp(mdl);
+endp;
+
+proc (struct ptTable) = ptFromArdl(...);
+    struct ptTable tbl;
+    _library_missing_error(currentprocname(), "QARDL");
+    retp(tbl);
+endp;
+
+proc (struct ptModel) = ptModelFromArdlECM(...);
+    struct ptModel mdl;
+    _library_missing_error(currentprocname(), "QARDL");
+    retp(mdl);
+endp;
+
+proc (struct ptTable) = ptFromArdlECM(...);
+    struct ptTable tbl;
+    _library_missing_error(currentprocname(), "QARDL");
+    retp(tbl);
+endp;
+
+proc (struct ptModel) = ptModelFromQardl(...);
+    struct ptModel mdl;
+    _library_missing_error(currentprocname(), "QARDL");
+    retp(mdl);
+endp;
+
+proc (struct ptTable) = ptFromQardl(...);
+    struct ptTable tbl;
+    _library_missing_error(currentprocname(), "QARDL");
+    retp(tbl);
+endp;
+
+proc (struct ptModel) = ptModelFromQardlECM(...);
+    struct ptModel mdl;
+    _library_missing_error(currentprocname(), "QARDL");
+    retp(mdl);
+endp;
+
+proc (struct ptTable) = ptFromQardlECM(...);
+    struct ptTable tbl;
+    _library_missing_error(currentprocname(), "QARDL");
+    retp(tbl);
+endp;
+
+proc (struct ptModel) = ptModelFromNardl(...);
+    struct ptModel mdl;
+    _library_missing_error(currentprocname(), "QARDL");
+    retp(mdl);
+endp;
+
+proc (struct ptTable) = ptFromNardl(...);
+    struct ptTable tbl;
+    _library_missing_error(currentprocname(), "QARDL");
+    retp(tbl);
+endp;
+
+proc (struct ptModel) = ptModelFromNardlECM(...);
+    struct ptModel mdl;
+    _library_missing_error(currentprocname(), "QARDL");
+    retp(mdl);
+endp;
+
+proc (struct ptTable) = ptFromNardlECM(...);
+    struct ptTable tbl;
+    _library_missing_error(currentprocname(), "QARDL");
+    retp(tbl);
+endp;
+
+proc (struct ptModel) = ptModelFromCsardl(...);
+    struct ptModel mdl;
+    _library_missing_error(currentprocname(), "QARDL");
+    retp(mdl);
+endp;
+
+proc (struct ptTable) = ptFromCsardl(...);
+    struct ptTable tbl;
+    _library_missing_error(currentprocname(), "QARDL");
+    retp(tbl);
+endp;
+
+proc (struct ptModel) = ptModelFromCsardlECM(...);
+    struct ptModel mdl;
+    _library_missing_error(currentprocname(), "QARDL");
+    retp(mdl);
+endp;
+
+proc (struct ptTable) = ptFromCsardlECM(...);
+    struct ptTable tbl;
+    _library_missing_error(currentprocname(), "QARDL");
+    retp(tbl);
+endp;
+
+proc (struct ptTable) = ptFromArdlFull(...);
+    struct ptTable tbl;
+    _library_missing_error(currentprocname(), "QARDL");
+    retp(tbl);
+endp;
+
+proc (struct ptTable) = ptTablesFromQardlFull(...);
+    struct ptTable tbl;
+    _library_missing_error(currentprocname(), "QARDL");
+    retp(tbl);
+endp;
+
+proc (struct ptTable) = ptTablesFromNardlFull(...);
+    struct ptTable tbl;
+    _library_missing_error(currentprocname(), "QARDL");
+    retp(tbl);
+endp;
+
+proc (struct ptTable) = ptTablesFromCsardlFull(...);
+    struct ptTable tbl;
+    _library_missing_error(currentprocname(), "QARDL");
+    retp(tbl);
+endp;
+
+proc (struct ptTable) = ptFromArdlFamily(...);
+    struct ptTable tbl;
+    _library_missing_error(currentprocname(), "QARDL");
+    retp(tbl);
+endp;
+
 #endIf

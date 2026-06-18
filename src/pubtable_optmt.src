@@ -1,4 +1,4 @@
-*
+/*
 ** pubtable_optmt.src
 **
 ** Optional pubtable adapter for optmt (general optimization) results.
@@ -39,4 +39,21 @@ proc (struct ptTable) = ptTableFromOptmt(struct optmtResults out);
 
     retp(tbl);
 endp;
+#else
+
+proc (struct ptTable) = ptTableFromOptmt(...);
+    struct ptTable tbl;
+    _library_missing_error(currentprocname(), "Optmt");
+
+    retp(tbl);
+endp;
+
 #endIf
+
+proc _library_missing_error(functionname, library_miss);
+    local msg;
+
+    msg = "'"$+functionname$+"' : " $+ library_miss $+ " not installed.";
+    errorlogat msg;
+
+endp;

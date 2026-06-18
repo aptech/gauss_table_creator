@@ -1,4 +1,4 @@
-*
+/*
 ** pubtable_maxlikmt.src
 **
 ** Optional pubtable adapter for maxlikmt results. Activated when
@@ -37,4 +37,18 @@ endp;
 proc (struct ptTable) = ptFromMaxlikmt(struct maxlikmtResults out);
     retp(ptModelTable(ptModelFromMaxlikmt("Maximum likelihood results", out)));
 endp;
+#else
+
+proc (struct ptModel) = ptModelFromMaxlikmt(...);
+    struct ptModel mdl;
+    _library_missing_error(currentprocname(), "Maxlikmt");
+    retp(mdl);
+endp;
+
+proc (struct ptTable) = ptFromMaxlikmt(...);
+    struct ptTable tbl;
+    _library_missing_error(currentprocname(), "Maxlikmt");
+    retp(tbl);
+endp;
+
 #endIf
