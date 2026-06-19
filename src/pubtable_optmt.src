@@ -51,10 +51,3 @@ endp;
 
 #endIf
 
-proc _library_missing_error(functionname, library_miss);
-    local msg;
-
-    msg = "'"$+functionname$+"' : " $+ library_miss $+ " not installed.";
-    errorlogat msg;
-
-endp;

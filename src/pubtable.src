@@ -1887,6 +1887,14 @@ proc (1) = ptExportAllFormats(struct ptTable tbl, basename, exts);
     retp(err);
 endp;
 
+proc _library_missing_error(functionname, library_miss);
+    local msg;
+
+    msg = "'"$+functionname$+"' : " $+ library_miss $+ " not installed.";
+    errorlogat msg;
+
+endp;
+
 /*
 ** pubtableSet(): detect installed optional GAUSS libraries and write
 ** pubtable.dec to the standard package installation directory
@@ -2049,3 +2057,4 @@ endp;
 /* Auto-generate pubtable.dec if the package is installed and it has not
 ** been generated yet. Takes effect on the next program run. */
 call _ptSetupSilent();
+
