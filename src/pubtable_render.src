@@ -1,0 +1,648 @@
+/*
+** pubtable_render.src
+**
+** Rendering procedures: cell style formatters, number formatting helpers,
+** ptRenderArray, and format-specific renderers (Markdown, CSV, LaTeX,
+** plain text, RTF, HTML), together with all supporting escape, join,
+** padding, and column-group-row builder helpers.
+**
+** Included unconditionally by pubtable.src.
+*/
+#include pubtable.sdf
+
+proc (1) = ptStyleMarkdown(text, style);
+    if style $== "bold";
+        retp("**" $+ text $+ "**");
+    elseif style $== "italic";
+        retp("*" $+ text $+ "*");
+    elseif style $== "bold italic";
+        retp("***" $+ text $+ "***");
+    else;
+        retp(text);
+    endif;
+endp;
+
+proc (1) = ptStyleLatex(text, style);
+    if style $== "bold";
+        retp("\\textbf{" $+ text $+ "}");
+    elseif style $== "italic";
+        retp("\\textit{" $+ text $+ "}");
+    elseif style $== "bold italic";
+        retp("\\textbf{\\textit{" $+ text $+ "}}");
+    else;
+        retp(text);
+    endif;
+endp;
+
+proc (1) = ptStyleHtml(text, style);
+    if style $== "bold";
+        retp("<strong>" $+ text $+ "</strong>");
+    elseif style $== "italic";
+        retp("<em>" $+ text $+ "</em>");
+    elseif style $== "bold italic";
+        retp("<strong><em>" $+ text $+ "</em></strong>");
+    else;
+        retp(text);
+    endif;
+endp;
+
+proc (1) = ptStyleRtf(text, style);
+    if style $== "bold";
+        retp("\\b " $+ text $+ "\\b0");
+    elseif style $== "italic";
+        retp("\\i " $+ text $+ "\\i0");
+    elseif style $== "bold italic";
+        retp("\\b\\i " $+ text $+ "\\i0\\b0");
+    else;
+        retp(text);
+    endif;
+endp;
+
+proc (1) = ptFormatMatrix(x, digits);
+    local out, i, j;
+
+    out = ptBlankSA(rows(x), cols(x));
+    for i(1, rows(x), 1);
+        for j(1, cols(x), 1);
+            out[i, j] = ptFormatNumber(x[i, j], digits);
+        endfor;
+    endfor;
+
+    retp(out);
+endp;
+
+proc (1) = ptFormatNumber(x, digits);
+    if scalmiss(x);
+        retp("");
+    endif;
+
+    retp(sprintf("%." $+ sprintf("%d", digits) $+ "f", x));
+endp;
+
+/* Format a GOF/count value: whole numbers render as integers ("74"),
+** fractional values use the standard digit count ("0.661"). */
+proc (1) = ptFormatGOFValue(x, digits);
+    if scalmiss(x);
+        retp("");
+    endif;
+    if x == floor(x);
+        retp(sprintf("%.0f", x));
+    endif;
+    retp(ptFormatNumber(x, digits));
+endp;
+
+proc (1) = ptFormatEstimate(x, pval, struct ptFormat fmt);
+    local out;
+
+    out = ptFormatNumber(x, fmt.digits);
+
+    if fmt.stars and not scalmiss(pval);
+        out = out $+ ptStars(pval, fmt);
+    endif;
+
+    retp(out);
+endp;
+
+proc (1) = ptStars(pval, struct ptFormat fmt);
+    local mark, i;
+
+    mark = "";
+    for i(1, rows(fmt.starCutoffs), 1);
+        if pval <= fmt.starCutoffs[i];
+            mark = fmt.starSymbols[i];
+        endif;
+    endfor;
+
+    retp(mark);
+endp;
+
+proc (1) = ptWrapStatistic(value, struct ptFormat fmt);
+    if fmt.statisticWrapper $== "bracket";
+        retp("[" $+ value $+ "]");
+    elseif fmt.statisticWrapper $== "none";
+        retp(value);
+    endif;
+
+    retp("(" $+ value $+ ")");
+endp;
+
+proc (1) = ptStatRowValue(statType, struct ptModel mdl, idx);
+    local tstat;
+
+    if statType $== "se";
+        if scalmiss(mdl.stdErrors[idx]);
+            retp("");
+        endif;
+        retp(ptWrapStatistic(ptFormatNumber(mdl.stdErrors[idx], mdl.fmt.digits), mdl.fmt));
+    elseif statType $== "tstat";
+        if scalmiss(mdl.stdErrors[idx]) or mdl.stdErrors[idx] == 0;
+            retp("");
+        endif;
+        tstat = mdl.estimates[idx] / mdl.stdErrors[idx];
+        retp(ptWrapStatistic(ptFormatNumber(tstat, mdl.fmt.digits), mdl.fmt));
+    elseif statType $== "pvalue";
+        if scalmiss(mdl.pValues[idx]);
+            retp("");
+        endif;
+        retp(ptWrapStatistic(ptFormatNumber(mdl.pValues[idx], mdl.fmt.digits), mdl.fmt));
+    elseif statType $== "ci";
+        if scalmiss(mdl.ciLower[idx]) or scalmiss(mdl.ciUpper[idx]);
+            retp("");
+        endif;
+        retp("[" $+ ptFormatNumber(mdl.ciLower[idx], mdl.fmt.digits) $+ ", " $+ ptFormatNumber(mdl.ciUpper[idx], mdl.fmt.digits) $+ "]");
+    endif;
+
+    retp("");
+endp;
+
+proc (1) = ptStarNote(struct ptFormat fmt);
+    local note, i;
+
+    if not fmt.stars;
+        retp("");
+    endif;
+
+    note = "Significance: ";
+    for i(1, rows(fmt.starCutoffs), 1);
+        if i > 1;
+            note = note $+ ", ";
+        endif;
+        note = note $+ fmt.starSymbols[i] $+ " p<" $+ sprintf("%.3g", fmt.starCutoffs[i]);
+    endfor;
+
+    retp(note);
+endp;
+
+proc (1) = ptColWidths(arr);
+    local widths, j;
+
+    widths = zeros(1, cols(arr));
+    for j(1, cols(arr), 1);
+        widths[j] = maxc(strlen(arr[., j]));
+    endfor;
+
+    retp(widths);
+endp;
+
+proc (1) = ptPadRight(s, width);
+    retp(sprintf("%-" $+ ntos(width) $+ "s", s));
+endp;
+
+proc (1) = ptPadLeft(s, width);
+    retp(sprintf("%" $+ ntos(width) $+ "s", s));
+endp;
+
+proc (1) = ptRepeatChar(ch, n);
+    local out, i;
+
+    out = "";
+    for i(1, n, 1);
+        out = out $+ ch;
+    endfor;
+
+    retp(out);
+endp;
+
+proc (1) = ptJoinRow(row, sep);
+    local out, j;
+
+    out = row[1];
+    for j(2, cols(row), 1);
+        out = out $+ sep $+ row[j];
+    endfor;
+
+    retp(out);
+endp;
+
+proc (1) = ptJoinLatexRow(row);
+    local out, j;
+
+    out = ptEscapeLatex(row[1]);
+    for j(2, cols(row), 1);
+        out = out $+ " & " $+ ptEscapeLatex(row[j]);
+    endfor;
+
+    retp(out);
+endp;
+
+proc (1) = ptJoinLatexRowStyled(row, styles);
+    local out, j, cell;
+
+    cell = ptEscapeLatex(row[1]);
+    if styles[1] $/= "";
+        cell = ptStyleLatex(cell, styles[1]);
+    endif;
+    out = cell;
+
+    for j(2, cols(row), 1);
+        cell = ptEscapeLatex(row[j]);
+        if styles[j] $/= "";
+            cell = ptStyleLatex(cell, styles[j]);
+        endif;
+        out = out $+ " & " $+ cell;
+    endfor;
+
+    retp(out);
+endp;
+
+proc (1) = ptEscapeLatex(s);
+    s = strreplace(s, "\\", "\\textbackslash{}");
+    s = strreplace(s, "_", "\\_");
+    s = strreplace(s, "%", "\\%");
+    s = strreplace(s, "&", "\\&");
+    s = strreplace(s, "#", "\\#");
+    retp(s);
+endp;
+
+proc (1) = ptEscapeRtf(s);
+    s = strreplace(s, "\\", "\\\\");
+    s = strreplace(s, "{", "\\{");
+    s = strreplace(s, "}", "\\}");
+    retp(s);
+endp;
+
+proc (1) = ptEscapeHtml(s);
+    s = strreplace(s, "&", "&amp;");
+    s = strreplace(s, "<", "&lt;");
+    s = strreplace(s, ">", "&gt;");
+    retp(s);
+endp;
+
+proc (1) = ptLatexColGroupHeader(struct ptTable tbl);
+    local labels, spans, out, col, g;
+
+    { labels, spans } = ptColGroupRuns(tbl.colGroups);
+
+    out = "";
+    col = 2;
+    for g(1, rows(labels), 1);
+        if labels[g] $== "";
+            if spans[g] == 1;
+                out = out $+ "";
+            else;
+                out = out $+ "\\multicolumn{" $+ sprintf("%d", spans[g]) $+ "}{c}{}";
+            endif;
+        else;
+            out = out $+ "\\multicolumn{" $+ sprintf("%d", spans[g]) $+ "}{c}{" $+ ptEscapeLatex(labels[g]) $+ "}";
+        endif;
+
+        if g < rows(labels);
+            out = out $+ " & ";
+        endif;
+    endfor;
+    out = " & " $+ out $+ " \\\\\n";
+
+    col = 2;
+    for g(1, rows(labels), 1);
+        if labels[g] $/= "";
+            out = out $+ "\\cmidrule(lr){" $+ sprintf("%d", col) $+ "-" $+ sprintf("%d", col + spans[g] - 1) $+ "}\n";
+        endif;
+        col = col + spans[g];
+    endfor;
+
+    retp(out);
+endp;
+
+proc (1) = ptRtfColGroupRow(struct ptTable tbl, widths, borders);
+    local labels, spans, row, out, cellx, j, g, col, n_cols, mergeFlags, cellText;
+
+    { labels, spans } = ptColGroupRuns(tbl.colGroups);
+    row = ptColGroupRow(tbl);
+
+    n_cols = cols(widths);
+    mergeFlags = zeros(1, n_cols);
+
+    col = 2;
+    for g(1, rows(labels), 1);
+        if spans[g] > 1;
+            mergeFlags[col] = 1;
+            for j(col + 1, col + spans[g] - 1, 1);
+                mergeFlags[j] = 2;
+            endfor;
+        endif;
+        col = col + spans[g];
+    endfor;
+
+    out = "\\trowd\\trgaph108\\trleft0\n";
+    cellx = 0;
+    for j(1, n_cols, 1);
+        cellx = cellx + (widths[j] * 120 + 200);
+        if mergeFlags[j] == 1;
+            out = out $+ "\\clmgf";
+        elseif mergeFlags[j] == 2;
+            out = out $+ "\\clmrg";
+        endif;
+        out = out $+ borders $+ "\\cellx" $+ ntos(cellx) $+ "\n";
+    endfor;
+
+    out = out $+ "\\pard\\intbl";
+    for j(1, n_cols, 1);
+        cellText = ptEscapeRtf(row[j]);
+        if mergeFlags[j] == 2;
+            out = out $+ "\\cell";
+        else;
+            if cellText $/= "";
+                cellText = "\\b " $+ cellText $+ "\\b0";
+            endif;
+            out = out $+ " " $+ cellText $+ "\\cell";
+        endif;
+    endfor;
+    out = out $+ "\\row\n";
+
+    retp(out);
+endp;
+
+proc (1) = ptHtmlColGroupRow(struct ptTable tbl);
+    local labels, spans, out, g;
+
+    { labels, spans } = ptColGroupRuns(tbl.colGroups);
+
+    out = "<tr><th></th>";
+    for g(1, rows(labels), 1);
+        if spans[g] == 1;
+            out = out $+ "<th>" $+ ptEscapeHtml(labels[g]) $+ "</th>";
+        else;
+            out = out $+ "<th colspan=\"" $+ sprintf("%d", spans[g]) $+ "\">" $+ ptEscapeHtml(labels[g]) $+ "</th>";
+        endif;
+    endfor;
+    out = out $+ "</tr>\n";
+
+    retp(out);
+endp;
+
+proc (1) = ptRenderArray(struct ptTable tbl);
+    local out, n_rows, n_cols;
+
+    call ptValidateTable(tbl, "ptRenderArray");
+
+    n_rows = rows(tbl.body);
+    n_cols = cols(tbl.body);
+    out = ptBlankSA(n_rows + 1, n_cols + 1);
+    out[1, 1] = tbl.stubName;
+    out[1, 2:n_cols + 1] = tbl.colNames';
+    out[2:n_rows + 1, 1] = tbl.rowNames;
+    out[2:n_rows + 1, 2:n_cols + 1] = tbl.body;
+
+    retp(out);
+endp;
+
+proc (1) = ptRenderMarkdown(struct ptTable tbl);
+    local arr, out, sep, i, j, row, styles;
+
+    arr = ptRenderArray(tbl);
+    out = "";
+
+    if tbl.title $/= "";
+        out = "# " $+ tbl.title $+ "\n\n";
+    endif;
+
+    if ptHasColGroups(tbl.colGroups);
+        out = out $+ "|" $+ ptJoinRow(ptColGroupRow(tbl), "|") $+ "|\n";
+    endif;
+
+    out = out $+ "|" $+ ptJoinRow(arr[1, .], "|") $+ "|\n";
+    sep = ptBlankSA(1, cols(arr));
+    for i(1, cols(arr), 1);
+        if tbl.fmt.colAlign $/= "";
+            sep[i] = ptMarkdownAlignCell(ptColAlignChar(tbl, i, cols(arr)));
+        else;
+            sep[i] = "---";
+        endif;
+    endfor;
+    out = out $+ "|" $+ ptJoinRow(sep, "|") $+ "|\n";
+
+    for i(2, rows(arr), 1);
+        row = arr[i, .];
+        styles = ptCellStyleRow(tbl, i - 1);
+        for j(1, cols(arr), 1);
+            if styles[j] $/= "";
+                row[j] = ptStyleMarkdown(row[j], styles[j]);
+            endif;
+        endfor;
+        out = out $+ "|" $+ ptJoinRow(row, "|") $+ "|\n";
+    endfor;
+
+    if tbl.notes[1] $/= "";
+        out = out $+ "\n";
+        for i(1, rows(tbl.notes), 1);
+            out = out $+ tbl.notes[i] $+ "\n";
+        endfor;
+    endif;
+
+    retp(out);
+endp;
+
+proc (1) = ptRenderCsv(struct ptTable tbl);
+    local arr, out, i;
+
+    arr = ptRenderArray(tbl);
+    out = "";
+
+    if ptHasColGroups(tbl.colGroups);
+        out = out $+ ptJoinRow(ptColGroupRow(tbl), ",") $+ "\n";
+    endif;
+
+    for i(1, rows(arr), 1);
+        out = out $+ ptJoinRow(arr[i, .], ",") $+ "\n";
+    endfor;
+
+    retp(out);
+endp;
+
+proc (1) = ptRenderLatex(struct ptTable tbl);
+    local arr, out, i, spec;
+
+    arr = ptRenderArray(tbl);
+
+    if tbl.fmt.colAlign $/= "";
+        if strlen(tbl.fmt.colAlign) /= cols(arr);
+            errorlog "ptRenderLatex: colAlign must specify " $+ sprintf("%d", cols(arr)) $+ " column(s) (stub column plus data columns).";
+            end;
+        endif;
+        spec = tbl.fmt.colAlign;
+    else;
+        spec = "l" $+ chrs(114 * ones(1, cols(arr) - 1));
+    endif;
+
+    out = "\\begin{table}[!htbp]\n\\centering\n";
+    if tbl.title $/= "";
+        out = out $+ "\\caption{" $+ ptEscapeLatex(tbl.title) $+ "}\n";
+    endif;
+    if tbl.fmt.label $/= "";
+        out = out $+ "\\label{" $+ tbl.fmt.label $+ "}\n";
+    endif;
+    out = out $+ "\\begin{tabular}{" $+ spec $+ "}\n\\toprule\n";
+
+    if ptHasColGroups(tbl.colGroups);
+        out = out $+ ptLatexColGroupHeader(tbl);
+    endif;
+
+    out = out $+ ptJoinLatexRow(arr[1, .]) $+ " \\\\\n\\midrule\n";
+
+    for i(2, rows(arr), 1);
+        out = out $+ ptJoinLatexRowStyled(arr[i, .], ptCellStyleRow(tbl, i - 1)) $+ " \\\\\n";
+    endfor;
+
+    out = out $+ "\\bottomrule\n\\end{tabular}\n";
+
+    if tbl.notes[1] $/= "";
+        out = out $+ "\\\\\n";
+        for i(1, rows(tbl.notes), 1);
+            out = out $+ "\\footnotesize{" $+ ptEscapeLatex(tbl.notes[i]) $+ "}\\\\\n";
+        endfor;
+    endif;
+
+    out = out $+ "\\end{table}\n";
+    retp(out);
+endp;
+
+proc (1) = ptRenderText(struct ptTable tbl);
+    local arr, out, i, j, n_rows, n_cols, widths, row, sep, grpRow, grpLine;
+
+    arr = ptRenderArray(tbl);
+    n_rows = rows(arr);
+    n_cols = cols(arr);
+    widths = ptColWidths(arr);
+
+    out = "";
+    if tbl.title $/= "";
+        out = tbl.title $+ "\n\n";
+    endif;
+
+    if ptHasColGroups(tbl.colGroups);
+        grpRow = ptColGroupRow(tbl);
+        grpLine = ptPadRight(grpRow[1], widths[1]);
+        for j(2, n_cols, 1);
+            grpLine = grpLine $+ "  " $+ ptPadRight(grpRow[j], widths[j]);
+        endfor;
+        out = out $+ grpLine $+ "\n";
+    endif;
+
+    for i(1, n_rows, 1);
+        row = ptBlankSA(1, n_cols);
+        for j(1, n_cols, 1);
+            row[j] = ptPadAlign(arr[i, j], widths[j], ptColAlignChar(tbl, j, n_cols));
+        endfor;
+        out = out $+ ptJoinRow(row, "  ") $+ "\n";
+
+        if i == 1;
+            sep = ptRepeatChar("-", widths[1]);
+            for j(2, n_cols, 1);
+                sep = sep $+ "  " $+ ptRepeatChar("-", widths[j]);
+            endfor;
+            out = out $+ sep $+ "\n";
+        endif;
+    endfor;
+
+    if tbl.notes[1] $/= "";
+        out = out $+ "\n";
+        for i(1, rows(tbl.notes), 1);
+            out = out $+ tbl.notes[i] $+ "\n";
+        endfor;
+    endif;
+
+    retp(out);
+endp;
+
+proc (1) = ptRenderRtf(struct ptTable tbl);
+    local arr, out, i, j, n_rows, n_cols, widths, borders, cellx, cellText, styles;
+
+    arr = ptRenderArray(tbl);
+    n_rows = rows(arr);
+    n_cols = cols(arr);
+    widths = ptColWidths(arr);
+
+    out = "{\\rtf1\\ansi\n";
+
+    if tbl.title $/= "";
+        out = out $+ "{\\b " $+ ptEscapeRtf(tbl.title) $+ "}\\par\n";
+    endif;
+
+    borders = "\\clbrdrt\\brdrs\\brdrw10\\clbrdrl\\brdrs\\brdrw10"
+        $+ "\\clbrdrb\\brdrs\\brdrw10\\clbrdrr\\brdrs\\brdrw10";
+
+    if ptHasColGroups(tbl.colGroups);
+        out = out $+ ptRtfColGroupRow(tbl, widths, borders);
+    endif;
+
+    for i(1, n_rows, 1);
+        out = out $+ "\\trowd\\trgaph108\\trleft0\n";
+        cellx = 0;
+        for j(1, n_cols, 1);
+            cellx = cellx + (widths[j] * 120 + 200);
+            out = out $+ borders $+ "\\cellx" $+ ntos(cellx) $+ "\n";
+        endfor;
+
+        if i > 1;
+            styles = ptCellStyleRow(tbl, i - 1);
+        endif;
+
+        out = out $+ "\\pard\\intbl";
+        for j(1, n_cols, 1);
+            cellText = ptEscapeRtf(arr[i, j]);
+            if i == 1;
+                cellText = "\\b " $+ cellText $+ "\\b0";
+            elseif styles[j] $/= "";
+                cellText = ptStyleRtf(cellText, styles[j]);
+            endif;
+            out = out $+ " " $+ cellText $+ "\\cell";
+        endfor;
+        out = out $+ "\\row\n";
+    endfor;
+
+    if tbl.notes[1] $/= "";
+        for i(1, rows(tbl.notes), 1);
+            out = out $+ "{\\i " $+ ptEscapeRtf(tbl.notes[i]) $+ "}\\par\n";
+        endfor;
+    endif;
+
+    out = out $+ "}\n";
+    retp(out);
+endp;
+
+proc (1) = ptRenderHtml(struct ptTable tbl);
+    local arr, out, i, j, n_cols, styles, cellText;
+
+    arr = ptRenderArray(tbl);
+    n_cols = cols(arr);
+
+    out = "<table>\n";
+    if tbl.title $/= "";
+        out = out $+ "<caption>" $+ ptEscapeHtml(tbl.title) $+ "</caption>\n";
+    endif;
+
+    out = out $+ "<thead>\n";
+
+    if ptHasColGroups(tbl.colGroups);
+        out = out $+ ptHtmlColGroupRow(tbl);
+    endif;
+
+    out = out $+ "<tr>";
+    for j(1, n_cols, 1);
+        out = out $+ "<th" $+ ptHtmlAlignAttr(tbl, j, n_cols) $+ ">" $+ ptEscapeHtml(arr[1, j]) $+ "</th>";
+    endfor;
+    out = out $+ "</tr>\n</thead>\n<tbody>\n";
+
+    for i(2, rows(arr), 1);
+        styles = ptCellStyleRow(tbl, i - 1);
+        out = out $+ "<tr><th scope=\"row\"" $+ ptHtmlAlignAttr(tbl, 1, n_cols) $+ ">" $+ ptEscapeHtml(arr[i, 1]) $+ "</th>";
+        for j(2, n_cols, 1);
+            cellText = ptEscapeHtml(arr[i, j]);
+            if styles[j] $/= "";
+                cellText = ptStyleHtml(cellText, styles[j]);
+            endif;
+            out = out $+ "<td" $+ ptHtmlAlignAttr(tbl, j, n_cols) $+ ">" $+ cellText $+ "</td>";
+        endfor;
+        out = out $+ "</tr>\n";
+    endfor;
+
+    out = out $+ "</tbody>\n</table>\n";
+
+    if tbl.notes[1] $/= "";
+        for i(1, rows(tbl.notes), 1);
+            out = out $+ "<p class=\"pt-note\">" $+ ptEscapeHtml(tbl.notes[i]) $+ "</p>\n";
+        endfor;
+    endif;
+
+    retp(out);
+endp;

@@ -1,0 +1,180 @@
+/*
+** pubtable_export.src
+**
+** Export procedures: ptExport, ptExportAll, ptExportAllFormats,
+** ptWriteTextFile, and supporting helpers (ptFileExt, ptStripRtfHeader,
+** ptStripRtfFooter).
+**
+** Included unconditionally by pubtable.src.
+*/
+#include pubtable.sdf
+
+proc (1) = ptFileExt(fname);
+    local i, ext;
+
+    ext = "";
+    for i(strlen(fname), 1, -1);
+        if strsect(fname, i, 1) $== ".";
+            ext = lower(strsect(fname, i + 1, strlen(fname) - i));
+            break;
+        endif;
+    endfor;
+
+    retp(ext);
+endp;
+
+proc (0) = ptWriteTextFile(fname, text);
+    output file=^fname reset;
+    screen off;
+    output on;
+    print /flush text;
+    output off;
+    screen on;
+endp;
+
+proc (1) = ptStripRtfHeader(s);
+    local prefix;
+
+    prefix = "{\\rtf1\\ansi\n";
+    if strsect(s, 1, strlen(prefix)) $== prefix;
+        retp(strsect(s, strlen(prefix) + 1, strlen(s) - strlen(prefix)));
+    endif;
+
+    retp(s);
+endp;
+
+proc (1) = ptStripRtfFooter(s);
+    local suffix;
+
+    suffix = "}\n";
+    if strsect(s, strlen(s) - strlen(suffix) + 1, strlen(suffix)) $== suffix;
+        retp(strsect(s, 1, strlen(s) - strlen(suffix)));
+    endif;
+
+    retp(s);
+endp;
+
+proc (1) = ptExport(struct ptTable tbl, fname);
+    local ext, text, ret, oldtrap;
+
+    call ptValidateTable(tbl, "ptExport");
+
+    ext = ptFileExt(fname);
+
+    if ext $== "xlsx" or ext $== "xls";
+        oldtrap = trapchk(1);
+        trap 1;
+        ret = SpreadsheetWrite(ptRenderArray(tbl), fname, "A1", 1);
+        trap oldtrap;
+        if scalerr(ret);
+            ret = scalerr(ret);
+        endif;
+        retp(ret);
+    elseif ext $== "md";
+        text = ptRenderMarkdown(tbl);
+    elseif ext $== "tex";
+        text = ptRenderLatex(tbl);
+    elseif ext $== "csv";
+        text = ptRenderCsv(tbl);
+    elseif ext $== "rtf";
+        text = ptRenderRtf(tbl);
+    elseif ext $== "html" or ext $== "htm";
+        text = ptRenderHtml(tbl);
+    else;
+        text = ptRenderText(tbl);
+    endif;
+
+    call ptWriteTextFile(fname, text);
+    retp(0);
+endp;
+
+proc (1) = ptExportAll(struct ptTable tbl, fname);
+    local ext, n, i, text, ret, oldtrap, body, sep;
+
+    n = rows(tbl);
+    for i(1, n, 1);
+        call ptValidateTable(tbl[i], "ptExportAll");
+    endfor;
+
+    ext = ptFileExt(fname);
+
+    if ext $== "xlsx" or ext $== "xls";
+        oldtrap = trapchk(1);
+        trap 1;
+        for i(1, n, 1);
+            ret = SpreadsheetWrite(ptRenderArray(tbl[i]), fname, "A1", i);
+            if scalerr(ret);
+                trap oldtrap;
+                retp(scalerr(ret));
+            endif;
+        endfor;
+        trap oldtrap;
+        retp(0);
+    endif;
+
+    if ext $== "rtf";
+        if n == 1;
+            text = ptRenderRtf(tbl[1]);
+        else;
+            text = ptStripRtfFooter(ptRenderRtf(tbl[1]));
+            for i(2, n, 1);
+                body = ptStripRtfHeader(ptRenderRtf(tbl[i]));
+                if i < n;
+                    body = ptStripRtfFooter(body);
+                endif;
+                text = text $+ body;
+            endfor;
+        endif;
+
+        call ptWriteTextFile(fname, text);
+        retp(0);
+    endif;
+
+    text = "";
+    for i(1, n, 1);
+        if ext $== "md";
+            body = ptRenderMarkdown(tbl[i]);
+            sep = "\n---\n\n";
+        elseif ext $== "tex";
+            body = ptRenderLatex(tbl[i]);
+            sep = "\n";
+        elseif ext $== "csv";
+            body = ptRenderCsv(tbl[i]);
+            sep = "\n";
+        elseif ext $== "html" or ext $== "htm";
+            body = ptRenderHtml(tbl[i]);
+            sep = "\n";
+        else;
+            body = ptRenderText(tbl[i]);
+            sep = "\n";
+        endif;
+
+        text = text $+ body $+ sep;
+    endfor;
+
+    call ptWriteTextFile(fname, text);
+    retp(0);
+endp;
+
+/*
+** ptExportAllFormats(tbl, basename, exts): batch-export a ptTable array to
+** several output formats in one call. For each extension in exts (e.g.
+** "md" $| "tex" $| "html"), writes basename + "." + extension via
+** ptExportAll. Returns 0 if every format exported successfully, otherwise
+** the return code of the first format that failed (export continues for
+** the remaining formats regardless).
+*/
+proc (1) = ptExportAllFormats(struct ptTable tbl, basename, exts);
+    local n, i, ret, err;
+
+    err = 0;
+    n = rows(exts);
+    for i(1, n, 1);
+        ret = ptExportAll(tbl, basename $+ "." $+ exts[i]);
+        if ret /= 0 and err == 0;
+            err = ret;
+        endif;
+    endfor;
+
+    retp(err);
+endp;

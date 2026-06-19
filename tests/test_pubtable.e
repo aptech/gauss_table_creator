@@ -1,6 +1,9 @@
 new;
 #include C:\Users\eclow\Documents\GitHub\gauss_table_creator\src\pubtable.sdf
 #include C:\Users\eclow\Documents\GitHub\gauss_table_creator\src\pubtable.src
+#include C:\Users\eclow\Documents\GitHub\gauss_table_creator\src\pubtable_model.src
+#include C:\Users\eclow\Documents\GitHub\gauss_table_creator\src\pubtable_render.src
+#include C:\Users\eclow\Documents\GitHub\gauss_table_creator\src\pubtable_export.src
 
 proc (0) = checkStringEqual(actual, expected, label);
     if actual $/= expected;

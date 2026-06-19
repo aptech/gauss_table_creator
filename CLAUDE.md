@@ -10,7 +10,7 @@ Current direction:
 
 - Modern API prefix: `pt`
 - Core structs: `ptFormat`, `ptTable`, `ptModel`
-- Core source: `src/pubtable.sdf`, `src/pubtable.src`
+- Core source: `src/pubtable.sdf`, `src/pubtable.src`, `src/pubtable_model.src`, `src/pubtable_render.src`, `src/pubtable_export.src`
 - Legacy compatibility source: `src/pubtable_legacy.sdf`, `src/pubtable_legacy_output.src`, `src/pubtable_legacy_setters.src`
 
 ## Design Priorities
@@ -143,6 +143,8 @@ Current automatic adapters:
 - `fglsOut`
 
 `pubtableSet()` detects installed optional GAUSS libraries at runtime via `fopen(getGAUSSHome() $+ "pkgs/X/src/X.sdf", "r")` and writes `pubtable.dec` with `declare matrix _pubtable_ver = {0, 3, 0};` plus `#define PT_USE_X` sentinels for each detected library (cmlmt, maxlikmt, optmt, tsmt). `ptSetup()` is an alias for `pubtableSet()`; `ptSetupAt(srcDir)` writes `pubtable.dec` to a specified directory (for dev/git-clone installs). `src/pubtable.dec` ships as a template with just the version declaration; the generated version is machine-specific and should not be committed to source control.
+
+The core source is split across four files: `pubtable.src` (format/presets, internal utilities, table struct and setters, dispatchers and built-in adapters, setup), `pubtable_model.src` (all `ptModel*` and `ptCompare*` procedures), `pubtable_render.src` (number formatting, all `ptRender*`, and render helpers), and `pubtable_export.src` (all `ptExport*` and file I/O helpers). When using `library pubtable;`, GAUSS loads all four automatically. For dev/test direct-include paths, all four must be included explicitly (see `tests/test_pubtable.e`).
 
 Each adapter source file (`pubtable_cmlmt.src`, `pubtable_maxlikmt.src`, `pubtable_optmt.src`, `pubtable_tsmt.src`) uses `#ifDef PT_USE_X` for the real implementation and a `#else` block of stub procs that call `_library_missing_error(currentprocname(), "LibName")`. The qardl adapter (`pubtable_qardl.src`) uses `#ifDef QARDL_SDF_INCLUDED / #else / #endIf` with the same pattern. `_library_missing_error(funcname, libname)` is defined unconditionally in `pubtable.src` itself (not in any adapter file) — this avoids structure-conflict errors that arise when the helper is compiled inside an adapter that also includes library-specific `.sdf` type definitions. All adapter files are included unconditionally at the bottom of `pubtable.src`; the inner guards select real implementation vs. stubs, so calling an adapter without the library installed produces a diagnostic error message instead of "procedure not found".
 

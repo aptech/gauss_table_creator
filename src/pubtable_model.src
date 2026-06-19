@@ -1,0 +1,338 @@
+/*
+** pubtable_model.src
+**
+** Model lifecycle procedures: ptModel struct construction, all ptModelSet*
+** setters, ptCompareOptions construction and setters, ptModelTable,
+** ptModelCompare, and ptModelCompareWith.
+**
+** Included unconditionally by pubtable.src.
+*/
+#include pubtable.sdf
+
+proc (struct ptModel) = ptModelCreate(name, estimates, stdErrors);
+    struct ptModel mdl;
+
+    if rows(estimates) < 1 or cols(estimates) /= 1;
+        errorlog "ptModelCreate: estimates must be a non-empty column vector.";
+        end;
+    endif;
+
+    if rows(stdErrors) /= rows(estimates) or cols(stdErrors) /= cols(estimates);
+        errorlog "ptModelCreate: stdErrors must have the same dimensions as estimates.";
+        end;
+    endif;
+
+    mdl.name = name;
+    mdl.estimates = estimates;
+    mdl.stdErrors = stdErrors;
+    mdl.pValues = miss(zeros(rows(estimates), cols(estimates)), 0);
+    mdl.ciLower = miss(zeros(rows(estimates), 1), 0);
+    mdl.ciUpper = miss(zeros(rows(estimates), 1), 0);
+    mdl.termNames = "x" $+ sprintf("%d", seqa(1, 1, rows(estimates)));
+    mdl.gofNames = "";
+    mdl.gofValues = miss(0, 0);
+    mdl.notes = "";
+    mdl.fmt = ptFormatCreate();
+
+    retp(mdl);
+endp;
+
+proc (struct ptModel) = ptModelSetNames(struct ptModel mdl, termNames);
+    mdl.termNames = ptLabelsToCol(termNames, rows(mdl.estimates), "ptModelSetNames", "termNames");
+    retp(mdl);
+endp;
+
+proc (struct ptModel) = ptModelSetPValues(struct ptModel mdl, pValues);
+    if rows(pValues) /= rows(mdl.estimates) or cols(pValues) /= cols(mdl.estimates);
+        errorlog "ptModelSetPValues: pValues must have the same dimensions as estimates.";
+        end;
+    endif;
+
+    mdl.pValues = pValues;
+    retp(mdl);
+endp;
+
+proc (struct ptModel) = ptModelSetGOF(struct ptModel mdl, gofNames, gofValues);
+    if cols(gofValues) /= 1;
+        errorlog "ptModelSetGOF: gofValues must be a column vector.";
+        end;
+    endif;
+
+    mdl.gofNames = ptLabelsToCol(gofNames, rows(gofValues), "ptModelSetGOF", "gofNames");
+    mdl.gofValues = gofValues;
+    retp(mdl);
+endp;
+
+proc (struct ptModel) = ptModelSetDigits(struct ptModel mdl, digits);
+    call ptCheckDigits(digits, "ptModelSetDigits");
+    mdl.fmt.digits = digits;
+    retp(mdl);
+endp;
+
+proc (struct ptModel) = ptModelSetLabel(struct ptModel mdl, label);
+    mdl.fmt.label = label;
+    retp(mdl);
+endp;
+
+proc (struct ptModel) = ptModelSetStars(struct ptModel mdl, cutoffs, symbols);
+    if rows(cutoffs) /= rows(symbols);
+        errorlog "ptModelSetStars: cutoffs and symbols must have the same number of rows.";
+        end;
+    endif;
+
+    mdl.fmt.stars = 1;
+    mdl.fmt.starCutoffs = cutoffs;
+    mdl.fmt.starSymbols = symbols;
+    retp(mdl);
+endp;
+
+proc (struct ptModel) = ptModelNoStars(struct ptModel mdl);
+    mdl.fmt.stars = 0;
+    retp(mdl);
+endp;
+
+proc (struct ptModel) = ptModelSetColAlign(struct ptModel mdl, colAlign);
+    call ptCheckColAlign(colAlign, "ptModelSetColAlign");
+    mdl.fmt.colAlign = colAlign;
+    retp(mdl);
+endp;
+
+proc (struct ptModel) = ptModelSetCI(struct ptModel mdl, ciLower, ciUpper);
+    if rows(ciLower) /= rows(mdl.estimates) or cols(ciLower) /= 1;
+        errorlog "ptModelSetCI: ciLower must be a column vector matching estimates.";
+        end;
+    endif;
+
+    if rows(ciUpper) /= rows(mdl.estimates) or cols(ciUpper) /= 1;
+        errorlog "ptModelSetCI: ciUpper must be a column vector matching estimates.";
+        end;
+    endif;
+
+    mdl.ciLower = ciLower;
+    mdl.ciUpper = ciUpper;
+    retp(mdl);
+endp;
+
+proc (struct ptModel) = ptModelSetStatRows(struct ptModel mdl, statRows);
+    call ptCheckStatRows(statRows, "ptModelSetStatRows");
+    mdl.fmt.statRows = statRows;
+    retp(mdl);
+endp;
+
+proc (struct ptModel) = ptModelSetNotes(struct ptModel mdl, notes);
+    mdl.notes = notes;
+    retp(mdl);
+endp;
+
+proc (struct ptCompareOptions) = ptCompareOptionsCreate();
+    struct ptCompareOptions opts;
+
+    opts.termOrder = "";
+    opts.gofOrder = "";
+    opts.mapFrom = "";
+    opts.mapTo = "";
+    opts.notes = "";
+    opts.colGroups = "";
+
+    retp(opts);
+endp;
+
+proc (struct ptCompareOptions) = ptCompareSetTermOrder(struct ptCompareOptions opts, termOrder);
+    opts.termOrder = termOrder;
+    retp(opts);
+endp;
+
+proc (struct ptCompareOptions) = ptCompareSetGofOrder(struct ptCompareOptions opts, gofOrder);
+    opts.gofOrder = gofOrder;
+    retp(opts);
+endp;
+
+proc (struct ptCompareOptions) = ptCompareSetLabelMap(struct ptCompareOptions opts, mapFrom, mapTo);
+    call ptCheckLabelMap(mapFrom, mapTo, "ptCompareSetLabelMap");
+    opts.mapFrom = mapFrom;
+    opts.mapTo = mapTo;
+    retp(opts);
+endp;
+
+proc (struct ptCompareOptions) = ptCompareSetNotes(struct ptCompareOptions opts, notes);
+    opts.notes = notes;
+    retp(opts);
+endp;
+
+proc (struct ptCompareOptions) = ptCompareSetColGroups(struct ptCompareOptions opts, colGroups);
+    opts.colGroups = colGroups;
+    retp(opts);
+endp;
+
+proc (struct ptTable) = ptModelTable(struct ptModel mdl);
+    local n_terms, n_gof, n_stat, rows_per_term, body, row_names, i, k, base;
+    struct ptTable tbl;
+
+    call ptValidateModel(mdl, "ptModelTable");
+
+    n_terms = rows(mdl.estimates);
+    n_stat = rows(mdl.fmt.statRows);
+    rows_per_term = 1 + n_stat;
+    n_gof = 0;
+    if mdl.gofNames[1] $/= "";
+        n_gof = rows(mdl.gofValues);
+    endif;
+
+    body = ptBlankSA(rows_per_term * n_terms + n_gof, 1);
+    row_names = ptBlankSA(rows(body), 1);
+
+    for i(1, n_terms, 1);
+        base = rows_per_term * (i - 1);
+        row_names[base + 1] = mdl.termNames[i];
+        body[base + 1, 1] = ptFormatEstimate(mdl.estimates[i], mdl.pValues[i], mdl.fmt);
+
+        for k(1, n_stat, 1);
+            row_names[base + 1 + k] = "";
+            body[base + 1 + k, 1] = ptStatRowValue(mdl.fmt.statRows[k], mdl, i);
+        endfor;
+    endfor;
+
+    for i(1, n_gof, 1);
+        row_names[rows_per_term * n_terms + i] = mdl.gofNames[i];
+        body[rows_per_term * n_terms + i, 1] = ptFormatGOFValue(mdl.gofValues[i], mdl.fmt.digits);
+    endfor;
+
+    tbl = ptTableCreate(mdl.name);
+    tbl.stubName = "Term";
+    tbl.rowNames = row_names;
+    tbl.colNames = mdl.name;
+    tbl.body = body;
+    tbl.fmt = mdl.fmt;
+    tbl.notes = ptAppendNotes(ptStarNote(mdl.fmt), mdl.notes);
+
+    retp(tbl);
+endp;
+
+proc (struct ptTable) = ptModelCompare(struct ptModel models);
+    retp(ptModelCompareWith(models, ptCompareOptionsCreate()));
+endp;
+
+proc (struct ptTable) = ptModelCompareWith(struct ptModel models, struct ptCompareOptions opts);
+    local n_models, n_terms, n_gof, n_stat, rows_per_term, n_rows, body, row_names, col_names, i, j, k, row, base;
+    local term_names, gof_names, display_names, notes;
+    local idx;
+    struct ptTable tbl;
+
+    n_models = rows(models);
+    if n_models < 1;
+        errorlog "ptModelCompare: at least one model is required.";
+        end;
+    endif;
+
+    for j(1, n_models, 1);
+        call ptValidateModel(models[j], "ptModelCompare");
+    endfor;
+
+    term_names = models[1].termNames;
+    gof_names = "";
+    if models[1].gofNames[1] $/= "";
+        gof_names = models[1].gofNames;
+    endif;
+
+    for j(2, n_models, 1);
+        term_names = ptAppendNewLabels(term_names, models[j].termNames);
+        if models[j].gofNames[1] $/= "";
+            if gof_names[1] $== "";
+                gof_names = models[j].gofNames;
+            else;
+                gof_names = ptAppendNewLabels(gof_names, models[j].gofNames);
+            endif;
+        endif;
+    endfor;
+
+    term_names = ptOrderLabels(term_names, opts.termOrder);
+    if gof_names[1] $/= "";
+        gof_names = ptOrderLabels(gof_names, opts.gofOrder);
+    endif;
+    display_names = ptApplyLabelMap(term_names, opts.mapFrom, opts.mapTo);
+
+    n_terms = rows(term_names);
+    n_stat = rows(models[1].fmt.statRows);
+    rows_per_term = 1 + n_stat;
+    n_gof = 0;
+    if gof_names[1] $/= "";
+        n_gof = rows(gof_names);
+    endif;
+    n_rows = rows_per_term * n_terms + n_gof;
+
+    body = ptBlankSA(n_rows, n_models);
+    row_names = ptBlankSA(n_rows, 1);
+    col_names = ptBlankSA(n_models, 1);
+
+    for j(1, n_models, 1);
+        col_names[j] = models[j].name;
+    endfor;
+
+    for i(1, n_terms, 1);
+        base = rows_per_term * (i - 1);
+        row_names[base + 1] = display_names[i];
+
+        for j(1, n_models, 1);
+            idx = ptFindLabel(models[j].termNames, term_names[i]);
+            if idx == 0;
+                body[base + 1, j] = "";
+                for k(1, n_stat, 1);
+                    body[base + 1 + k, j] = "";
+                endfor;
+            else;
+                body[base + 1, j] = ptFormatEstimate(models[j].estimates[idx], models[j].pValues[idx], models[j].fmt);
+                for k(1, n_stat, 1);
+                    body[base + 1 + k, j] = ptStatRowValue(models[1].fmt.statRows[k], models[j], idx);
+                endfor;
+            endif;
+        endfor;
+    endfor;
+
+    for i(1, n_gof, 1);
+        row = rows_per_term * n_terms + i;
+        row_names[row] = gof_names[i];
+
+        for j(1, n_models, 1);
+            idx = 0;
+            if models[j].gofNames[1] $/= "";
+                idx = ptFindLabel(models[j].gofNames, gof_names[i]);
+            endif;
+
+            if idx == 0;
+                body[row, j] = "";
+            else;
+                body[row, j] = ptFormatGOFValue(models[j].gofValues[idx], models[j].fmt.digits);
+            endif;
+        endfor;
+    endfor;
+
+    notes = ptStarNote(models[1].fmt);
+    for j(1, n_models, 1);
+        if models[j].notes[1] $/= "";
+            if n_models > 1;
+                notes = ptAppendNotes(notes, models[j].name $+ ": " $+ models[j].notes);
+            else;
+                notes = ptAppendNotes(notes, models[j].notes);
+            endif;
+        endif;
+    endfor;
+    notes = ptAppendNotes(notes, opts.notes);
+
+    tbl = ptTableCreate("Model comparison");
+    tbl.stubName = "Term";
+    tbl.rowNames = row_names;
+    tbl.colNames = col_names;
+    tbl.body = body;
+    tbl.fmt = models[1].fmt;
+    tbl.notes = notes;
+
+    if ptHasColGroups(opts.colGroups);
+        if rows(opts.colGroups) /= n_models;
+            errorlog "ptModelCompareWith: colGroups must have one entry for each model.";
+            end;
+        endif;
+        tbl.colGroups = opts.colGroups;
+    endif;
+
+    retp(tbl);
+endp;
