@@ -23,7 +23,7 @@
 new;
 library cmlmt, pubtable;
 
-/* Step 1: Log-likelihood — sum of per-observation Poisson log-densities */
+/* Step 1: Log-likelihood sum of per-observation Poisson log-densities */
 proc lpsn(struct PV p, struct DS d, ind);
     local m, y, x, b;
     struct modelResults mm;

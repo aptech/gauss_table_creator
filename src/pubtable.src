@@ -128,7 +128,7 @@ proc (2) = ptColGroupRuns(colGroups);
 
         if cur $/= "";
             do while i + count <= n;
-                if colGroups[i + count] $/= cur;
+                if colGroups[i+count] $/= cur;
                     break;
                 endif;
                 count = count + 1;

@@ -5,10 +5,10 @@
 ** statistic-row / star configuration on the same OLS model.
 **
 ** Presets:
-**   "journal"  -- 3 digits, +/ * / ** stars at 0.10/0.05/0.01, SE in parens
-**   "compact"  -- 2 digits, +/ * / ** stars at 0.10/0.05/0.01, SE in parens
+**   "journal"  -- 3 digits, + / * / ** stars at 0.10/0.05/0.01, SE in parens
+**   "compact"  -- 2 digits, + / * / ** stars at 0.10/0.05/0.01, SE in parens
 **   "plain"    -- 3 digits, no stars, SE without parentheses
-**   "report"   -- 3 digits, +/ * / ** stars at 0.10/0.05/0.01, SE + p-value rows
+**   "report"   -- 3 digits, + / * / ** stars at 0.10/0.05/0.01, SE + p-value rows
 **
 ** Steps:
 **   1. Estimate the model.
@@ -36,31 +36,31 @@ mdl = ptModelFrom("", out);
 mdl = ptModelSetCI(mdl, out.b - 1.96 .* out.stderr, out.b + 1.96 .* out.stderr);
 mdl = ptModelSetNotes(mdl, "Dependent variable: mpg");
 
-/* Step 3a: Journal preset — +/*/** stars, SE in parentheses, 3 digits */
+/* Step 3a: Journal preset  + / * / ** stars, SE in parentheses, 3 digits */
 jMdl = ptModelApplyPreset(mdl, "journal");
 jMdl.name = "Coeff.";
 jTbl = ptModelTable(jMdl);
 jTbl = ptSetTitle(jTbl, "Journal preset");
 
-/* Step 3b: Compact preset — same as journal but 2 digits */
+/* Step 3b: Compact preset same as journal but 2 digits */
 cMdl = ptModelApplyPreset(mdl, "compact");
 cMdl.name = "Coeff.";
 cTbl = ptModelTable(cMdl);
 cTbl = ptSetTitle(cTbl, "Compact preset");
 
-/* Step 3c: Plain preset — no stars, no parentheses */
+/* Step 3c: Plain preset no stars, no parentheses */
 pMdl = ptModelApplyPreset(mdl, "plain");
 pMdl.name = "Coeff.";
 pTbl = ptModelTable(pMdl);
 pTbl = ptSetTitle(pTbl, "Plain preset");
 
-/* Step 3d: Report preset — stars + p-value row under each coefficient */
+/* Step 3d: Report preset stars + p-value row under each coefficient */
 rMdl = ptModelApplyPreset(mdl, "report");
 rMdl.name = "Coeff.";
 rTbl = ptModelTable(rMdl);
 rTbl = ptSetTitle(rTbl, "Report preset");
 
-/* Step 4: Custom — t-statistic + CI rows, stricter */** /*** stars */
+/* Step 4: Custom — t-statistic + CI rows, stricter * / ** / *** stars */
 xMdl = mdl;
 xMdl.name = "Coeff.";
 xMdl = ptModelSetStatRows(xMdl, "tstat" $| "ci");
