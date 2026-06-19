@@ -20,6 +20,7 @@
 ** All adapters assume the typical ARDL case p >= 1 (an autoregressive lag
 ** term is present); rows(out.phi) == 0 is not specially handled.
 */
+#include pubtable.sdf 
 #ifDef QARDL_SDF_INCLUDED
 
 /*

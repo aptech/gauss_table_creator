@@ -23,6 +23,7 @@
 ** The tsPanelEstimationOut adapters also require #include tspanel.src
 ** from the tsmt package source directory.
 */
+#include pubtable.sdf 
 #ifDef PT_USE_TSMT
 #include tsmt.sdf
 

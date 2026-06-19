@@ -13,6 +13,7 @@
 **   #include pubtable.sdf
 **   #include pubtable.src
 */
+#include pubtable.sdf 
 #ifDef PT_USE_MAXLIKMT
 #include maxlikmt.sdf
 

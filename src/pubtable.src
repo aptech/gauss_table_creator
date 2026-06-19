@@ -1,3 +1,5 @@
+
+#include pubtable.sdf 
 proc (struct ptFormat) = ptFormatCreate();
     struct ptFormat fmt;
 
