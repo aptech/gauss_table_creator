@@ -13,12 +13,12 @@
 ** - tscsmtOut (tscsFit)
 **
 ** Activated when PT_USE_TSMT is defined in pubtable.dec. To use: run
-** pubtableSet() once, then include pubtable.dec before pubtable.src:
+** pubtableSet() once. Include pubtable.dec BEFORE loading the pubtable
+** library so PT_USE_TSMT is defined when the adapter is compiled:
 **   library tsmt;
 **   #include tsmt.sdf
 **   #include pubtable.dec
-**   #include pubtable.sdf
-**   #include pubtable.src
+**   library pubtable;
 **
 ** The tsPanelEstimationOut adapters also require #include tspanel.src
 ** from the tsmt package source directory.

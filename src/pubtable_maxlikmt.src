@@ -4,14 +4,13 @@
 ** Optional pubtable adapter for maxlikmt results. Activated when
 ** PT_USE_MAXLIKMT is defined in pubtable.dec.
 **
-** To use: run pubtableSet() once, then include pubtable.dec before
-** pubtable.src in your program. Also load the maxlikmt library and its
-** SDF before pubtable.src:
+** To use: run pubtableSet() once. Include pubtable.dec BEFORE loading
+** the pubtable library so PT_USE_MAXLIKMT is defined when the adapter is
+** compiled:
 **   library maxlikmt;
 **   #include maxlikmt.sdf
 **   #include pubtable.dec
-**   #include pubtable.sdf
-**   #include pubtable.src
+**   library pubtable;
 */
 #include pubtable.sdf 
 #ifDef PT_USE_MAXLIKMT

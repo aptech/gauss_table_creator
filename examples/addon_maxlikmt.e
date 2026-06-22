@@ -11,6 +11,10 @@
 ** Prerequisites:
 **   1. Run pubtableSet() once to generate pubtable.dec with PT_USE_MAXLIKMT.
 **   2. maxlikmt must be installed (library maxlikmt loads without error).
+**   3. pubtable must be in the GAUSS library search path so that
+**      #include pubtable.dec resolves. pubtable.dec must be included
+**      BEFORE library pubtable so PT_USE_MAXLIKMT is defined when the
+**      maxlikmt adapter is compiled.
 **
 ** Steps:
 **   1. Define the Normal log-likelihood procedure.
@@ -22,7 +26,10 @@
 */
 
 new;
-library maxlikmt, pubtable;
+library maxlikmt;
+#include maxlikmt.sdf
+#include pubtable.dec
+library pubtable;
 
 /* Step 1: Log-likelihood — per-observation Normal log-densities via lnpdfmvn */
 proc lnorm(struct PV p, struct DS d, ind);

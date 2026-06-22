@@ -9,14 +9,13 @@
 ** ptTableFromOptmt builds a simple parameter/estimate/gradient table
 ** with the function value and return code reported as table notes.
 **
-** To use: run pubtableSet() once, then include pubtable.dec before
-** pubtable.src in your program. Also load the optmt library and its
-** SDF before pubtable.src:
+** To use: run pubtableSet() once. Include pubtable.dec BEFORE loading
+** the pubtable library so PT_USE_OPTMT is defined when the adapter is
+** compiled:
 **   library optmt;
 **   #include optmt.sdf
 **   #include pubtable.dec
-**   #include pubtable.sdf
-**   #include pubtable.src
+**   library pubtable;
 */
 #include pubtable.sdf 
 #ifDef PT_USE_OPTMT

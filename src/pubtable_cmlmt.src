@@ -4,14 +4,13 @@
 ** Optional pubtable adapter for cmlmt (constrained maximum likelihood)
 ** results. Activated when PT_USE_CMLMT is defined in pubtable.dec.
 **
-** To use: run pubtableSet() once, then include pubtable.dec before
-** pubtable.src in your program. Also load the cmlmt library and its
-** SDF before pubtable.src:
+** To use: run pubtableSet() once. Include pubtable.dec BEFORE loading
+** the pubtable library so PT_USE_CMLMT is defined when the adapter is
+** compiled:
 **   library cmlmt;
 **   #include cmlmt.sdf
 **   #include pubtable.dec
-**   #include pubtable.sdf
-**   #include pubtable.src
+**   library pubtable;
 */
 #include pubtable.sdf 
 #ifDef PT_USE_CMLMT

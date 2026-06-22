@@ -13,6 +13,9 @@
     "src": [
         "pubtable.sdf",
         "pubtable.src",
+        "pubtable_model.src",
+        "pubtable_render.src",
+        "pubtable_export.src",
         "pubtable_legacy.sdf",
         "pubtable_legacy_output.src",
         "pubtable_legacy_setters.src",
