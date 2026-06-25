@@ -52,13 +52,21 @@ The qardl adapter is activated automatically by the `QARDL_SDF_INCLUDED` guard w
 by `qardl.sdf` — no `pubtableSet` entry is needed.
 
 ## Usage after setup
-For installed packages (`library pubtable;` workflow), `pubtable.dec` is picked up
-automatically by the library loader and no explicit `#include` is needed in user code.
+For installed packages (`library pubtable;` workflow), no explicit `#include pubtable.dec` is
+needed in user code at all: each optional adapter file (`pubtable_cmlmt.src`, `pubtable_maxlikmt.src`,
+`pubtable_optmt.src`, `pubtable_tsmt.src`) includes `pubtable.dec` itself, right after
+`#include pubtable.sdf`. Just load the optional library together with pubtable in a single
+statement, e.g. `library cmlmt, pubtable;` — never as two separate `library` statements, since each
+`library` statement unloads every previously loaded library not named in it.
 
-For dev-path installs, add these two lines before using pubtable:
+For dev-path installs (direct `#include` instead of the package manager), include the core split
+files plus any adapter files you need, in this order:
 ```gauss
-#include pubtable.dec;
-#include pubtable.src;
+#include C:\path\to\gauss_table_creator\src\pubtable.sdf
+#include C:\path\to\gauss_table_creator\src\pubtable.src
+#include C:\path\to\gauss_table_creator\src\pubtable_model.src
+#include C:\path\to\gauss_table_creator\src\pubtable_render.src
+#include C:\path\to\gauss_table_creator\src\pubtable_export.src
 ```
 
 ## Example
@@ -75,8 +83,8 @@ call pubtableSet();
 For a dev-path (git-clone) install, writing to the source directory:
 ```gauss
 new;
-#include pubtable.dec;
-#include C:\path\to\gauss_table_creator\src\pubtable.src;
+#include C:\path\to\gauss_table_creator\src\pubtable.sdf
+#include C:\path\to\gauss_table_creator\src\pubtable.src
 
 call ptSetupAt("C:\\path\\to\\gauss_table_creator\\src\\");
 ```

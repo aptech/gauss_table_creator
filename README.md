@@ -144,21 +144,16 @@ Adapters for optional GAUSS packages (cmlmt, maxlikmt, optmt, tsmt) are activate
 
 ```gauss
 library pubtable;
-#include pubtable.sdf
-#include pubtable.src
 call pubtableSet();
 ```
 
-Then include `pubtable.dec` before `pubtable.src` in your programs to activate the adapters:
+Each optional adapter file (`pubtable_cmlmt.src`, `pubtable_maxlikmt.src`, `pubtable_optmt.src`, `pubtable_tsmt.src`) includes `pubtable.dec` itself, so user programs don't need to `#include` anything — just load the optional library together with pubtable **in a single statement**:
 
 ```gauss
-library pubtable;
-library cmlmt;
-#include cmlmt.sdf
-#include pubtable.dec   /* written by pubtableSet() — defines PT_USE_CMLMT etc. */
-#include pubtable.sdf
-#include pubtable.src   /* cmlmt adapter loads because PT_USE_CMLMT is defined */
+library cmlmt, pubtable;   /* PT_USE_CMLMT is defined because pubtableSet() already ran */
 ```
+
+Loading them as two separate statements (`library cmlmt; library pubtable;`) is **not** equivalent — each `library` statement unloads every previously loaded library not named in it, so the second statement would unload cmlmt.
 
 For development installations (git clones not installed via the package manager), run `ptSetupAt` once with the path to the `src/` directory:
 
@@ -168,17 +163,19 @@ call ptSetupAt("C:/path/to/gauss_table_creator/src/");
 
 Re-run `pubtableSet()` after installing or removing optional libraries.
 
-qardl is auto-detected via the `QARDL_SDF_INCLUDED` guard in `qardl.sdf` — just include `qardl.sdf` before `pubtable.src`; no `pubtable.dec` entry needed.
+qardl is auto-detected via the `QARDL_SDF_INCLUDED` guard in `qardl.sdf` (its own include guard, not a `pubtable.dec` entry) — just load it together with pubtable the same way: `library qardl, pubtable;`.
 
-Optional add-on package adapters (not wired into `ptModelFrom`/`ptTableFrom`, since they require packages that may not be installed):
+Once the optional library is loaded this way, most of its model adapters are automatically reachable through the standard [`ptModelFrom(name, out)`](docs/api/ptModelFrom.md) dispatcher — no separate function name to remember. The exceptions are `optmtResults` (no covariance matrix, so there's no `ptModel` form — use `ptTableFromOptmt` directly), `tscsmtOut` (two distinct estimators, no single canonical model — use `ptFromTscsmt`), and `qardlOut`/`qardlECMOut` (need an extra `tauIdx` argument — use `ptFromQardl`/`ptFromQardlECM`).
 
-| Package/results | Adapters and requirements |
+Optional add-on package adapters and their underlying output structs:
+
+| Package/results | Adapters |
 | --- | --- |
-| `maxlikmtResults` | `ptModelFromMaxlikmt`/`ptFromMaxlikmt` in `src/pubtable_maxlikmt.src`. Requires `library maxlikmt;` and `#include maxlikmt.sdf` before including this file. |
-| `cmlmtResults` | `ptModelFromCmlmt`/`ptFromCmlmt` in `src/pubtable_cmlmt.src`. Requires `library cmlmt;` and `#include cmlmt.sdf` before including this file. |
-| tsmt (Time Series MT) results | `src/pubtable_tsmt.src` provides `ptModelFromArimamt`/`ptFromArimamt` (`arimamtOut`), `ptModelFromTsPanel`/`ptFromTsPanel` (`tsPanelEstimationOut`), `ptModelFromAutomt`/`ptFromAutomt` (`automtOut`), `ptModelFromVarmamt`/`ptFromVarmamt` (`varmamtOut`), `ptModelFromLsdvmt`/`ptFromLsdvmt` (`lsdvmtOut`), `ptModelFromSwitchmt`/`ptFromSwitchmt` (`switchmtOut`), `ptModelFromGarchmt`/`ptFromGarchmt` (`garchEstimation`), and `ptFromTscsmt` (`tscsmtOut`, a [`ptModelCompare`](docs/api/ptModelCompare.md) table comparing the within/fixed-effects and error-components estimates). Requires `library tsmt;` and `#include tsmt.sdf` before including this file; `tsPanelEstimationOut` adapters also require `#include tspanel.src` from the tsmt package. Several output structs (`automtOut`, `lsdvmtOut`, `tscsmtOut`) don't carry the original variable names, so those adapters use generic `X`/`AR`/`x` row labels. |
-| `optmtResults` | `ptTableFromOptmt` in `src/pubtable_optmt.src` builds a parameter/estimate/gradient table (no standard errors, since `optmtResults` has no covariance matrix). Requires `library optmt;` and `#include optmt.sdf` before including this file. |
-| QARDL package (ARDL/QARDL/NARDL/CS-ARDL family) | `src/pubtable_qardl.src` provides `ptModelFromArdl`/`ptFromArdl` (`ardlOut`), `ptModelFromArdlECM`/`ptFromArdlECM` (`ardlECMOut`), `ptModelFromQardl`/`ptFromQardl` and `ptModelFromQardlECM`/`ptFromQardlECM` (`qardlOut`/`qardlECMOut`, one comparison column per quantile in `out.tau`), `ptModelFromNardl`/`ptFromNardl` and `ptModelFromNardlECM`/`ptFromNardlECM` (`nardlOut`/`nardlECMOut`), `ptModelFromCsardl`/`ptFromCsardl` and `ptModelFromCsardlECM`/`ptFromCsardlECM` (`csardlOut`/`csardlECMOut`), `ptFromArdlFull` (`ardlFullOut`) and `ptTablesFromQardlFull`/`ptTablesFromNardlFull`/`ptTablesFromCsardlFull` (`qardlFullOut`/`nardlFullOut`/`csardlFullOut`, each returning a 2x1 `ptTable` array of levels + ECM tables for `ptExportAll`), and the `ptFromArdlFamily` dispatcher. Requires `library qardl;` and `#include qardl.sdf` before including this file. |
+| `maxlikmtResults` | `ptModelFromMaxlikmt`/`ptFromMaxlikmt` in `src/pubtable_maxlikmt.src`. Load with `library maxlikmt, pubtable;`. |
+| `cmlmtResults` | `ptModelFromCmlmt`/`ptFromCmlmt` in `src/pubtable_cmlmt.src`. Load with `library cmlmt, pubtable;`. |
+| tsmt (Time Series MT) results | `src/pubtable_tsmt.src` provides `ptModelFromArimamt`/`ptFromArimamt` (`arimamtOut`), `ptModelFromTsPanel`/`ptFromTsPanel` (`tsPanelEstimationOut`), `ptModelFromAutomt`/`ptFromAutomt` (`automtOut`), `ptModelFromVarmamt`/`ptFromVarmamt` (`varmamtOut`), `ptModelFromLsdvmt`/`ptFromLsdvmt` (`lsdvmtOut`), `ptModelFromSwitchmt`/`ptFromSwitchmt` (`switchmtOut`), `ptModelFromGarchmt`/`ptFromGarchmt` (`garchEstimation`), and `ptFromTscsmt` (`tscsmtOut`, a [`ptModelCompare`](docs/api/ptModelCompare.md) table comparing the within/fixed-effects and error-components estimates). Load with `library tsmt, pubtable;`; `tsPanelEstimationOut` adapters also require `#include tspanel.src` from the tsmt package. Several output structs (`automtOut`, `lsdvmtOut`, `tscsmtOut`) don't carry the original variable names, so those adapters use generic `X`/`AR`/`x` row labels. |
+| `optmtResults` | `ptTableFromOptmt` in `src/pubtable_optmt.src` builds a parameter/estimate/gradient table (no standard errors, since `optmtResults` has no covariance matrix). Load with `library optmt, pubtable;`. |
+| QARDL package (ARDL/QARDL/NARDL/CS-ARDL family) | `src/pubtable_qardl.src` provides `ptModelFromArdl`/`ptFromArdl` (`ardlOut`), `ptModelFromArdlECM`/`ptFromArdlECM` (`ardlECMOut`), `ptModelFromQardl`/`ptFromQardl` and `ptModelFromQardlECM`/`ptFromQardlECM` (`qardlOut`/`qardlECMOut`, one comparison column per quantile in `out.tau`), `ptModelFromNardl`/`ptFromNardl` and `ptModelFromNardlECM`/`ptFromNardlECM` (`nardlOut`/`nardlECMOut`), `ptModelFromCsardl`/`ptFromCsardl` and `ptModelFromCsardlECM`/`ptFromCsardlECM` (`csardlOut`/`csardlECMOut`), `ptFromArdlFull` (`ardlFullOut`) and `ptTablesFromQardlFull`/`ptTablesFromNardlFull`/`ptTablesFromCsardlFull` (`qardlFullOut`/`nardlFullOut`/`csardlFullOut`, each returning a 2x1 `ptTable` array of levels + ECM tables for `ptExportAll`), and the `ptFromArdlFamily` dispatcher. Load with `library qardl, pubtable;`. |
 
 Initial exporters:
 

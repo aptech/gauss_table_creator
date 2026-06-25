@@ -1,4 +1,4 @@
-# OLS Regression
+# OLS: Fuel Efficiency
 
 |Term|OLS results|
 |---|---|

@@ -60,7 +60,10 @@ rMdl.name = "Coeff.";
 rTbl = ptModelTable(rMdl);
 rTbl = ptSetTitle(rTbl, "Report preset");
 
-/* Step 4: Custom — t-statistic + CI rows, stricter * / ** / *** stars */
+/* Step 4: Custom — t-statistic + CI rows, stricter * / ** / *** stars.
+** Plain copy from another inferred-type variable does not carry struct
+** type inference, so xMdl needs an explicit declaration before .name. */
+struct ptModel xMdl;
 xMdl = mdl;
 xMdl.name = "Coeff.";
 xMdl = ptModelSetStatRows(xMdl, "tstat" $| "ci");

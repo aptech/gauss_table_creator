@@ -11,12 +11,16 @@ library qardl, pubtable;
 /* qardl.sdf include sets QARDL_SDF_INCLUDED, activating the adapter block */
 ```
 
-For dev-path installs:
+For dev-path installs (direct `#include` instead of the package manager):
 ```gauss
 library qardl;
-#include qardl.sdf;
-#include pubtable.dec;
-#include pubtable.src;
+#include qardl.sdf
+#include C:\path\to\gauss_table_creator\src\pubtable.sdf
+#include C:\path\to\gauss_table_creator\src\pubtable.src
+#include C:\path\to\gauss_table_creator\src\pubtable_model.src
+#include C:\path\to\gauss_table_creator\src\pubtable_render.src
+#include C:\path\to\gauss_table_creator\src\pubtable_export.src
+#include C:\path\to\gauss_table_creator\src\pubtable_qardl.src
 ```
 
 ## Adapters at a glance
@@ -62,6 +66,13 @@ library qardl;
 |:------- |:------- |:------- |
 | `ptFromArdlFamily(out)` | Any of the above output structs | `ptTable` dispatched by `isStructType`. |
 
+`ptModelFromArdl`, `ptModelFromArdlECM`, `ptModelFromNardl`, `ptModelFromNardlECM`,
+`ptModelFromCsardl`, and `ptModelFromCsardlECM` are also reachable through the standard
+[`ptModelFrom(name, out)`](ptModelFrom.md) dispatcher once qardl and pubtable are loaded.
+`ptModelFromQardl`/`ptModelFromQardlECM` are **not** wired into `ptModelFrom`, since they require an
+additional `tauIdx` argument the two-argument dispatcher can't supply — use `ptFromQardl`/
+`ptFromQardlECM`, or call them directly.
+
 ## QARDL column labels
 `ptFromQardl` and `ptFromQardlECM` build one comparison column per entry in `out.tau`,
 labeled `"tau=<value>"`. SE for the levels beta/phi/gamma parameters replicates the
@@ -81,7 +92,7 @@ library qardl, pubtable;
 ardlCtl = ardlControlCreate;
 out = ardlFit(y, x, ardlCtl);
 
-mdl = ptModelFromArdl("ARDL", out);
+mdl = ptModelFrom("ARDL", out);
 mdl = ptModelSetNotes(mdl, "Bounds test: F-stat = ...");
 
 tbl = ptModelTable(mdl);

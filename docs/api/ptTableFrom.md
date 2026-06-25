@@ -22,10 +22,13 @@
 - If `out` is not one of the supported struct types, `ptTableFrom` calls `errorlog` and ends execution.
   Use `ptModelFrom`/`ptModelTable` (for model adapters such as `gmmOut`) or build the table manually
   with `ptTableFromMatrix`/`ptTableCreate` for unsupported types.
-- Optional add-on adapters (`maxlikmtResults`, `cmlmtResults`, `arimamtOut`, `tsPanelEstimationOut`,
-  `optmtResults`) are *not* wired into `ptTableFrom`/`ptModelFrom` because the underlying packages may
-  not be installed; call their dedicated `ptFrom...`/`ptModelFrom...` procedures directly (see
-  `src/pubtable_maxlikmt.src`, `src/pubtable_cmlmt.src`, `src/pubtable_tsmt.src`, `src/pubtable_optmt.src`).
+- Optional add-on output structs (`maxlikmtResults`, `cmlmtResults`, `arimamtOut`, etc.) are *not*
+  wired into `ptTableFrom` — call the dedicated `ptFrom...` procedure directly (see
+  `src/pubtable_maxlikmt.src`, `src/pubtable_cmlmt.src`, `src/pubtable_tsmt.src`,
+  `src/pubtable_optmt.src`, `src/pubtable_qardl.src`), or go through
+  [`ptModelFrom`](ptModelFrom.md) + `ptModelTable` instead. Most of these structs **are** wired into
+  `ptModelFrom` (unlike `ptTableFrom`) — see [ptModelFrom](ptModelFrom.md) for the current list and
+  its exceptions (`optmtResults`, `tscsmtOut`, `qardlOut`/`qardlECMOut`).
 
 ## Example
 ```gauss

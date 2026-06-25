@@ -5,7 +5,8 @@ Activated when `PT_USE_CMLMT` is defined in `pubtable.dec` — run `pubtableSet(
 after installing cmlmt, then use `library cmlmt, pubtable;` in your programs.
 
 ## Format
-> mdl = ptModelFromCmlmt(name, out)
+> mdl = ptModelFrom(name, out)        -- standard dispatcher, recommended
+> mdl = ptModelFromCmlmt(name, out)   -- equivalent, explicit form
 > tbl = ptFromCmlmt(out)
 
 ## Input
@@ -17,13 +18,12 @@ after installing cmlmt, then use `library cmlmt, pubtable;` in your programs.
 ## Output
 | Output | Description |
 |:------- |:------- |
-| mdl | `ptModel` with parameter names from `pvGetParNames(out.par)`, estimates from `pvGetParVector(out.par)`, SE from `sqrt(diag(out.acov))`, and p-values from a standard-Normal z-test. |
+| mdl | `ptModel` with parameter names from `pvGetParNames(out.par)`, estimates from `pvGetParVector(out.par)`, SE from `sqrt(diag(out.covPar))`, and p-values from a standard-Normal z-test. |
 | tbl | `ptTable` (shorthand via `ptFromCmlmt`). |
 
 ## GOF rows
-- `"Log-likelihood"` — `out.fct`
-- `"AIC"` — `out.aic`
-- `"BIC"` — `out.bic`
+- `"N"` — `out.numObs`
+- `"Function value"` — `out.fct`
 
 ## Prerequisites
 1. cmlmt is installed (`library cmlmt;` loads without error).
@@ -68,7 +68,7 @@ d0.dname = getGAUSSHome() $+ "pkgs/cmlmt/examples/cmlmtpsn";
 struct cmlmtResults out;
 out = cmlmt(&lpsn, p0, d0, c0);
 
-mdl = ptModelFromCmlmt("Poisson (b1=b2)", out);
+mdl = ptModelFrom("Poisson (b1=b2)", out);
 mdl = ptModelSetNotes(mdl, "Equality constraint: b1 = b2.");
 
 tbl = ptModelTable(mdl);

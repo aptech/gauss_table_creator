@@ -59,7 +59,7 @@ Current/provisional modern API:
 
 `ptModelApplyPreset(model, preset)` / `ptApplyPreset(tbl, preset)` apply a bundle of `ptFormat` settings for one of `"journal"`, `"compact"`, `"plain"`, or `"report"` (digits, significance stars, statRows, and statistic wrapper).
 
-Current adapters:
+Built-in adapters (always available with `library pubtable;`):
 
 - `olsmtOut`
 - `glmOut`
@@ -67,15 +67,21 @@ Current adapters:
 - `dstatmtOut`
 - `fglsOut`
 
-`pubtableSet()` detects installed optional GAUSS libraries at runtime (via `fopen(getGAUSSHome()...)`) and writes `pubtable.dec` with `declare matrix _pubtable_ver = {0, 3, 0};` plus `#define PT_USE_X` entries for each found library (cmlmt, maxlikmt, optmt, tsmt). `ptSetup()` is an alias for `pubtableSet()`; `ptSetupAt(srcDir)` writes `pubtable.dec` to a specified directory for dev/git-clone installs. `src/pubtable.dec` ships as a template with just the version declaration; the generated version is machine-specific. `_ptSetupSilent()` runs as top-level code at the end of `pubtable.src` — on first load of an installed package it silently auto-generates `pubtable.dec` (checks for "Auto-generated" via `fgets`; only proceeds if `pkgs/pubtable/src/pubtable.src` exists); the file then takes effect on the next include. Users include `#include pubtable.dec` before `pubtable.src` to activate adapters. Each adapter source file is guarded both at the include site (outer `#ifDef PT_USE_X` in `pubtable.src`) and internally (inner `#ifDef PT_USE_X / #endIf` wrapping all code that depends on add-on library structures). qardl uses `QARDL_SDF_INCLUDED` (set by `qardl.sdf`'s own include guard) with the same dual-guard pattern.
+`pubtableSet()` detects installed optional GAUSS libraries at runtime (via `fopen(getGAUSSHome()...)`) and writes `pubtable.dec` with `declare matrix _pubtable_ver = {0, 3, 0};` plus `#define PT_USE_X` entries for each found library (cmlmt, maxlikmt, optmt, tsmt). `ptSetup()` is an alias for `pubtableSet()`; `ptSetupAt(srcDir)` writes `pubtable.dec` to a specified directory for dev/git-clone installs. `src/pubtable.dec` ships as a template with just the version declaration; the generated version is machine-specific. `_ptSetupSilent()` runs as top-level code at the end of `pubtable.src` — on first load of an installed package it silently auto-generates `pubtable.dec` (checks for "Auto-generated" via `fgets`; only proceeds if `pkgs/pubtable/src/pubtable.src` exists); the file then takes effect on the next include.
 
-Optional add-on package adapters (separate files, not wired into `ptModelFrom`/`ptTableFrom`):
+Each `PT_USE_X`-gated adapter file (`pubtable_cmlmt.src`, `pubtable_maxlikmt.src`, `pubtable_optmt.src`, `pubtable_tsmt.src`) includes `pubtable.dec` itself (right after `#include pubtable.sdf`), so user programs never need to `#include` anything — just load the optional library together with pubtable in a single statement: `library cmlmt, pubtable;`. Loading them as two separate `library` statements is wrong, since each statement unloads every previously loaded library not named in it. qardl uses `QARDL_SDF_INCLUDED` (set by `qardl.sdf`'s own include guard) instead of a `pubtable.dec` entry, with the same `library qardl, pubtable;` loading pattern.
 
-- `src/pubtable_maxlikmt.src`: `ptModelFromMaxlikmt`/`ptFromMaxlikmt` for `maxlikmtResults` (requires `library maxlikmt;` + `#include maxlikmt.sdf`)
-- `src/pubtable_cmlmt.src`: `ptModelFromCmlmt`/`ptFromCmlmt` for `cmlmtResults` (requires `library cmlmt;` + `#include cmlmt.sdf`)
-- `src/pubtable_tsmt.src`: tsmt adapters (requires `library tsmt;` + `#include tsmt.sdf`; the tsPanel adapters also need `#include tspanel.src`): `ptModelFromArimamt`/`ptFromArimamt` (`arimamtOut`), `ptModelFromTsPanel`/`ptFromTsPanel` (`tsPanelEstimationOut`), `ptModelFromAutomt`/`ptFromAutomt` (`automtOut`), `ptModelFromVarmamt`/`ptFromVarmamt` (`varmamtOut`), `ptModelFromLsdvmt`/`ptFromLsdvmt` (`lsdvmtOut`), `ptModelFromSwitchmt`/`ptFromSwitchmt` (`switchmtOut`), `ptModelFromGarchmt`/`ptFromGarchmt` (`garchEstimation`), and `ptFromTscsmt` (`tscsmtOut`, a `ptModelCompare` table of within/FE vs. error-components estimates)
-- `src/pubtable_optmt.src`: `ptTableFromOptmt` for `optmtResults`, a parameter/estimate/gradient table with no SE row since `optmtResults` has no covariance matrix (requires `library optmt;` + `#include optmt.sdf`)
-- `src/pubtable_qardl.src`: QARDL package (ARDL/QARDL/NARDL/CS-ARDL family) adapters (requires `library qardl;` + `#include qardl.sdf`): `ptModelFromArdl`/`ptFromArdl` (`ardlOut`), `ptModelFromArdlECM`/`ptFromArdlECM` (`ardlECMOut`), `ptModelFromQardl`/`ptFromQardl` and `ptModelFromQardlECM`/`ptFromQardlECM` (`qardlOut`/`qardlECMOut`, one `ptModelCompare` column per quantile in `out.tau`), `ptModelFromNardl`/`ptFromNardl` and `ptModelFromNardlECM`/`ptFromNardlECM` (`nardlOut`/`nardlECMOut`), `ptModelFromCsardl`/`ptFromCsardl` and `ptModelFromCsardlECM`/`ptFromCsardlECM` (`csardlOut`/`csardlECMOut`), `ptFromArdlFull`/`ptTablesFromQardlFull`/`ptTablesFromNardlFull`/`ptTablesFromCsardlFull` for the `*Full` workflow outputs, and the `ptFromArdlFamily` dispatcher
+Each adapter proc is declared once with variadic `(...)` args and fetches its typed arguments via `dynargsGet()` inside an inner `#ifDef PT_USE_X / #else / #endIf` (or `#ifDef QARDL_SDF_INCLUDED` for qardl) — not two duplicated proc bodies. The `#else` branch calls `_library_missing_error(currentprocname(), "LibName")`, which is defined unconditionally in `pubtable.src` itself (not in any adapter file, to avoid structure-conflict errors from library-specific `.sdf` types). Adapter `.src` files are NOT `#include`d from `pubtable.src` — they are listed only in `package.json`'s `"src"` array, so `library pubtable;` compiles them automatically.
+
+Most optional add-on adapters are wired into `ptModelFrom(name, out)`, so calling `ptModelFrom` works the same way for add-on structs as for built-in ones once the library is loaded. Exceptions: `optmtResults` (no covariance matrix, so no `ptModel` form exists — use `ptTableFromOptmt`), `tscsmtOut` (two distinct estimators, no single canonical model — use `ptFromTscsmt`), and `qardlOut`/`qardlECMOut` (need an extra `tauIdx` argument — use `ptFromQardl`/`ptFromQardlECM`).
+
+Optional add-on package adapters (separate files):
+
+- `src/pubtable_maxlikmt.src`: `ptModelFromMaxlikmt`/`ptFromMaxlikmt` for `maxlikmtResults`. Load with `library maxlikmt, pubtable;`.
+- `src/pubtable_cmlmt.src`: `ptModelFromCmlmt`/`ptFromCmlmt` for `cmlmtResults`. Load with `library cmlmt, pubtable;`.
+- `src/pubtable_tsmt.src`: tsmt adapters (load with `library tsmt, pubtable;`; the tsPanel adapters also need `#include tspanel.src`): `ptModelFromArimamt`/`ptFromArimamt` (`arimamtOut`), `ptModelFromTsPanel`/`ptFromTsPanel` (`tsPanelEstimationOut`), `ptModelFromAutomt`/`ptFromAutomt` (`automtOut`), `ptModelFromVarmamt`/`ptFromVarmamt` (`varmamtOut`), `ptModelFromLsdvmt`/`ptFromLsdvmt` (`lsdvmtOut`), `ptModelFromSwitchmt`/`ptFromSwitchmt` (`switchmtOut`), `ptModelFromGarchmt`/`ptFromGarchmt` (`garchEstimation`), and `ptFromTscsmt` (`tscsmtOut`, a `ptModelCompare` table of within/FE vs. error-components estimates)
+- `src/pubtable_optmt.src`: `ptTableFromOptmt` for `optmtResults`, a parameter/estimate/gradient table with no SE row since `optmtResults` has no covariance matrix. Load with `library optmt, pubtable;`.
+- `src/pubtable_qardl.src`: QARDL package (ARDL/QARDL/NARDL/CS-ARDL family) adapters. Load with `library qardl, pubtable;`. `ptModelFromArdl`/`ptFromArdl` (`ardlOut`), `ptModelFromArdlECM`/`ptFromArdlECM` (`ardlECMOut`), `ptModelFromQardl`/`ptFromQardl` and `ptModelFromQardlECM`/`ptFromQardlECM` (`qardlOut`/`qardlECMOut`, one `ptModelCompare` column per quantile in `out.tau`), `ptModelFromNardl`/`ptFromNardl` and `ptModelFromNardlECM`/`ptFromNardlECM` (`nardlOut`/`nardlECMOut`), `ptModelFromCsardl`/`ptFromCsardl` and `ptModelFromCsardlECM`/`ptFromCsardlECM` (`csardlOut`/`csardlECMOut`), `ptFromArdlFull`/`ptTablesFromQardlFull`/`ptTablesFromNardlFull`/`ptTablesFromCsardlFull` for the `*Full` workflow outputs, and the `ptFromArdlFamily` dispatcher
 
 Current exporters:
 
@@ -94,15 +100,20 @@ LaTeX rendering supports `ptSetLabel`/`ptModelSetLabel` (adds `\label{...}` afte
 ## File Structure
 
 - `src/pubtable.sdf`: modern structs: `ptFormat`, `ptTable`, `ptModel`
-- `src/pubtable.src`: modern implementation, adapters, renderers, exporters
+- `src/pubtable.src`: format/presets, internal utilities, table struct and setters, dispatchers (`ptTableFrom`, `ptModelFrom`) and built-in adapters, setup (`pubtableSet`/`ptSetup`/`ptSetupAt`), `_library_missing_error`
+- `src/pubtable_model.src`: all `ptModel*` and `ptCompare*` procedures
+- `src/pubtable_render.src`: number formatting and all `ptRender*` procedures
+- `src/pubtable_export.src`: all `ptExport*` and file I/O helpers
+- `src/pubtable_cmlmt.src`, `src/pubtable_maxlikmt.src`, `src/pubtable_optmt.src`, `src/pubtable_tsmt.src`, `src/pubtable_qardl.src`: optional add-on library adapters; listed in `package.json`, not `#include`d from `pubtable.src`
 - `src/pubtable_legacy.sdf`: legacy structs
 - `src/pubtable_legacy_output.src`: legacy output helpers
 - `src/pubtable_legacy_setters.src`: legacy setter helpers
+- `package.json`: GAUSS package manifest — `"src"` array lists every file above; `library pubtable;` compiles them all
 - `examples/`: modern and legacy examples
-- `tests/test_pubtable.e`: current GAUSS smoke/source test
+- `tests/test_pubtable.e`: current GAUSS smoke/source test (includes the four core split files directly; does not exercise the optional adapters)
 - `README.md`: user-facing overview
-- `docs/`: older legacy command docs
-- `lib/pubtable.xml`: GAUSS application manifest
+- `docs/`: API reference (`docs/api/`) plus older legacy command docs
+- `lib/pubtable.xml`: GAUSS application manifest (legacy installer path)
 
 ## Testing
 

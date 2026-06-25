@@ -2,7 +2,15 @@
   "permissions": {
     "allow": [
       "PowerShell(Stop-Process -Force -ErrorAction SilentlyContinue)",
-      "Bash(git -C \"C:\\\\Users\\\\eclow\\\\Documents\\\\GitHub\\\\gauss_table_creator\" diff --check)"
+      "Bash(git -C \"C:\\\\Users\\\\eclow\\\\Documents\\\\GitHub\\\\gauss_table_creator\" diff --check)",
+      "Bash(git -C \"c:\\\\Users\\\\eclow\\\\Documents\\\\GitHub\\\\gauss_table_creator\" log --oneline -15)",
+      "Bash(git -C \"c:\\\\Users\\\\eclow\\\\Documents\\\\GitHub\\\\gauss_table_creator\" status --short)",
+      "Bash(ls -la addon_*.md)",
+      "Bash(cat .gitignore)",
+      "Bash(cd \"/c/Users/eclow/Documents/GitHub/gauss_table_creator\" && rm -v preset_styles.html preset_styles.md)"
+    ],
+    "additionalDirectories": [
+      "c:\\c\\Users\\eclow\\Documents\\GitHub\\gauss_table_creator"
     ]
   }
 }

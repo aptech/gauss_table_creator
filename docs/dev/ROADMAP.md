@@ -120,12 +120,14 @@ Evaluate support for:
 Optional adapter auto-loading is implemented via:
 
 - [x] `ptSetup()` / `ptSetupAt(srcDir)`: detect installed optional libraries via `fopen(getGAUSSHome()...)` and write `pubtable.dec` with `#define PT_USE_X` entries.
-- [x] All adapter `.src` files are included unconditionally at the bottom of `pubtable.src`. Each file uses `#ifDef PT_USE_X` for the real implementation and a `#else` block of `_library_missing_error` stubs, so calling an adapter without the library installed produces a diagnostic error instead of "procedure not found".
-- [x] qardl: auto-detected via `QARDL_SDF_INCLUDED` (the include guard in `qardl.sdf`) — no `pubtable.dec` entry needed; same `#ifDef / #else` stub pattern used.
+- [x] Adapter `.src` files (`pubtable_cmlmt.src`, `pubtable_maxlikmt.src`, `pubtable_optmt.src`, `pubtable_tsmt.src`, `pubtable_qardl.src`) are listed only in `package.json`'s `"src"` array — NOT `#include`d from `pubtable.src` — so `library pubtable;` compiles them automatically. Each `PT_USE_X`-gated file includes `pubtable.dec` itself (right after `#include pubtable.sdf`), so user programs never need to `#include` it; they just load the optional library together with pubtable in one statement (`library cmlmt, pubtable;`).
+- [x] Each adapter proc is declared once with variadic `(...)` args, fetching typed arguments via `dynargsGet()` inside an inner `#ifDef PT_USE_X / #else / #endIf` (real implementation vs. `_library_missing_error` stub) — not two duplicated proc bodies. This avoids a compile error from a typed struct parameter (e.g. `struct cmlmtResults out`) when the library's `.sdf` isn't included.
+- [x] qardl: auto-detected via `QARDL_SDF_INCLUDED` (the include guard in `qardl.sdf`) — no `pubtable.dec` entry needed; same inner-`#ifDef` stub pattern used.
 - [x] `src/pubtable.dec`: default template ships with the package; `ptSetup()` overwrites it with detected library sentinels. Machine-specific — not committed to source control.
-- [x] `_library_missing_error(funcname, libname)`: defined unconditionally in `pubtable_optmt.src`; called by all adapter stubs.
+- [x] `_library_missing_error(funcname, libname)`: defined unconditionally in `pubtable.src` itself (not in any adapter file, to avoid structure-conflict errors from library-specific `.sdf` type definitions); called by all adapter stubs.
+- [x] Most add-on adapters (cmlmt, maxlikmt, most of tsmt, most of qardl) are wired into the standard `ptModelFrom(name, out)` dispatcher via `isStructType`, so callers don't need to know the library-specific function name. Not wired: `optmtResults` (no covariance matrix, no `ptModel` form), `tscsmtOut` (two distinct estimators, no single canonical model), `qardlOut`/`qardlECMOut` (need an extra `tauIdx` argument).
 
-Users run `ptSetup()` once after install, then add `#include pubtable.dec` before `pubtable.src` in their programs to enable all available adapters automatically.
+Users run `ptSetup()` once after install. No further `#include` is needed — loading the optional library together with pubtable in a single `library X, pubtable;` statement is sufficient to enable its adapters.
 
 ## Design Constraint
 

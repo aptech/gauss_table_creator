@@ -13,7 +13,7 @@
 | Option | Description |
 |:------- |:------- |
 | name | String, the display name for this model (used as the column header in comparison tables). |
-| out | A struct returned by a supported GAUSS estimation command. Currently dispatches on `olsmtOut`, `glmOut`, `gmmOut`, and `fglsOut`. |
+| out | A struct returned by a supported GAUSS estimation command. Built in: `olsmtOut`, `glmOut`, `gmmOut`, `fglsOut`. Optional add-on (dispatched automatically once the corresponding library is loaded): `cmlmtResults`, `maxlikmtResults`, `arimamtOut`, `tsPanelEstimationOut`, `automtOut`, `varmamtOut`, `lsdvmtOut`, `switchmtOut`, `garchEstimation`, `ardlOut`, `ardlECMOut`, `nardlOut`, `nardlECMOut`, `csardlOut`, `csardlECMOut`. |
 
 ## Output
 | Output | Description |
@@ -25,9 +25,18 @@
 - Use `ptModelSetStatRows`, `ptModelSetCI`, `ptModelSetDigits`, `ptModelSetNotes`,
   `ptModelSetLabel`, and `ptModelSetColAlign` to customize a model before calling `ptModelTable` or
   comparing it with other models.
-- Optional add-on adapters (`maxlikmtResults`, `cmlmtResults`, `arimamtOut`, `tsPanelEstimationOut`)
-  are not wired into `ptModelFrom`; call `ptModelFromMaxlikmt`, `ptModelFromCmlmt`,
-  `ptModelFromArimamt`, or `ptModelFromTsPanel` directly.
+- Most optional add-on adapters are wired into `ptModelFrom` (see the `out` row above) — load the
+  add-on library together with pubtable (e.g. `library cmlmt, pubtable;`) and call `ptModelFrom`
+  exactly as you would for a built-in struct.
+- Not wired into `ptModelFrom`, because there is no single unambiguous two-argument mapping for
+  these — call the dedicated procedure directly instead:
+  - `optmtResults` — `optmtResults` has no covariance matrix, so there is no `ptModelFromOptmt`;
+    use `ptTableFromOptmt(out)` instead (see [ptAdaptersOptmt](ptAdaptersOptmt.md)).
+  - `tscsmtOut` — `tscsFit` produces two distinct estimators (within/dummy-variable and
+    error-components) with no single canonical model; use `ptFromTscsmt(out)` or
+    `ptModelFromTscsmtDV`/`ptModelFromTscsmtEC` directly.
+  - `qardlOut`/`qardlECMOut` — the per-quantile adapters require an additional `tauIdx` argument;
+    use `ptFromQardl`/`ptFromQardlECM`, or call `ptModelFromQardl`/`ptModelFromQardlECM` directly.
 
 ## Example
 ```gauss

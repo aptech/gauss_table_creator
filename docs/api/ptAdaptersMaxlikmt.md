@@ -5,7 +5,8 @@ Optional adapter for the **maxlikmt** (Maximum Likelihood MT) package. Activated
 installing maxlikmt, then use `library maxlikmt, pubtable;` in your programs.
 
 ## Format
-> mdl = ptModelFromMaxlikmt(name, out)
+> mdl = ptModelFrom(name, out)          -- standard dispatcher, recommended
+> mdl = ptModelFromMaxlikmt(name, out)  -- equivalent, explicit form
 > tbl = ptFromMaxlikmt(out)
 
 ## Input
@@ -17,13 +18,12 @@ installing maxlikmt, then use `library maxlikmt, pubtable;` in your programs.
 ## Output
 | Output | Description |
 |:------- |:------- |
-| mdl | `ptModel` with parameter names from `pvGetParNames(out.par)`, estimates from `pvGetParVector(out.par)`, SE from `sqrt(diag(out.acov))`, and p-values from a standard-Normal z-test. |
+| mdl | `ptModel` with parameter names from `pvGetParNames(out.par)`, estimates from `pvGetParVector(out.par)`, SE from `sqrt(diag(out.covPar))`, and p-values from a standard-Normal z-test. |
 | tbl | `ptTable` (shorthand via `ptFromMaxlikmt`). |
 
 ## GOF rows
+- `"N"` — `out.numObs`
 - `"Log-likelihood"` — `out.fct`
-- `"AIC"` — `out.aic`
-- `"BIC"` — `out.bic`
 
 ## Prerequisites
 1. maxlikmt is installed (`library maxlikmt;` loads without error).
@@ -72,7 +72,7 @@ d0[2].dataMatrix = z[., 2:3];
 struct maxlikmtResults out;
 out = maxlikmt(&lnorm, p0, d0, c0);
 
-mdl = ptModelFromMaxlikmt("Normal MLE", out);
+mdl = ptModelFrom("Normal MLE", out);
 mdl = ptModelSetNotes(mdl, "Dependent variable: mpg.  MLE estimates match OLS.");
 
 tbl = ptModelTable(mdl);

@@ -10,7 +10,7 @@ is defined in `pubtable.dec` — run `pubtableSet()` once after installing tsmt,
 |:------- |:------- |:------- |:------- |
 | `ptModelFromArimamt(name, out)` | `arimamtOut` | `ptModel` | AR/MA/Constant terms; Log-likelihood/AIC/SBC GOF. |
 | `ptFromArimamt(out)` | `arimamtOut` | `ptTable` | Shorthand for single-model ARIMA table. |
-| `ptModelFromTsPanel(name, out)` | `tsPanelEstimationOut` | `ptModel` | Panel estimates; N/T/R² GOF. Requires `#include tspanel.src`. |
+| `ptModelFromTsPanel(name, out)` | `tsPanelEstimationOut` | `ptModel` | Panel estimates; N/R²/Adj R² GOF. Requires `#include tspanel.src`. |
 | `ptFromTsPanel(out)` | `tsPanelEstimationOut` | `ptTable` | Shorthand for panel. |
 | `ptModelFromAutomt(name, out)` | `automtOut` | `ptModel` | Autoregression (generic `X1`/`X2`/… labels). |
 | `ptFromAutomt(out)` | `automtOut` | `ptTable` | Shorthand for autoregression. |
@@ -20,11 +20,17 @@ is defined in `pubtable.dec` — run `pubtableSet()` once after installing tsmt,
 | `ptFromLsdvmt(out)` | `lsdvmtOut` | `ptTable` | Shorthand for LSDV. |
 | `ptModelFromSwitchmt(name, out)` | `switchmtOut` | `ptModel` | Switching regression (PV name/value pattern). |
 | `ptFromSwitchmt(out)` | `switchmtOut` | `ptTable` | Shorthand for switching regression. |
-| `ptModelFromGarchmt(name, out)` | `garchEstimation` | `ptModel` | GARCH (PV name/value pattern; Log-likelihood/AIC/SBC GOF). |
+| `ptModelFromGarchmt(name, out)` | `garchEstimation` | `ptModel` | GARCH (PV name/value pattern; N/AIC/BIC/Function value GOF). |
 | `ptFromGarchmt(out)` | `garchEstimation` | `ptTable` | Shorthand for GARCH. |
 | `ptModelFromTscsmtDV(name, out)` | `tscsmtOut` | `ptModel` | TSCS within/dummy-variable estimate column. |
 | `ptModelFromTscsmtEC(name, out)` | `tscsmtOut` | `ptModel` | TSCS error-components (GLS) estimate column. |
 | `ptFromTscsmt(out)` | `tscsmtOut` | `ptTable` | Comparison table with DV and EC columns side-by-side. |
+
+All adapters above except `ptModelFromTscsmtDV`/`ptModelFromTscsmtEC` are also reachable through the
+standard [`ptModelFrom(name, out)`](ptModelFrom.md) dispatcher once tsmt and pubtable are loaded —
+`ptModelFrom("AR(1)", ar1)` is equivalent to `ptModelFromArimamt("AR(1)", ar1)`. `tscsmtOut` is not
+wired into the dispatcher because it has two distinct estimators with no single canonical model; use
+`ptFromTscsmt` or call `ptModelFromTscsmtDV`/`ptModelFromTscsmtEC` directly.
 
 ## Prerequisites
 1. tsmt is installed (`library tsmt;` loads without error).
@@ -34,15 +40,23 @@ is defined in `pubtable.dec` — run `pubtableSet()` once after installing tsmt,
 ## Usage
 ```gauss
 library tsmt, pubtable;
-/* PT_USE_TSMT is activated automatically via lib/pubtable.xml */
+/* pubtable_tsmt.src includes pubtable.dec itself, so PT_USE_TSMT is defined
+** automatically once pubtableSet() has been run — no further #include needed.
+** Loading tsmt and pubtable in one statement matters: library tsmt; library
+** pubtable; (two separate statements) would unload tsmt before pubtable_tsmt.src
+** compiles, since each library statement unloads every library not named in it. */
 ```
 
-For dev-path installs:
+For dev-path installs (direct `#include` instead of the package manager):
 ```gauss
 library tsmt;
-#include tsmt.sdf;
-#include pubtable.dec;
-#include pubtable.src;
+#include tsmt.sdf
+#include C:\path\to\gauss_table_creator\src\pubtable.sdf
+#include C:\path\to\gauss_table_creator\src\pubtable.src
+#include C:\path\to\gauss_table_creator\src\pubtable_model.src
+#include C:\path\to\gauss_table_creator\src\pubtable_render.src
+#include C:\path\to\gauss_table_creator\src\pubtable_export.src
+#include C:\path\to\gauss_table_creator\src\pubtable_tsmt.src
 ```
 
 ## Label note
@@ -66,8 +80,8 @@ ctl.quiet = 1;
 ar1 = arimaFit(y, 1, 1, 0, ctl);
 ar2 = arimaFit(y, 2, 1, 0, ctl);
 
-ar1Mdl = ptModelFromArimamt("ARIMA(1,1,0)", ar1);
-ar2Mdl = ptModelFromArimamt("ARIMA(2,1,0)", ar2);
+ar1Mdl = ptModelFrom("ARIMA(1,1,0)", ar1);
+ar2Mdl = ptModelFrom("ARIMA(2,1,0)", ar2);
 
 struct ptModel models;
 models = reshape(ar1Mdl, 2, 1);
