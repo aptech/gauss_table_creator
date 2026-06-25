@@ -45,7 +45,10 @@ proc (struct ptModel) = ptModelFromArimamt(...);
             names = ("AR" $+ sprintf("%d", seqa(1, 1, p))) $| names;
         endif;
 
-        se = real(sqrt(diag(out.vcb)));
+        /* out.b always appends the constant as its last row, but out.vcb
+        ** covers only the AR/MA terms — arimaFit reports no standard error
+        ** for the constant, so pad se with a missing value to match. */
+        se = real(sqrt(diag(out.vcb))) | miss(zeros(1, 1), 0);
         tstat = out.b ./ se;
         pval = 2 * cdfnc(abs(tstat));
 

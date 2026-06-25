@@ -621,6 +621,21 @@ proc (struct ptTable) = ptTableFrom(x);
     retp(tbl);
 endp;
 
+/*
+** ptModelFrom: dispatches on isStructType, covering both the built-in
+** adapters above and the optional add-on library adapters (cmlmt,
+** maxlikmt, tsmt, qardl) whose pubtable_X.src files are unconditionally
+** compiled (with stub fallbacks) per package.json.
+**
+** Not included: optmtResults (optmtResults has no covariance matrix, so
+** there is no ptModelFromOptmt — see ptTableFromOptmt instead), tscsmtOut
+** (tscsFit produces two distinct estimators — within/dummy-variable and
+** error-components — with no single canonical ptModel; use ptFromTscsmt
+** or ptModelFromTscsmtDV/EC directly), and qardlOut/qardlECMOut (qardl's
+** per-quantile adapters require an additional tauIdx argument that this
+** two-argument dispatcher cannot supply; use ptFromQardl/ptFromQardlECM
+** or call ptModelFromQardl/ptModelFromQardlECM directly).
+*/
 proc (struct ptModel) = ptModelFrom(name, x);
     struct ptModel mdl;
 
@@ -632,6 +647,36 @@ proc (struct ptModel) = ptModelFrom(name, x);
         mdl = ptModelFromGmm(name, x);
     elseif isStructType(x, "fglsOut");
         mdl = ptModelFromFgls(name, x);
+    elseif isStructType(x, "cmlmtResults");
+        mdl = ptModelFromCmlmt(name, x);
+    elseif isStructType(x, "maxlikmtResults");
+        mdl = ptModelFromMaxlikmt(name, x);
+    elseif isStructType(x, "arimamtOut");
+        mdl = ptModelFromArimamt(name, x);
+    elseif isStructType(x, "tsPanelEstimationOut");
+        mdl = ptModelFromTsPanel(name, x);
+    elseif isStructType(x, "automtOut");
+        mdl = ptModelFromAutomt(name, x);
+    elseif isStructType(x, "varmamtOut");
+        mdl = ptModelFromVarmamt(name, x);
+    elseif isStructType(x, "lsdvmtOut");
+        mdl = ptModelFromLsdvmt(name, x);
+    elseif isStructType(x, "switchmtOut");
+        mdl = ptModelFromSwitchmt(name, x);
+    elseif isStructType(x, "garchEstimation");
+        mdl = ptModelFromGarchmt(name, x);
+    elseif isStructType(x, "ardlOut");
+        mdl = ptModelFromArdl(name, x);
+    elseif isStructType(x, "ardlECMOut");
+        mdl = ptModelFromArdlECM(name, x);
+    elseif isStructType(x, "nardlOut");
+        mdl = ptModelFromNardl(name, x);
+    elseif isStructType(x, "nardlECMOut");
+        mdl = ptModelFromNardlECM(name, x);
+    elseif isStructType(x, "csardlOut");
+        mdl = ptModelFromCsardl(name, x);
+    elseif isStructType(x, "csardlECMOut");
+        mdl = ptModelFromCsardlECM(name, x);
     else;
         errorlog "ptModelFrom: unsupported model output structure.";
         end;

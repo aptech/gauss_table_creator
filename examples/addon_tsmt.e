@@ -14,7 +14,7 @@
 ** Steps:
 **   1. Simulate a stationary AR(1) series.
 **   2. Estimate AR(1) and AR(2) with arimaFit.
-**   3. Wrap each result in a ptModel with ptModelFromArimamt.
+**   3. Wrap each result in a ptModel with ptModelFrom.
 **   4. Build a side-by-side comparison table.
 **   5. Also render AR(1) alone as a single-model table.
 **   6. Export.
@@ -32,16 +32,16 @@ for i(2, n, 1);
     y[i] = phi * y[i-1] + rndn(1, 1);
 endfor;
 
-/* Step 2: Estimate — suppress iteration output with ctl.quiet */
-ctl = arimaControlCreate();
-ctl.quiet = 1;
+/* Step 2: Estimate ARIMA Model */
+struct arimamtOut ar1;
+struct arimamtOut ar2;
+ar1 = arimaFit(y, 1, 0, 0);
+ar2 = arimaFit(y, 2, 0, 0);
 
-ar1 = arimaFit(y, 1, 0, 0, ctl);
-ar2 = arimaFit(y, 2, 0, 0, ctl);
-
-/* Step 3: Convert to ptModel — no explicit struct declaration needed */
-ar1Mdl = ptModelFromArimamt("AR(1)", ar1);
-ar2Mdl = ptModelFromArimamt("AR(2)", ar2);
+/* Step 3: Convert to ptModel via the standard dispatcher — no explicit
+** struct declaration needed */
+ar1Mdl = ptModelFrom("AR(1)", ar1);
+ar2Mdl = ptModelFrom("AR(2)", ar2);
 
 /* Step 4: Build comparison table.
 ** reshape to a struct array requires an explicit 'struct ptModel' declaration. */

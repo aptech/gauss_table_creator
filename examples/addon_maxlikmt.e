@@ -19,7 +19,7 @@
 **   2. Set initial parameters and bounds (s2 > 0).
 **   3. Load the data.
 **   4. Estimate with maxlikmt.
-**   5. Convert to a pubtable with ptModelFromMaxlikmt.
+**   5. Convert to a pubtable with ptModelFrom.
 **   6. Export.
 */
 
@@ -71,8 +71,9 @@ d0[2].dataMatrix = z[., 2:3];
 struct maxlikmtResults out;
 out = maxlikmt(&lnorm, p0, d0, c0);
 
-/* Step 5: Convert to pubtable — no 'struct ptModel' or 'struct ptTable' needed */
-mdl = ptModelFromMaxlikmt("Normal MLE", out);
+/* Step 5: Convert to pubtable via the standard dispatcher — no 'struct
+** ptModel' or 'struct ptTable' needed */
+mdl = ptModelFrom("Normal MLE", out);
 mdl = ptModelSetNotes(mdl, "Dependent variable: mpg.  MLE estimates match OLS.");
 
 tbl = ptModelTable(mdl);

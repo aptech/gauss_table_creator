@@ -18,7 +18,7 @@
 **   2. Set initial parameters and the equality constraint.
 **   3. Load the sample data.
 **   4. Estimate with cmlmt.
-**   5. Convert to a pubtable with ptModelFromCmlmt.
+**   5. Convert to a pubtable with ptModelFrom.
 **   6. Export.
 */
 
@@ -64,7 +64,8 @@ d0.dname = getGAUSSHome() $+ "pkgs/cmlmt/examples/cmlmtpsn";
 struct cmlmtResults out;
 out = cmlmt(&lpsn, p0, d0, c0);
 
-/* Step 5: Convert to pubtable no 'struct ptModel' or 'struct ptTable' needed */
+/* Step 5: Convert to pubtable via the standard dispatcher — no 'struct
+** ptModel' or 'struct ptTable' needed */
 mdl = ptModelFrom("Poisson (b1 = b2)", out);
 mdl = ptModelSetNotes(mdl, "Equality constraint: b1 = b2.  Data: cmlmtpsn.");
 
