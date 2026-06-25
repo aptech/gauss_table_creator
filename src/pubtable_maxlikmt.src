@@ -4,51 +4,47 @@
 ** Optional pubtable adapter for maxlikmt results. Activated when
 ** PT_USE_MAXLIKMT is defined in pubtable.dec.
 **
-** To use: run pubtableSet() once. Include pubtable.dec BEFORE loading
-** the pubtable library so PT_USE_MAXLIKMT is defined when the adapter is
-** compiled:
-**   library maxlikmt;
-**   #include maxlikmt.sdf
-**   #include pubtable.dec
-**   library pubtable;
+** To use: run pubtableSet() once. Then load maxlikmt and pubtable together
+** in a single library statement so neither library unloads the other:
+**   library maxlikmt, pubtable;
 */
-#include pubtable.sdf 
+#include pubtable.sdf
+#include pubtable.dec
 #ifDef PT_USE_MAXLIKMT
 #include maxlikmt.sdf
-
-proc (struct ptModel) = ptModelFromMaxlikmt(name, struct maxlikmtResults out);
-    local names, estimates, se, tstat, pval;
-    struct ptModel mdl;
-
-    names = pvGetParNames(out.par);
-    estimates = pvGetParVector(out.par);
-    se = real(sqrt(diag(out.covPar)));
-    tstat = estimates ./ se;
-    pval = 2 * cdfnc(abs(tstat));
-
-    mdl = ptModelCreate(name, estimates, se);
-    mdl = ptModelSetNames(mdl, names);
-    mdl = ptModelSetPValues(mdl, pval);
-    mdl = ptModelSetGOF(mdl, "N" $| "Log-likelihood", out.numObs | out.fct);
-
-    retp(mdl);
-endp;
-
-proc (struct ptTable) = ptFromMaxlikmt(struct maxlikmtResults out);
-    retp(ptModelTable(ptModelFromMaxlikmt("Maximum likelihood results", out)));
-endp;
-#else
+#endif
 
 proc (struct ptModel) = ptModelFromMaxlikmt(...);
+    local name, names, estimates, se, tstat, pval;
     struct ptModel mdl;
-    _library_missing_error(currentprocname(), "Maxlikmt");
+
+    #ifDef PT_USE_MAXLIKMT
+        struct maxlikmtResults out;
+        { name, out } = dynargsGet(1|2);
+
+        names = pvGetParNames(out.par);
+        estimates = pvGetParVector(out.par);
+        se = real(sqrt(diag(out.covPar)));
+        tstat = estimates ./ se;
+        pval = 2 * cdfnc(abs(tstat));
+
+        mdl = ptModelCreate(name, estimates, se);
+        mdl = ptModelSetNames(mdl, names);
+        mdl = ptModelSetPValues(mdl, pval);
+        mdl = ptModelSetGOF(mdl, "N" $| "Log-likelihood", out.numObs | out.fct);
+    #else;
+        _library_missing_error(currentprocname(), "Maxlikmt");
+    #endif;
+
     retp(mdl);
 endp;
 
 proc (struct ptTable) = ptFromMaxlikmt(...);
-    struct ptTable tbl;
-    _library_missing_error(currentprocname(), "Maxlikmt");
-    retp(tbl);
+    #ifDef PT_USE_MAXLIKMT
+        struct maxlikmtResults out;
+        out = dynargsGet(1);
+        retp(ptModelTable(ptModelFromMaxlikmt("Maximum likelihood results", out)));
+    #else;
+        _library_missing_error(currentprocname(), "Maxlikmt");
+    #endif;
 endp;
-
-#endIf

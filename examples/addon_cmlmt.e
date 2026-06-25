@@ -10,8 +10,8 @@
 ** Prerequisites:
 **   1. Run pubtableSet() once to generate pubtable.dec with PT_USE_CMLMT.
 **   2. cmlmt must be installed (library cmlmt loads without error).
-**   3. pubtable.dec must be included BEFORE library pubtable so
-**      PT_USE_CMLMT is defined when the cmlmt adapter is compiled.
+**   3. Load cmlmt and pubtable together in a single library statement so
+**      neither library unloads the other.
 **
 ** Steps:
 **   1. Define the Poisson log-likelihood procedure.
@@ -24,9 +24,6 @@
 
 new;
 library cmlmt, pubtable;
-#include cmlmt.sdf
-#include pubtable.dec
-
 
 /* Step 1: Log-likelihood sum of per-observation Poisson log-densities */
 proc lpsn(struct PV p, struct DS d, ind);
@@ -67,8 +64,8 @@ d0.dname = getGAUSSHome() $+ "pkgs/cmlmt/examples/cmlmtpsn";
 struct cmlmtResults out;
 out = cmlmt(&lpsn, p0, d0, c0);
 
-/* Step 5: Convert to pubtable — no 'struct ptModel' or 'struct ptTable' needed */
-mdl = ptModelFromCmlmt("Poisson (b1 = b2)", out);
+/* Step 5: Convert to pubtable no 'struct ptModel' or 'struct ptTable' needed */
+mdl = ptModelFrom("Poisson (b1 = b2)", out);
 mdl = ptModelSetNotes(mdl, "Equality constraint: b1 = b2.  Data: cmlmtpsn.");
 
 tbl = ptModelTable(mdl);

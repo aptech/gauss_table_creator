@@ -4,51 +4,47 @@
 ** Optional pubtable adapter for cmlmt (constrained maximum likelihood)
 ** results. Activated when PT_USE_CMLMT is defined in pubtable.dec.
 **
-** To use: run pubtableSet() once. Include pubtable.dec BEFORE loading
-** the pubtable library so PT_USE_CMLMT is defined when the adapter is
-** compiled:
-**   library cmlmt;
-**   #include cmlmt.sdf
-**   #include pubtable.dec
-**   library pubtable;
+** To use: run pubtableSet() once. Then load cmlmt and pubtable together
+** in a single library statement so neither library unloads the other:
+**   library cmlmt, pubtable;
 */
-#include pubtable.sdf 
+#include pubtable.sdf
+#include pubtable.dec
 #ifDef PT_USE_CMLMT
 #include cmlmt.sdf
-
-proc (struct ptModel) = ptModelFromCmlmt(name, struct cmlmtResults out);
-    local names, estimates, se, tstat, pval;
-    struct ptModel mdl;
-
-    names = pvGetParNames(out.par);
-    estimates = pvGetParVector(out.par);
-    se = real(sqrt(diag(out.covPar)));
-    tstat = estimates ./ se;
-    pval = 2 * cdfnc(abs(tstat));
-
-    mdl = ptModelCreate(name, estimates, se);
-    mdl = ptModelSetNames(mdl, names);
-    mdl = ptModelSetPValues(mdl, pval);
-    mdl = ptModelSetGOF(mdl, "N" $| "Function value", out.numObs | out.fct);
-
-    retp(mdl);
-endp;
-
-proc (struct ptTable) = ptFromCmlmt(struct cmlmtResults out);
-    retp(ptModelTable(ptModelFromCmlmt("Constrained ML results", out)));
-endp;
-#else
+#endif
 
 proc (struct ptModel) = ptModelFromCmlmt(...);
+    local name, names, estimates, se, tstat, pval;
     struct ptModel mdl;
-    _library_missing_error(currentprocname(), "Cmlmt");
+
+    #ifDef PT_USE_CMLMT
+        struct cmlmtResults out;
+        { name, out } = dynargsGet(1|2);
+
+        names = pvGetParNames(out.par);
+        estimates = pvGetParVector(out.par);
+        se = real(sqrt(diag(out.covPar)));
+        tstat = estimates ./ se;
+        pval = 2 * cdfnc(abs(tstat));
+
+        mdl = ptModelCreate(name, estimates, se);
+        mdl = ptModelSetNames(mdl, names);
+        mdl = ptModelSetPValues(mdl, pval);
+        mdl = ptModelSetGOF(mdl, "N" $| "Function value", out.numObs | out.fct);
+    #else;
+        _library_missing_error(currentprocname(), "Cmlmt");
+    #endif;
+
     retp(mdl);
 endp;
 
 proc (struct ptTable) = ptFromCmlmt(...);
-    struct ptTable tbl;
-    _library_missing_error(currentprocname(), "Cmlmt");
-    retp(tbl);
+    #ifDef PT_USE_CMLMT
+        struct cmlmtResults out;
+        out = dynargsGet(1);
+        retp(ptModelTable(ptModelFromCmlmt("Constrained ML results", out)));
+    #else;
+        _library_missing_error(currentprocname(), "Cmlmt");
+    #endif;
 endp;
-
-#endIf

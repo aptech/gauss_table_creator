@@ -13,91 +13,116 @@
 ** - tscsmtOut (tscsFit)
 **
 ** Activated when PT_USE_TSMT is defined in pubtable.dec. To use: run
-** pubtableSet() once. Include pubtable.dec BEFORE loading the pubtable
-** library so PT_USE_TSMT is defined when the adapter is compiled:
-**   library tsmt;
-**   #include tsmt.sdf
-**   #include pubtable.dec
-**   library pubtable;
+** pubtableSet() once. Then load tsmt and pubtable together in a single
+** library statement so neither library unloads the other:
+**   library tsmt, pubtable;
 **
 ** The tsPanelEstimationOut adapters also require #include tspanel.src
-** from the tsmt package source directory.
+** from the tsmt package source directory before this file compiles.
 */
-#include pubtable.sdf 
+#include pubtable.sdf
+#include pubtable.dec
 #ifDef PT_USE_TSMT
 #include tsmt.sdf
+#endif
 
-proc (struct ptModel) = ptModelFromArimamt(name, struct arimamtOut out);
-    local names, se, tstat, pval, p, q;
+proc (struct ptModel) = ptModelFromArimamt(...);
+    local name, names, se, tstat, pval, p, q;
     struct ptModel mdl;
 
-    p = out.p;
-    q = out.q;
+    #ifDef PT_USE_TSMT
+        struct arimamtOut out;
+        { name, out } = dynargsGet(1|2);
 
-    names = "Constant";
-    if q > 0;
-        names = ("MA" $+ sprintf("%d", seqa(1, 1, q))) $| names;
-    endif;
-    if p > 0;
-        names = ("AR" $+ sprintf("%d", seqa(1, 1, p))) $| names;
-    endif;
+        p = out.p;
+        q = out.q;
 
-    se = real(sqrt(diag(out.vcb)));
-    tstat = out.b ./ se;
-    pval = 2 * cdfnc(abs(tstat));
-
-    mdl = ptModelCreate(name, out.b, se);
-    mdl = ptModelSetNames(mdl, names);
-    mdl = ptModelSetPValues(mdl, pval);
-    mdl = ptModelSetGOF(mdl, "Log-likelihood" $| "AIC" $| "SBC", out.ll | out.aic | out.sbc);
-
-    retp(mdl);
-endp;
-
-proc (struct ptTable) = ptFromArimamt(struct arimamtOut out);
-    retp(ptModelTable(ptModelFromArimamt("ARIMA results", out)));
-endp;
-
-proc (struct ptModel) = ptModelFromTsPanel(name, struct tsPanelEstimationOut out);
-    local names, k;
-    struct ptModel mdl;
-
-    k = rows(out.coef);
-
-    if out.hasconstant;
-        if k > 1;
-            names = "Constant" $| ("X" $+ sprintf("%d", seqa(1, 1, k - 1)));
-        else;
-            names = "Constant";
+        names = "Constant";
+        if q > 0;
+            names = ("MA" $+ sprintf("%d", seqa(1, 1, q))) $| names;
         endif;
-    else;
-        names = "X" $+ sprintf("%d", seqa(1, 1, k));
-    endif;
+        if p > 0;
+            names = ("AR" $+ sprintf("%d", seqa(1, 1, p))) $| names;
+        endif;
 
-    mdl = ptModelCreate(name, out.coef, out.std_error);
-    mdl = ptModelSetNames(mdl, names);
-    mdl = ptModelSetPValues(mdl, out.pvt);
-    mdl = ptModelSetGOF(mdl, "N" $| "R-squared" $| "Adj R-squared", out.obs | out.r2 | out.adjr2);
+        se = real(sqrt(diag(out.vcb)));
+        tstat = out.b ./ se;
+        pval = 2 * cdfnc(abs(tstat));
+
+        mdl = ptModelCreate(name, out.b, se);
+        mdl = ptModelSetNames(mdl, names);
+        mdl = ptModelSetPValues(mdl, pval);
+        mdl = ptModelSetGOF(mdl, "Log-likelihood" $| "AIC" $| "SBC", out.ll | out.aic | out.sbc);
+    #else;
+        _library_missing_error(currentprocname(), "Tsmt");
+    #endif;
 
     retp(mdl);
 endp;
 
-proc (struct ptTable) = ptFromTsPanel(struct tsPanelEstimationOut out);
-    local title;
+proc (struct ptTable) = ptFromArimamt(...);
+    #ifDef PT_USE_TSMT
+        struct arimamtOut out;
+        out = dynargsGet(1);
+        retp(ptModelTable(ptModelFromArimamt("ARIMA results", out)));
+    #else;
+        _library_missing_error(currentprocname(), "Tsmt");
+    #endif;
+endp;
 
-    if out.method $== "ols";
-        title = "Pooled OLS results";
-    elseif out.method $== "fe";
-        title = "Fixed effects results";
-    elseif out.method $== "between";
-        title = "Between results";
-    elseif out.method $== "re";
-        title = "Random effects results";
-    else;
-        title = "Panel results";
-    endif;
+proc (struct ptModel) = ptModelFromTsPanel(...);
+    local name, names, k;
+    struct ptModel mdl;
 
-    retp(ptModelTable(ptModelFromTsPanel(title, out)));
+    #ifDef PT_USE_TSMT
+        struct tsPanelEstimationOut out;
+        { name, out } = dynargsGet(1|2);
+
+        k = rows(out.coef);
+
+        if out.hasconstant;
+            if k > 1;
+                names = "Constant" $| ("X" $+ sprintf("%d", seqa(1, 1, k - 1)));
+            else;
+                names = "Constant";
+            endif;
+        else;
+            names = "X" $+ sprintf("%d", seqa(1, 1, k));
+        endif;
+
+        mdl = ptModelCreate(name, out.coef, out.std_error);
+        mdl = ptModelSetNames(mdl, names);
+        mdl = ptModelSetPValues(mdl, out.pvt);
+        mdl = ptModelSetGOF(mdl, "N" $| "R-squared" $| "Adj R-squared", out.obs | out.r2 | out.adjr2);
+    #else;
+        _library_missing_error(currentprocname(), "Tsmt");
+    #endif;
+
+    retp(mdl);
+endp;
+
+proc (struct ptTable) = ptFromTsPanel(...);
+    #ifDef PT_USE_TSMT
+        local title;
+        struct tsPanelEstimationOut out;
+        out = dynargsGet(1);
+
+        if out.method $== "ols";
+            title = "Pooled OLS results";
+        elseif out.method $== "fe";
+            title = "Fixed effects results";
+        elseif out.method $== "between";
+            title = "Between results";
+        elseif out.method $== "re";
+            title = "Random effects results";
+        else;
+            title = "Panel results";
+        endif;
+
+        retp(ptModelTable(ptModelFromTsPanel(title, out)));
+    #else;
+        _library_missing_error(currentprocname(), "Tsmt");
+    #endif;
 endp;
 
 /*
@@ -105,53 +130,79 @@ endp;
 ** autoregressive lag coefficients (phi/vcphi). Row names are generic since
 ** automtOut does not carry the original variable names.
 */
-proc (struct ptModel) = ptModelFromAutomt(name, struct automtOut out);
-    local k, p, names, estimates, se, pval;
+proc (struct ptModel) = ptModelFromAutomt(...);
+    local name, k, p, names, estimates, se, pval;
     struct ptModel mdl;
 
-    k = rows(out.coefs);
-    p = rows(out.phi);
+    #ifDef PT_USE_TSMT
+        struct automtOut out;
+        { name, out } = dynargsGet(1|2);
 
-    names = ("X" $+ sprintf("%d", seqa(1, 1, k))) $| ("AR" $+ sprintf("%d", seqa(1, 1, p)));
-    estimates = out.coefs | out.phi;
-    se = sqrt(diag(out.vcb)) | sqrt(diag(out.vcphi));
-    pval = 2 * cdfnc(abs(estimates ./ se));
+        k = rows(out.coefs);
+        p = rows(out.phi);
 
-    mdl = ptModelCreate(name, estimates, se);
-    mdl = ptModelSetNames(mdl, names);
-    mdl = ptModelSetPValues(mdl, pval);
-    mdl = ptModelSetGOF(mdl, "N" $| "R-squared" $| "Sigma2" $| "-2*LogL", out.tobs | out.rsq | out.sigsq | out.chisq);
+        names = ("X" $+ sprintf("%d", seqa(1, 1, k))) $| ("AR" $+ sprintf("%d", seqa(1, 1, p)));
+        estimates = out.coefs | out.phi;
+        se = sqrt(diag(out.vcb)) | sqrt(diag(out.vcphi));
+        pval = 2 * cdfnc(abs(estimates ./ se));
+
+        mdl = ptModelCreate(name, estimates, se);
+        mdl = ptModelSetNames(mdl, names);
+        mdl = ptModelSetPValues(mdl, pval);
+        mdl = ptModelSetGOF(mdl, "N" $| "R-squared" $| "Sigma2" $| "-2*LogL", out.tobs | out.rsq | out.sigsq | out.chisq);
+    #else;
+        _library_missing_error(currentprocname(), "Tsmt");
+    #endif;
 
     retp(mdl);
 endp;
 
-proc (struct ptTable) = ptFromAutomt(struct automtOut out);
-    retp(ptModelTable(ptModelFromAutomt("Autoregression results", out)));
+proc (struct ptTable) = ptFromAutomt(...);
+    #ifDef PT_USE_TSMT
+        struct automtOut out;
+        out = dynargsGet(1);
+        retp(ptModelTable(ptModelFromAutomt("Autoregression results", out)));
+    #else;
+        _library_missing_error(currentprocname(), "Tsmt");
+    #endif;
 endp;
 
 /*
 ** varmamtOut (varmaFit): parameter vector / covariance follow the same
 ** struct PV pattern as cmlmtResults / maxlikmtResults.
 */
-proc (struct ptModel) = ptModelFromVarmamt(name, struct varmamtOut out);
-    local names, estimates, se, pval;
+proc (struct ptModel) = ptModelFromVarmamt(...);
+    local name, names, estimates, se, pval;
     struct ptModel mdl;
 
-    names = pvGetParNames(out.par);
-    estimates = pvGetParVector(out.par);
-    se = real(sqrt(diag(out.covpar)));
-    pval = 2 * cdfnc(abs(estimates ./ se));
+    #ifDef PT_USE_TSMT
+        struct varmamtOut out;
+        { name, out } = dynargsGet(1|2);
 
-    mdl = ptModelCreate(name, estimates, se);
-    mdl = ptModelSetNames(mdl, names);
-    mdl = ptModelSetPValues(mdl, pval);
-    mdl = ptModelSetGOF(mdl, "AIC" $| "BIC", out.aic | out.bic);
+        names = pvGetParNames(out.par);
+        estimates = pvGetParVector(out.par);
+        se = real(sqrt(diag(out.covpar)));
+        pval = 2 * cdfnc(abs(estimates ./ se));
+
+        mdl = ptModelCreate(name, estimates, se);
+        mdl = ptModelSetNames(mdl, names);
+        mdl = ptModelSetPValues(mdl, pval);
+        mdl = ptModelSetGOF(mdl, "AIC" $| "BIC", out.aic | out.bic);
+    #else;
+        _library_missing_error(currentprocname(), "Tsmt");
+    #endif;
 
     retp(mdl);
 endp;
 
-proc (struct ptTable) = ptFromVarmamt(struct varmamtOut out);
-    retp(ptModelTable(ptModelFromVarmamt("VARMA results", out)));
+proc (struct ptTable) = ptFromVarmamt(...);
+    #ifDef PT_USE_TSMT
+        struct varmamtOut out;
+        out = dynargsGet(1);
+        retp(ptModelTable(ptModelFromVarmamt("VARMA results", out)));
+    #else;
+        _library_missing_error(currentprocname(), "Tsmt");
+    #endif;
 endp;
 
 /*
@@ -160,53 +211,79 @@ endp;
 ** regStderrs). Row names are generic since lsdvmtOut does not carry the
 ** original variable names.
 */
-proc (struct ptModel) = ptModelFromLsdvmt(name, struct lsdvmtOut out);
-    local p, k, names, estimates, se, pval;
+proc (struct ptModel) = ptModelFromLsdvmt(...);
+    local name, p, k, names, estimates, se, pval;
     struct ptModel mdl;
 
-    p = rows(out.autoCoefficients);
-    k = rows(out.regCoefficients);
+    #ifDef PT_USE_TSMT
+        struct lsdvmtOut out;
+        { name, out } = dynargsGet(1|2);
 
-    names = ("AR" $+ sprintf("%d", seqa(1, 1, p))) $| ("X" $+ sprintf("%d", seqa(1, 1, k)));
-    estimates = out.autoCoefficients | out.regCoefficients;
-    se = out.autoStderrs | out.regStderrs;
-    pval = 2 * cdfnc(abs(estimates ./ se));
+        p = rows(out.autoCoefficients);
+        k = rows(out.regCoefficients);
 
-    mdl = ptModelCreate(name, estimates, se);
-    mdl = ptModelSetNames(mdl, names);
-    mdl = ptModelSetPValues(mdl, pval);
-    mdl = ptModelSetGOF(mdl, "N" $| "SS residual" $| "SS total", out.numObservations | out.SSresidual | out.SSTotal);
+        names = ("AR" $+ sprintf("%d", seqa(1, 1, p))) $| ("X" $+ sprintf("%d", seqa(1, 1, k)));
+        estimates = out.autoCoefficients | out.regCoefficients;
+        se = out.autoStderrs | out.regStderrs;
+        pval = 2 * cdfnc(abs(estimates ./ se));
+
+        mdl = ptModelCreate(name, estimates, se);
+        mdl = ptModelSetNames(mdl, names);
+        mdl = ptModelSetPValues(mdl, pval);
+        mdl = ptModelSetGOF(mdl, "N" $| "SS residual" $| "SS total", out.numObservations | out.SSresidual | out.SSTotal);
+    #else;
+        _library_missing_error(currentprocname(), "Tsmt");
+    #endif;
 
     retp(mdl);
 endp;
 
-proc (struct ptTable) = ptFromLsdvmt(struct lsdvmtOut out);
-    retp(ptModelTable(ptModelFromLsdvmt("LSDV results", out)));
+proc (struct ptTable) = ptFromLsdvmt(...);
+    #ifDef PT_USE_TSMT
+        struct lsdvmtOut out;
+        out = dynargsGet(1);
+        retp(ptModelTable(ptModelFromLsdvmt("LSDV results", out)));
+    #else;
+        _library_missing_error(currentprocname(), "Tsmt");
+    #endif;
 endp;
 
 /*
 ** switchmtOut (switchFit): parameter vector / covariance follow the same
 ** struct PV pattern as cmlmtResults / maxlikmtResults.
 */
-proc (struct ptModel) = ptModelFromSwitchmt(name, struct switchmtOut out);
-    local names, estimates, se, pval;
+proc (struct ptModel) = ptModelFromSwitchmt(...);
+    local name, names, estimates, se, pval;
     struct ptModel mdl;
 
-    names = pvGetParNames(out.par);
-    estimates = pvGetParVector(out.par);
-    se = real(sqrt(diag(out.covPar)));
-    pval = 2 * cdfnc(abs(estimates ./ se));
+    #ifDef PT_USE_TSMT
+        struct switchmtOut out;
+        { name, out } = dynargsGet(1|2);
 
-    mdl = ptModelCreate(name, estimates, se);
-    mdl = ptModelSetNames(mdl, names);
-    mdl = ptModelSetPValues(mdl, pval);
-    mdl = ptModelSetGOF(mdl, "Log-likelihood", out.logl);
+        names = pvGetParNames(out.par);
+        estimates = pvGetParVector(out.par);
+        se = real(sqrt(diag(out.covPar)));
+        pval = 2 * cdfnc(abs(estimates ./ se));
+
+        mdl = ptModelCreate(name, estimates, se);
+        mdl = ptModelSetNames(mdl, names);
+        mdl = ptModelSetPValues(mdl, pval);
+        mdl = ptModelSetGOF(mdl, "Log-likelihood", out.logl);
+    #else;
+        _library_missing_error(currentprocname(), "Tsmt");
+    #endif;
 
     retp(mdl);
 endp;
 
-proc (struct ptTable) = ptFromSwitchmt(struct switchmtOut out);
-    retp(ptModelTable(ptModelFromSwitchmt("Markov-switching results", out)));
+proc (struct ptTable) = ptFromSwitchmt(...);
+    #ifDef PT_USE_TSMT
+        struct switchmtOut out;
+        out = dynargsGet(1);
+        retp(ptModelTable(ptModelFromSwitchmt("Markov-switching results", out)));
+    #else;
+        _library_missing_error(currentprocname(), "Tsmt");
+    #endif;
 endp;
 
 /*
@@ -215,25 +292,38 @@ endp;
 ** out.moment (set to the parameter covariance when garchControl.covType
 ** requests ML/QML standard errors).
 */
-proc (struct ptModel) = ptModelFromGarchmt(name, struct garchEstimation out);
-    local names, estimates, se, pval;
+proc (struct ptModel) = ptModelFromGarchmt(...);
+    local name, names, estimates, se, pval;
     struct ptModel mdl;
 
-    names = pvGetParNames(out.par);
-    estimates = pvGetParVector(out.par);
-    se = real(sqrt(diag(out.moment)));
-    pval = 2 * cdfnc(abs(estimates ./ se));
+    #ifDef PT_USE_TSMT
+        struct garchEstimation out;
+        { name, out } = dynargsGet(1|2);
 
-    mdl = ptModelCreate(name, estimates, se);
-    mdl = ptModelSetNames(mdl, names);
-    mdl = ptModelSetPValues(mdl, pval);
-    mdl = ptModelSetGOF(mdl, "N" $| "AIC" $| "BIC" $| "Function value", out.numObs | out.aic | out.bic | out.fct);
+        names = pvGetParNames(out.par);
+        estimates = pvGetParVector(out.par);
+        se = real(sqrt(diag(out.moment)));
+        pval = 2 * cdfnc(abs(estimates ./ se));
+
+        mdl = ptModelCreate(name, estimates, se);
+        mdl = ptModelSetNames(mdl, names);
+        mdl = ptModelSetPValues(mdl, pval);
+        mdl = ptModelSetGOF(mdl, "N" $| "AIC" $| "BIC" $| "Function value", out.numObs | out.aic | out.bic | out.fct);
+    #else;
+        _library_missing_error(currentprocname(), "Tsmt");
+    #endif;
 
     retp(mdl);
 endp;
 
-proc (struct ptTable) = ptFromGarchmt(struct garchEstimation out);
-    retp(ptModelTable(ptModelFromGarchmt("GARCH results", out)));
+proc (struct ptTable) = ptFromGarchmt(...);
+    #ifDef PT_USE_TSMT
+        struct garchEstimation out;
+        out = dynargsGet(1);
+        retp(ptModelTable(ptModelFromGarchmt("GARCH results", out)));
+    #else;
+        _library_missing_error(currentprocname(), "Tsmt");
+    #endif;
 endp;
 
 /*
@@ -244,155 +334,71 @@ endp;
 ** comparison aligns "Constant" (error-components only) against the shared
 ** "x1".."xk" terms.
 */
-proc (struct ptModel) = ptModelFromTscsmtDV(name, struct tscsmtOut out);
-    local k, names, estimates, se, pval;
-    struct ptModel mdl;
-
-    k = rows(out.bdv);
-    names = "x" $+ sprintf("%d", seqa(1, 1, k));
-    estimates = out.bdv;
-    se = sqrt(diag(out.vcdv));
-    pval = 2 * cdfnc(abs(estimates ./ se));
-
-    mdl = ptModelCreate(name, estimates, se);
-    mdl = ptModelSetNames(mdl, names);
-    mdl = ptModelSetPValues(mdl, pval);
-
-    retp(mdl);
-endp;
-
-proc (struct ptModel) = ptModelFromTscsmtEC(name, struct tscsmtOut out);
-    local k, names, estimates, se, pval;
-    struct ptModel mdl;
-
-    k = rows(out.bec) - 1;
-    names = "Constant" $| ("x" $+ sprintf("%d", seqa(1, 1, k)));
-    estimates = out.bec;
-    se = sqrt(diag(out.vcec));
-    pval = 2 * cdfnc(abs(estimates ./ se));
-
-    mdl = ptModelCreate(name, estimates, se);
-    mdl = ptModelSetNames(mdl, names);
-    mdl = ptModelSetPValues(mdl, pval);
-
-    retp(mdl);
-endp;
-
-proc (struct ptTable) = ptFromTscsmt(struct tscsmtOut out);
-    struct ptModel models;
-    struct ptTable tbl;
-
-    models = reshape(ptModelFromTscsmtDV("Within (FE)", out), 2, 1);
-    models[2] = ptModelFromTscsmtEC("Error components (RE)", out);
-
-    tbl = ptModelCompare(models);
-    tbl = ptSetTitle(tbl, "Panel results");
-    tbl.stubName = "Term";
-
-    retp(tbl);
-endp;
-#else
-
-proc (struct ptModel) = ptModelFromArimamt(...);
-    struct ptModel mdl;
-    _library_missing_error(currentprocname(), "Tsmt");
-    retp(mdl);
-endp;
-
-proc (struct ptTable) = ptFromArimamt(...);
-    struct ptTable tbl;
-    _library_missing_error(currentprocname(), "Tsmt");
-    retp(tbl);
-endp;
-
-proc (struct ptModel) = ptModelFromTsPanel(...);
-    struct ptModel mdl;
-    _library_missing_error(currentprocname(), "Tsmt");
-    retp(mdl);
-endp;
-
-proc (struct ptTable) = ptFromTsPanel(...);
-    struct ptTable tbl;
-    _library_missing_error(currentprocname(), "Tsmt");
-    retp(tbl);
-endp;
-
-proc (struct ptModel) = ptModelFromAutomt(...);
-    struct ptModel mdl;
-    _library_missing_error(currentprocname(), "Tsmt");
-    retp(mdl);
-endp;
-
-proc (struct ptTable) = ptFromAutomt(...);
-    struct ptTable tbl;
-    _library_missing_error(currentprocname(), "Tsmt");
-    retp(tbl);
-endp;
-
-proc (struct ptModel) = ptModelFromVarmamt(...);
-    struct ptModel mdl;
-    _library_missing_error(currentprocname(), "Tsmt");
-    retp(mdl);
-endp;
-
-proc (struct ptTable) = ptFromVarmamt(...);
-    struct ptTable tbl;
-    _library_missing_error(currentprocname(), "Tsmt");
-    retp(tbl);
-endp;
-
-proc (struct ptModel) = ptModelFromLsdvmt(...);
-    struct ptModel mdl;
-    _library_missing_error(currentprocname(), "Tsmt");
-    retp(mdl);
-endp;
-
-proc (struct ptTable) = ptFromLsdvmt(...);
-    struct ptTable tbl;
-    _library_missing_error(currentprocname(), "Tsmt");
-    retp(tbl);
-endp;
-
-proc (struct ptModel) = ptModelFromSwitchmt(...);
-    struct ptModel mdl;
-    _library_missing_error(currentprocname(), "Tsmt");
-    retp(mdl);
-endp;
-
-proc (struct ptTable) = ptFromSwitchmt(...);
-    struct ptTable tbl;
-    _library_missing_error(currentprocname(), "Tsmt");
-    retp(tbl);
-endp;
-
-proc (struct ptModel) = ptModelFromGarchmt(...);
-    struct ptModel mdl;
-    _library_missing_error(currentprocname(), "Tsmt");
-    retp(mdl);
-endp;
-
-proc (struct ptTable) = ptFromGarchmt(...);
-    struct ptTable tbl;
-    _library_missing_error(currentprocname(), "Tsmt");
-    retp(tbl);
-endp;
-
 proc (struct ptModel) = ptModelFromTscsmtDV(...);
+    local name, k, names, estimates, se, pval;
     struct ptModel mdl;
-    _library_missing_error(currentprocname(), "Tsmt");
+
+    #ifDef PT_USE_TSMT
+        struct tscsmtOut out;
+        { name, out } = dynargsGet(1|2);
+
+        k = rows(out.bdv);
+        names = "x" $+ sprintf("%d", seqa(1, 1, k));
+        estimates = out.bdv;
+        se = sqrt(diag(out.vcdv));
+        pval = 2 * cdfnc(abs(estimates ./ se));
+
+        mdl = ptModelCreate(name, estimates, se);
+        mdl = ptModelSetNames(mdl, names);
+        mdl = ptModelSetPValues(mdl, pval);
+    #else;
+        _library_missing_error(currentprocname(), "Tsmt");
+    #endif;
+
     retp(mdl);
 endp;
 
 proc (struct ptModel) = ptModelFromTscsmtEC(...);
+    local name, k, names, estimates, se, pval;
     struct ptModel mdl;
-    _library_missing_error(currentprocname(), "Tsmt");
+
+    #ifDef PT_USE_TSMT
+        struct tscsmtOut out;
+        { name, out } = dynargsGet(1|2);
+
+        k = rows(out.bec) - 1;
+        names = "Constant" $| ("x" $+ sprintf("%d", seqa(1, 1, k)));
+        estimates = out.bec;
+        se = sqrt(diag(out.vcec));
+        pval = 2 * cdfnc(abs(estimates ./ se));
+
+        mdl = ptModelCreate(name, estimates, se);
+        mdl = ptModelSetNames(mdl, names);
+        mdl = ptModelSetPValues(mdl, pval);
+    #else;
+        _library_missing_error(currentprocname(), "Tsmt");
+    #endif;
+
     retp(mdl);
 endp;
 
 proc (struct ptTable) = ptFromTscsmt(...);
     struct ptTable tbl;
-    _library_missing_error(currentprocname(), "Tsmt");
+
+    #ifDef PT_USE_TSMT
+        struct tscsmtOut out;
+        struct ptModel models;
+        out = dynargsGet(1);
+
+        models = reshape(ptModelFromTscsmtDV("Within (FE)", out), 2, 1);
+        models[2] = ptModelFromTscsmtEC("Error components (RE)", out);
+
+        tbl = ptModelCompare(models);
+        tbl = ptSetTitle(tbl, "Panel results");
+        tbl.stubName = "Term";
+    #else;
+        _library_missing_error(currentprocname(), "Tsmt");
+    #endif;
+
     retp(tbl);
 endp;
-
-#endIf

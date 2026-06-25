@@ -8,10 +8,8 @@
 ** Prerequisites:
 **   1. Run pubtableSet() once to generate pubtable.dec with PT_USE_TSMT.
 **   2. tsmt must be installed (library tsmt loads without error).
-**   3. pubtable must be in the GAUSS library search path so that
-**      #include pubtable.dec resolves. pubtable.dec must be included
-**      BEFORE library pubtable so PT_USE_TSMT is defined when the
-**      tsmt adapter is compiled.
+**   3. Load tsmt and pubtable together in a single library statement so
+**      neither library unloads the other.
 **
 ** Steps:
 **   1. Simulate a stationary AR(1) series.
@@ -23,10 +21,7 @@
 */
 
 new;
-library tsmt;
-#include tsmt.sdf
-#include pubtable.dec
-library pubtable;
+library tsmt, pubtable;
 
 /* Step 1: Simulate AR(1) data: y_t = 0.65 * y_{t-1} + e_t */
 rndseed 12345;

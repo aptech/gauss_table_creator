@@ -891,28 +891,21 @@ endp;
 /*
 ** Optional adapter auto-loading.
 **
-** Each adapter file is included unconditionally and contains an inner
-** #ifDef / #else / #endIf guard that selects the real implementation when
-** the library is available, or stub procs calling _library_missing_error
-** when it is not. To activate adapters, include pubtable.dec before
-** pubtable.src after running pubtableSet() once:
-**   #include pubtable.dec
-**   #include pubtable.sdf
-**   #include pubtable.src
+** Adapter files (pubtable_cmlmt.src, pubtable_maxlikmt.src,
+** pubtable_optmt.src, pubtable_tsmt.src, pubtable_qardl.src) are NOT
+** #included here. They are listed in package.json's "src" array, so
+** `library pubtable;` compiles them automatically alongside this file.
+** Each adapter proc takes variadic (...) args and uses dynargsGet() to
+** fetch typed arguments inside an inner #ifDef / #else / #endIf guard,
+** so a single proc declaration works whether or not the optional
+** library is present; the #else branch calls _library_missing_error.
 **
-** qardl: auto-detected when qardl.sdf is included before pubtable.src.
+** qardl: auto-detected when qardl.sdf is included before library pubtable.
 **   qardl.sdf defines QARDL_SDF_INCLUDED via its own include guard.
 **
 ** cmlmt / maxlikmt / optmt / tsmt: activated by PT_USE_X entries in
-**   pubtable.dec. Also load the library and its .sdf before pubtable.src:
-**     library cmlmt;
-**     #include cmlmt.sdf
-**     #include pubtable.dec
-**     #include pubtable.sdf
-**     #include pubtable.src
+**   pubtable.dec, which each adapter file includes itself. Load the
+**   optional library together with pubtable in a single statement so
+**   neither library unloads the other:
+**     library cmlmt, pubtable;
 */
-#include pubtable_qardl.src
-#include pubtable_cmlmt.src
-#include pubtable_maxlikmt.src
-#include pubtable_optmt.src
-#include pubtable_tsmt.src

@@ -9,44 +9,38 @@
 ** ptTableFromOptmt builds a simple parameter/estimate/gradient table
 ** with the function value and return code reported as table notes.
 **
-** To use: run pubtableSet() once. Include pubtable.dec BEFORE loading
-** the pubtable library so PT_USE_OPTMT is defined when the adapter is
-** compiled:
-**   library optmt;
-**   #include optmt.sdf
-**   #include pubtable.dec
-**   library pubtable;
+** To use: run pubtableSet() once. Then load optmt and pubtable together
+** in a single library statement so neither library unloads the other:
+**   library optmt, pubtable;
 */
-#include pubtable.sdf 
+#include pubtable.sdf
+#include pubtable.dec
 #ifDef PT_USE_OPTMT
 #include optmt.sdf
+#endif
 
-proc (struct ptTable) = ptTableFromOptmt(struct optmtResults out);
+proc (struct ptTable) = ptTableFromOptmt(...);
     local names, estimates, gradient;
     struct ptTable tbl;
 
-    names = pvGetParNames(out.par);
-    estimates = pvGetParVector(out.par);
+    #ifDef PT_USE_OPTMT
+        struct optmtResults out;
+        out = dynargsGet(1);
 
-    gradient = out.gradient;
-    if rows(gradient) /= rows(estimates) or cols(gradient) /= 1;
-        gradient = miss(zeros(rows(estimates), 1), 0);
-    endif;
+        names = pvGetParNames(out.par);
+        estimates = pvGetParVector(out.par);
 
-    tbl = ptTableFromMatrix(estimates ~ gradient, names, "Estimate" $| "Gradient", "Optimization results");
-    tbl.notes = "Function value: " $+ sprintf("%g", out.fct)
-        $+ ", Return code: " $+ sprintf("%d", out.retcode);
+        gradient = out.gradient;
+        if rows(gradient) /= rows(estimates) or cols(gradient) /= 1;
+            gradient = miss(zeros(rows(estimates), 1), 0);
+        endif;
+
+        tbl = ptTableFromMatrix(estimates ~ gradient, names, "Estimate" $| "Gradient", "Optimization results");
+        tbl.notes = "Function value: " $+ sprintf("%g", out.fct)
+            $+ ", Return code: " $+ sprintf("%d", out.retcode);
+    #else;
+        _library_missing_error(currentprocname(), "Optmt");
+    #endif;
 
     retp(tbl);
 endp;
-#else
-
-proc (struct ptTable) = ptTableFromOptmt(...);
-    struct ptTable tbl;
-    _library_missing_error(currentprocname(), "Optmt");
-
-    retp(tbl);
-endp;
-
-#endIf
-
