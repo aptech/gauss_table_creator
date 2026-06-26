@@ -1,9 +1,5 @@
 new;
-library optmt;
-#include optmt.sdf
-#include C:\Users\eclow\Documents\GitHub\gauss_table_creator\src\pubtable.sdf
-#include C:\Users\eclow\Documents\GitHub\gauss_table_creator\src\pubtable.src
-#include C:\Users\eclow\Documents\GitHub\gauss_table_creator\src\pubtable_optmt.src
+library optmt, pubtable;
 
 proc (0) = checkScalarEqual(actual, expected, label);
     if actual /= expected;

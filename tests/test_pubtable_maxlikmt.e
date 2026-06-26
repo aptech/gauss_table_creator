@@ -1,11 +1,6 @@
 new;
-library maxlikmt, cmlmt;
-#include maxlikmt.sdf
-#include cmlmt.sdf
-#include C:\Users\eclow\Documents\GitHub\gauss_table_creator\src\pubtable.sdf
-#include C:\Users\eclow\Documents\GitHub\gauss_table_creator\src\pubtable.src
-#include C:\Users\eclow\Documents\GitHub\gauss_table_creator\src\pubtable_maxlikmt.src
-#include C:\Users\eclow\Documents\GitHub\gauss_table_creator\src\pubtable_cmlmt.src
+library maxlikmt, cmlmt, pubtable;
+#include C:\Users\eclow\Documents\GitHub\gauss_table_creator\src\pubtable_qardl.src
 
 proc (0) = checkScalarEqual(actual, expected, label);
     if actual /= expected;

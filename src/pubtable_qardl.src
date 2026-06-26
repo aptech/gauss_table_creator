@@ -146,7 +146,7 @@ proc (struct ptModel) = ptModelFromQardl(...);
 
     #ifDef QARDL_SDF_INCLUDED
         struct qardlOut out;
-        { name, out, tauIdx } = dynargsGet(1|2|3);
+        { name, out, tauIdx } = dynargsGet(1|3);
 
         k = out.k;
         p = rows(out.phi) / rows(out.tau);
@@ -211,7 +211,7 @@ proc (struct ptModel) = ptModelFromQardlECM(...);
 
     #ifDef QARDL_SDF_INCLUDED
         struct qardlECMOut out;
-        { name, out, tauIdx } = dynargsGet(1|2|3);
+        { name, out, tauIdx } = dynargsGet(1|3);
 
         if out.ecm_type $== "uecm";
             betaLR = out.beta_lr[., tauIdx];

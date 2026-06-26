@@ -1,9 +1,16 @@
+/*
+** Uses `library pubtable;` rather than direct #include of the split source
+** files. Since ptModelFrom (in pubtable.src) directly references procs from
+** all five optional adapter files, pubtable.src cannot compile standalone --
+** even for this core-only test -- without all five also being compiled.
+** Raw multi-file #include of all five adapters is unreliable when more than
+** one optional library happens to be installed on the test machine (their
+** .sdf files can define conflicting same-named structs); `library pubtable;`
+** avoids this. This means the *installed* package copy is what's tested --
+** sync src/ to the installed package directory before running this test.
+*/
 new;
-#include C:\Users\eclow\Documents\GitHub\gauss_table_creator\src\pubtable.sdf
-#include C:\Users\eclow\Documents\GitHub\gauss_table_creator\src\pubtable.src
-#include C:\Users\eclow\Documents\GitHub\gauss_table_creator\src\pubtable_model.src
-#include C:\Users\eclow\Documents\GitHub\gauss_table_creator\src\pubtable_render.src
-#include C:\Users\eclow\Documents\GitHub\gauss_table_creator\src\pubtable_export.src
+library pubtable;
 
 proc (0) = checkStringEqual(actual, expected, label);
     if actual $/= expected;

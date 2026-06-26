@@ -1,9 +1,5 @@
 new;
-library qardl;
-#include qardl.sdf
-#include C:\Users\eclow\Documents\GitHub\gauss_table_creator\src\pubtable.sdf
-#include C:\Users\eclow\Documents\GitHub\gauss_table_creator\src\pubtable.src
-#include C:\Users\eclow\Documents\GitHub\gauss_table_creator\src\pubtable_qardl.src
+library qardl, pubtable;
 
 proc (0) = checkScalarEqual(actual, expected, label);
     if actual /= expected;

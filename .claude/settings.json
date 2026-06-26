@@ -7,7 +7,11 @@
       "Bash(git -C \"c:\\\\Users\\\\eclow\\\\Documents\\\\GitHub\\\\gauss_table_creator\" status --short)",
       "Bash(ls -la addon_*.md)",
       "Bash(cat .gitignore)",
-      "Bash(cd \"/c/Users/eclow/Documents/GitHub/gauss_table_creator\" && rm -v preset_styles.html preset_styles.md)"
+      "Bash(cd \"/c/Users/eclow/Documents/GitHub/gauss_table_creator\" && rm -v preset_styles.html preset_styles.md)",
+      "Read(//c/Users/eclow/Documents/GitHub/gauss-programming-llm/**)",
+      "Bash(xargs -I{} sh -c 'echo \"=== {} ===\"; grep -c \"^proc\" {}; grep -c \"endp;\" {}')",
+      "Bash(grep -o '\"pubtable[a-zA-Z_.]*\"' \"c:\\\\Users\\\\eclow\\\\Documents\\\\GitHub\\\\gauss_table_creator\\\\package.json\" | tr -d '\"' | sort > /tmp/pkg.txt *)",
+      "Read(//tmp/**)"
     ],
     "additionalDirectories": [
       "c:\\c\\Users\\eclow\\Documents\\GitHub\\gauss_table_creator"

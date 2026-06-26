@@ -98,13 +98,19 @@ After changes:
 
 ## Testing
 
-Current smoke/source test:
+`tests/test_pubtable.e` and all `tests/test_pubtable_*.e` adapter tests use `library pubtable;` (and `library <addon>, pubtable;` for the adapter tests), NOT direct `#include` of the split source files. This is required, not stylistic: `ptModelFrom` in `pubtable.src` directly references procs from all five optional adapter files, so `pubtable.src` cannot compile standalone — even for the core-only test — without all five also being compiled (in real-or-stub form). Raw multi-file `#include` of all five adapters together is unreliable whenever more than one optional library happens to be installed on the test machine (their `.sdf` files can define conflicting same-named structs, e.g. `modelResults`); `library pubtable;` avoids this. **Practical consequence: these tests exercise the *installed* package copy, not the git-repo source directly — sync `src/` to the installed package directory (e.g. `getGAUSSHome()/pkgs/pubtable/src/`) before running them.**
 
 ```powershell
 C:\gauss26\tgauss.exe C:\Users\eclow\Documents\GitHub\gauss_table_creator\tests\test_pubtable.e
+C:\gauss26\tgauss.exe C:\Users\eclow\Documents\GitHub\gauss_table_creator\tests\test_pubtable_tsmt.e
+C:\gauss26\tgauss.exe C:\Users\eclow\Documents\GitHub\gauss_table_creator\tests\test_pubtable_tsmt_extra.e
+C:\gauss26\tgauss.exe C:\Users\eclow\Documents\GitHub\gauss_table_creator\tests\test_pubtable_qardl.e
+C:\gauss26\tgauss.exe C:\Users\eclow\Documents\GitHub\gauss_table_creator\tests\test_pubtable_maxlikmt.e
 ```
 
-The GAUSS executable may print a command-log permission warning in this environment; treat the test result itself as authoritative.
+The GAUSS executable may print a command-log permission warning in this environment; treat the test result itself as authoritative. `tgauss.exe` does not exit after printing results when stdout isn't redirected from an empty source — invoke with `< NUL` (or pipe an empty stdin) when scripting, or expect a lingering `(gauss)` prompt to clean up manually.
+
+**Known limitation — do not "fix" by editing pubtable_optmt.src:** `tests/test_pubtable_optmt.e` reliably fails with a `modelResults` structure-redefinition error (G0465) on any machine where `optmt` AND any of cmlmt/maxlikmt/tsmt are installed, as soon as the script actually calls `optmt()`. Root cause: `library pubtable;` unconditionally compiles `pubtable_cmlmt.src`/`pubtable_maxlikmt.src`/`pubtable_tsmt.src` too (per `package.json`), and `optmt`'s own `modelResults` shape conflicts with theirs once `optmt()` is actually invoked (confirmed empirically — `library optmt, pubtable;` alone, with no `optmt()` call, compiles fine). This is a cross-package GAUSS interoperability issue exposed by pubtable's all-adapters-always-compiled packaging strategy, not a bug in the optmt adapter code itself. Treat `test_pubtable_optmt.e` as environment-dependent until this is investigated further.
 
 Also run:
 

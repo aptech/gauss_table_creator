@@ -1,8 +1,5 @@
 new;
-library tsmt;
-#include tsmt.sdf
-#include C:\Users\eclow\Documents\GitHub\gauss_table_creator\src\pubtable.sdf
-#include C:\Users\eclow\Documents\GitHub\gauss_table_creator\src\pubtable.src
+library tsmt, pubtable;
 #include C:\Users\eclow\Documents\GitHub\gauss_table_creator\src\pubtable_tsmt.src
 
 proc (0) = checkScalarEqual(actual, expected, label);

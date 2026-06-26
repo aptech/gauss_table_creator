@@ -1,10 +1,6 @@
 new;
-library tsmt;
-#include tsmt.sdf
+library tsmt, pubtable;
 #include c:\gauss26\pkgs\tsmt\src\tspanel.src
-#include C:\Users\eclow\Documents\GitHub\gauss_table_creator\src\pubtable.sdf
-#include C:\Users\eclow\Documents\GitHub\gauss_table_creator\src\pubtable.src
-#include C:\Users\eclow\Documents\GitHub\gauss_table_creator\src\pubtable_tsmt.src
 
 proc (0) = checkScalarEqual(actual, expected, label);
     if actual /= expected;
@@ -28,10 +24,14 @@ endp;
 ** different number of elements, error G0465), so the adapter is
 ** exercised here against a manually populated arimamtOut struct that
 ** matches the documented field shapes instead of a live arimaFit call.
+**
+** out.b always appends the constant as its last row, but out.vcb covers
+** only the AR/MA terms (confirmed empirically against a live arimaFit()
+** call) — so vcb is sized for just AR1+MA1 here, not the constant.
 */
 struct arimamtOut amo;
 amo.b = 0.30 | -0.20 | 0.05;
-amo.vcb = eye(3) * 0.01;
+amo.vcb = eye(2) * 0.01;
 amo.ll = -120.5;
 amo.aic = 247.0;
 amo.sbc = 258.4;
