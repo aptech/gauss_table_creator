@@ -249,6 +249,39 @@ proc (1) = ptHasStatSubRows(struct ptTable tbl);
 endp;
 
 /*
+** ptGofStartRow: 1-based row index *into a ptRenderArray(tbl) array* (i.e.
+** already offset by the header row) where the goodness-of-fit block
+** begins, or 0 if there is no GOF block to mark. Term blocks built by
+** ptModelTable/ptModelCompareWith always end in a blank-named stat
+** sub-row (statRows requires at least one entry), and GOF rows always
+** have a name, so the GOF block -- if any -- starts right after the
+** *last* blank-named row in tbl.rowNames. Used to draw a mid-rule
+** separating coefficients from goodness-of-fit statistics in the
+** "booktabs" ruleStyle.
+*/
+proc (1) = ptGofStartRow(struct ptTable tbl);
+    local i, n, lastBlank;
+
+    if not ptHasStatSubRows(tbl);
+        retp(0);
+    endif;
+
+    n = rows(tbl.rowNames);
+    lastBlank = 0;
+    for i(1, n, 1);
+        if tbl.rowNames[i] $== "";
+            lastBlank = i;
+        endif;
+    endfor;
+
+    if lastBlank == 0 or lastBlank == n;
+        retp(0);
+    endif;
+
+    retp(lastBlank + 2);
+endp;
+
+/*
 ** ptApplyStarGutter: right-pads every data-column cell (cols 2..n_cols) in
 ** a rendered array with however many trailing spaces are needed to reserve
 ** a fixed-width star-suffix slot, so coefficient rows (which may end in a
@@ -469,7 +502,7 @@ proc (1) = ptHtmlColGroupRow(struct ptTable tbl);
 
     { labels, spans } = ptColGroupRuns(tbl.colGroups);
 
-    borderAttr = ptHtmlMergeBorderAttr("", ptHtmlBorderCss(tbl.fmt, 1, 0, 0));
+    borderAttr = ptHtmlMergeBorderAttr("", ptHtmlBorderCss(tbl.fmt, 1, 0, 0, 0));
 
     out = "<tr><th" $+ borderAttr $+ "></th>";
     for g(1, rows(labels), 1);
@@ -485,9 +518,10 @@ proc (1) = ptHtmlColGroupRow(struct ptTable tbl);
 endp;
 
 /* CSS border declarations (no surrounding style="...") for journal_booktabs:
-** table top rule, header-bottom rule, and table-bottom rule only -- no
-** column dividers. "" for any other ruleStyle (including the default). */
-proc (1) = ptHtmlBorderCss(struct ptFormat fmt, isTopRow, isHeaderRow, isLastRow);
+** table top rule, header-bottom rule, a mid-rule before the GOF block
+** (isGofStart), and a table-bottom rule -- no column dividers. "" for any
+** other ruleStyle (including the default). */
+proc (1) = ptHtmlBorderCss(struct ptFormat fmt, isTopRow, isHeaderRow, isLastRow, isGofStart);
     local css;
 
     css = "";
@@ -495,7 +529,7 @@ proc (1) = ptHtmlBorderCss(struct ptFormat fmt, isTopRow, isHeaderRow, isLastRow
         retp(css);
     endif;
 
-    if isTopRow;
+    if isTopRow or isGofStart;
         css = css $+ "border-top:1px solid #000;";
     endif;
     if isHeaderRow or isLastRow;
@@ -715,9 +749,10 @@ endp;
 ** existing full 4-sided grid on every row. "booktabs" (journal_booktabs
 ** preset) drops left/right and inter-row borders entirely, keeping only:
 ** a top rule (on the row that visually opens the table -- the colGroup
-** row if present, else the header row), a header-bottom rule, and a
-** table-bottom rule on the last row. */
-proc (1) = ptRtfRowBorders(struct ptFormat fmt, isTopRow, isHeaderRow, isLastRow, defaultBorders);
+** row if present, else the header row), a header-bottom rule, a mid-rule
+** before the GOF block (isGofStart), and a table-bottom rule on the last
+** row. */
+proc (1) = ptRtfRowBorders(struct ptFormat fmt, isTopRow, isHeaderRow, isLastRow, isGofStart, defaultBorders);
     local b;
 
     if fmt.ruleStyle $/= "booktabs";
@@ -725,7 +760,7 @@ proc (1) = ptRtfRowBorders(struct ptFormat fmt, isTopRow, isHeaderRow, isLastRow
     endif;
 
     b = "";
-    if isTopRow;
+    if isTopRow or isGofStart;
         b = b $+ "\\clbrdrt\\brdrs\\brdrw10";
     endif;
     if isHeaderRow or isLastRow;
@@ -736,7 +771,7 @@ proc (1) = ptRtfRowBorders(struct ptFormat fmt, isTopRow, isHeaderRow, isLastRow
 endp;
 
 proc (1) = ptRenderRtf(struct ptTable tbl);
-    local arr, out, i, j, n_rows, n_cols, widths, borders, grpBorders, rowBorders, hasGroups, cellx, cellText, styles;
+    local arr, out, i, j, n_rows, n_cols, widths, gofStart, borders, grpBorders, rowBorders, hasGroups, cellx, cellText, styles;
 
     call _ptCheckJournalTitle(tbl.fmt, tbl.title);
 
@@ -744,6 +779,7 @@ proc (1) = ptRenderRtf(struct ptTable tbl);
     n_rows = rows(arr);
     n_cols = cols(arr);
     widths = ptColWidths(arr);
+    gofStart = ptGofStartRow(tbl);
 
     out = "{\\rtf1\\ansi\n";
 
@@ -756,12 +792,12 @@ proc (1) = ptRenderRtf(struct ptTable tbl);
 
     hasGroups = ptHasColGroups(tbl.colGroups);
     if hasGroups;
-        grpBorders = ptRtfRowBorders(tbl.fmt, 1, 0, 0, borders);
+        grpBorders = ptRtfRowBorders(tbl.fmt, 1, 0, 0, 0, borders);
         out = out $+ ptRtfColGroupRow(tbl, widths, grpBorders);
     endif;
 
     for i(1, n_rows, 1);
-        rowBorders = ptRtfRowBorders(tbl.fmt, i == 1 and not hasGroups, i == 1, i == n_rows, borders);
+        rowBorders = ptRtfRowBorders(tbl.fmt, i == 1 and not hasGroups, i == 1, i == n_rows, i == gofStart, borders);
 
         out = out $+ "\\trowd\\trgaph108\\trleft0\n";
         cellx = 0;
@@ -798,13 +834,14 @@ proc (1) = ptRenderRtf(struct ptTable tbl);
 endp;
 
 proc (1) = ptRenderHtml(struct ptTable tbl);
-    local arr, out, i, j, n_cols, n_rows, styles, cellText, headerHasTop, headerAttr, rowAttr;
+    local arr, out, i, j, n_cols, n_rows, gofStart, styles, cellText, headerHasTop, headerAttr, rowAttr;
 
     call _ptCheckJournalTitle(tbl.fmt, tbl.title);
 
     arr = ptRenderArray(tbl);
     n_cols = cols(arr);
     n_rows = rows(arr);
+    gofStart = ptGofStartRow(tbl);
 
     out = "<table>\n";
     if tbl.title $/= "";
@@ -822,21 +859,21 @@ proc (1) = ptRenderHtml(struct ptTable tbl);
 
     out = out $+ "<tr>";
     for j(1, n_cols, 1);
-        headerAttr = ptHtmlMergeBorderAttr(ptHtmlAlignAttr(tbl, j, n_cols), ptHtmlBorderCss(tbl.fmt, headerHasTop, 1, 0));
+        headerAttr = ptHtmlMergeBorderAttr(ptHtmlAlignAttr(tbl, j, n_cols), ptHtmlBorderCss(tbl.fmt, headerHasTop, 1, 0, 0));
         out = out $+ "<th" $+ headerAttr $+ ">" $+ ptEscapeHtml(arr[1, j]) $+ "</th>";
     endfor;
     out = out $+ "</tr>\n</thead>\n<tbody>\n";
 
     for i(2, n_rows, 1);
         styles = ptCellStyleRow(tbl, i - 1);
-        rowAttr = ptHtmlMergeBorderAttr(ptHtmlAlignAttr(tbl, 1, n_cols), ptHtmlBorderCss(tbl.fmt, 0, 0, i == n_rows));
+        rowAttr = ptHtmlMergeBorderAttr(ptHtmlAlignAttr(tbl, 1, n_cols), ptHtmlBorderCss(tbl.fmt, 0, 0, i == n_rows, i == gofStart));
         out = out $+ "<tr><th scope=\"row\"" $+ rowAttr $+ ">" $+ ptEscapeHtml(arr[i, 1]) $+ "</th>";
         for j(2, n_cols, 1);
             cellText = ptEscapeHtml(arr[i, j]);
             if styles[j] $/= "";
                 cellText = ptStyleHtml(cellText, styles[j]);
             endif;
-            rowAttr = ptHtmlMergeBorderAttr(ptHtmlAlignAttr(tbl, j, n_cols), ptHtmlBorderCss(tbl.fmt, 0, 0, i == n_rows));
+            rowAttr = ptHtmlMergeBorderAttr(ptHtmlAlignAttr(tbl, j, n_cols), ptHtmlBorderCss(tbl.fmt, 0, 0, i == n_rows, i == gofStart));
             out = out $+ "<td" $+ rowAttr $+ ">" $+ cellText $+ "</td>";
         endfor;
         out = out $+ "</tr>\n";

@@ -65,10 +65,15 @@ struct cmlmtResults out;
 out = cmlmt(&lpsn, p0, d0, c0);
 
 /* Step 5: Convert to pubtable via the standard dispatcher — no 'struct
-** ptModel' or 'struct ptTable' needed */
+** ptModel' or 'struct ptTable' needed. "journal_booktabs" gives the HTML/
+** RTF output top/header-bottom/bottom rules only (no column dividers);
+** ptModelSetAicBic reveals the AIC/BIC rows this adapter always computes
+** but hides by default. */
 mdl = ptModelFrom("Poisson (b1 = b2)", out);
+mdl = ptModelApplyPreset(mdl, "journal_booktabs");
 mdl = ptModelSetNotes(mdl, "Equality constraint: b1 = b2.");
 mdl = ptModelSetDataLabel(mdl, "cmlmtpsn");
+mdl = ptModelSetAicBic(mdl, 1);
 
 tbl = ptModelTable(mdl);
 tbl = ptSetTitle(tbl, "Constrained Poisson MLE");
@@ -76,3 +81,4 @@ tbl = ptSetTitle(tbl, "Constrained Poisson MLE");
 /* Step 6: Export */
 call ptExport(tbl, "addon_cmlmt.md");
 call ptExport(tbl, "addon_cmlmt.html");
+call ptExport(tbl, "addon_cmlmt.rtf");
