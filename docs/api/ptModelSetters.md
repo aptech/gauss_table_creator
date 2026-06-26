@@ -19,6 +19,8 @@ apply several changes before passing the model to `ptModelTable` or `ptModelComp
 | `ptModelSetCI(mdl, ciLower, ciUpper)` | Set confidence-interval bounds (required for `"ci"` statistic row). |
 | `ptModelSetStatRows(mdl, statRows)` | Choose which statistic rows appear under each coefficient. |
 | `ptModelSetNotes(mdl, notes)` | Set the model notes string appended in the final table. |
+| `ptModelSetDataLabel(mdl, dataLabel)` | Set a dataset description, rendered as its own `"Data: <dataLabel>."` note, separate from `ptModelSetNotes`. |
+| `ptModelSetAicBic(mdl, tf)` | Show (`1`) or hide (`0`, default) the optional AIC/BIC GOF rows added by `ptModelFromCmlmt`/`ptModelFromMaxlikmt`. |
 | `ptModelApplyPreset(mdl, preset)` | Apply a named style preset. See `ptApplyPreset`. |
 
 ## Inputs (common)
@@ -70,6 +72,23 @@ Default is `"se"`.
 plus one data column means a two-character string (e.g. `"lr"`). For comparison
 tables the string must cover the stub plus all model columns.
 
+## ptModelSetDataLabel
+`dataLabel` — string describing the data source (e.g. a dataset/file name).
+`ptModelTable`/`ptModelCompareWith` append `"Data: " $+ dataLabel $+ "."` as its own
+note line, after the significance note and any `ptModelSetNotes` content, so callers
+don't need to hand-concatenate a data-source description into another note string.
+Leave unset (default `""`) to omit the note entirely.
+
+## ptModelSetAicBic
+`tf` — `0` (default) or `1`. `ptModelFromCmlmt`/`ptModelFromMaxlikmt` always compute
+AIC/BIC from the function value and append them as the model's last two GOF rows, but
+those two rows are hidden by `ptModelTable`/`ptModelCompareWith` unless `ptModelSetAicBic`
+has set `tf = 1`. The hiding is gated on `mdl.hasOptionalAicBic` (set only by those two
+adapters) and removes the GOF rows **by position**, never by matching the `"AIC"`/`"BIC"`
+label text — so it has no effect on adapters that report their own non-optional AIC/BIC
+rows (e.g. `ptModelFromGlm`). Calling `ptModelSetAicBic` on a model that never set
+`hasOptionalAicBic` (e.g. one built directly with `ptModelCreate`) is a no-op.
+
 ## Example
 ```gauss
 new;
@@ -90,7 +109,8 @@ mdl = ptModelSetStatRows(mdl, "tstat" $| "ci");
 /* Stricter stars */
 mdl = ptModelSetStars(mdl, 0.05 | 0.01 | 0.001, "*" $| "**" $| "***");
 mdl = ptModelSetDigits(mdl, 4);
-mdl = ptModelSetNotes(mdl, "95% CI in brackets. Dependent variable: mpg.");
+mdl = ptModelSetNotes(mdl, "95% CI in brackets.");
+mdl = ptModelSetDataLabel(mdl, "auto.dat");
 
 tbl = ptModelTable(mdl);
 tbl = ptSetTitle(tbl, "OLS with CI");

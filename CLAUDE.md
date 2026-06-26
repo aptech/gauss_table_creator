@@ -132,7 +132,9 @@ Current implemented/provisional public API includes:
 - `ptSetColGroups`, `ptCompareSetColGroups`
 - `ptSetColFormat`, `ptSetCellStyle`
 - `ptSetStars`, `ptModelSetStars`, `ptNoStars`, `ptModelNoStars`
-- `ptApplyPreset`, `ptModelApplyPreset` (`"journal"`, `"compact"`, `"plain"`, `"report"`)
+- `ptApplyPreset`, `ptModelApplyPreset` (`"journal"`, `"journal_booktabs"`, `"compact"`, `"plain"`, `"report"`)
+- `ptModelSetDataLabel`: sets `ptModel.dataLabel`, rendered as a separate `"Data: <label>."` note (kept apart from `ptModelSetNotes`/`ptModelSetGOF` content) by `ptModelTable`/`ptModelCompareWith`.
+- `ptModelSetAicBic(mdl, tf)`: toggles whether a model's *optional* trailing AIC/BIC GOF rows are shown. `ptModelFromCmlmt`/`ptModelFromMaxlikmt` always compute and append AIC/BIC as the last two `gofNames`/`gofValues` entries (`AIC = -2*fval + 2*k`, `BIC = -2*fval + 2*k*ln(n)`) and set `mdl.hasOptionalAicBic = 1`. `ptFilterGofRows` (in `pubtable_model.src`, called from `ptModelTable`/`ptModelCompareWith`) drops exactly those last two rows by **position**, gated on `hasOptionalAicBic` being set — never by matching the row label string. This matters because `ptModelFromGlm` already reports its own *non-optional* `"AIC"`/`"BIC"` GOF rows; since it never sets `hasOptionalAicBic`, those are always shown regardless of `fmt.showAicBic`, which defaults to `0`.
 - `ptModelTable`
 - `ptModelCompare`, `ptModelCompareWith`
 - `ptCompareOptionsCreate`, `ptCompareSetTermOrder`, `ptCompareSetGofOrder`, `ptCompareSetLabelMap`, `ptCompareSetNotes`
@@ -205,6 +207,7 @@ Optional add-on package adapters (separate source files). Each file is self-cont
 ## Documentation
 
 - `README.md`: user-facing overview and current modern API examples.
+- `CHANGELOG.md`: notable changes by version, with an `[Unreleased]` section for work not yet tagged. Update this alongside any user-facing change (new API, behavior change, bug fix) — see its existing entries for the expected level of detail.
 - `examples/`: runnable usage examples.
-- `docs/`: older legacy `tableSet` command docs; update or replace as the modern API matures.
+- `docs/`: API reference (`docs/api/`), plus older legacy `tableSet` command docs; update or replace as the modern API matures.
 - `tests/`: source tests/smoke tests.

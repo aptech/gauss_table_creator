@@ -50,11 +50,14 @@ Significance stars use the default cutoffs `0.10`/`0.05`/`0.01` with symbols `"+
 | Preset | Settings |
 | --- | --- |
 | `"journal"` | 3 digits, default significance stars, one `"se"` row, parenthesized statistics (the default settings). |
+| `"journal_booktabs"` | Same as `"journal"`, plus `booktabs`-style rules in LaTeX/HTML/RTF (top rule, header-bottom rule, table-bottom rule; no vertical/column-divider rules). LaTeX is unaffected since it already renders this way by default; Markdown is unaffected since it has no border concept. |
 | `"compact"` | 2 digits, default significance stars, one `"se"` row, parenthesized statistics. |
 | `"plain"` | 3 digits, no significance stars, one `"se"` row, no statistic wrapper. |
 | `"report"` | 3 digits, default significance stars, `"se"` and `"pvalue"` rows, parenthesized statistics. |
 
 Apply a preset before calling `ptModelTable`/`ptExport` so the chosen formatting is used when the table is rendered.
+
+Exporting/rendering a `"journal"` or `"journal_booktabs"` table with no title set prints a non-fatal `errorlog` warning ("pubtable warning: journal-style table has no title. Use ptSetTitle(tbl, ...) before exporting.") but still completes the export — call `ptSetTitle(tbl, ...)` first to silence it.
 
 For more control over model comparisons, build a `ptCompareOptions` struct with `ptCompareOptionsCreate()` and pass it to `ptModelCompareWith(models, opts)`:
 
@@ -177,6 +180,10 @@ Optional add-on package adapters and their underlying output structs:
 | `optmtResults` | `ptTableFromOptmt` in `src/pubtable_optmt.src` builds a parameter/estimate/gradient table (no standard errors, since `optmtResults` has no covariance matrix). Load with `library optmt, pubtable;`. |
 | QARDL package (ARDL/QARDL/NARDL/CS-ARDL family) | `src/pubtable_qardl.src` provides `ptModelFromArdl`/`ptFromArdl` (`ardlOut`), `ptModelFromArdlECM`/`ptFromArdlECM` (`ardlECMOut`), `ptModelFromQardl`/`ptFromQardl` and `ptModelFromQardlECM`/`ptFromQardlECM` (`qardlOut`/`qardlECMOut`, one comparison column per quantile in `out.tau`), `ptModelFromNardl`/`ptFromNardl` and `ptModelFromNardlECM`/`ptFromNardlECM` (`nardlOut`/`nardlECMOut`), `ptModelFromCsardl`/`ptFromCsardl` and `ptModelFromCsardlECM`/`ptFromCsardlECM` (`csardlOut`/`csardlECMOut`), `ptFromArdlFull` (`ardlFullOut`) and `ptTablesFromQardlFull`/`ptTablesFromNardlFull`/`ptTablesFromCsardlFull` (`qardlFullOut`/`nardlFullOut`/`csardlFullOut`, each returning a 2x1 `ptTable` array of levels + ECM tables for `ptExportAll`), and the `ptFromArdlFamily` dispatcher. Load with `library qardl, pubtable;`. |
 
+`ptModelFromCmlmt`/`ptModelFromMaxlikmt` always compute AIC/BIC from the function value (`AIC = -2*fval + 2*k`, `BIC = -2*fval + 2*k*ln(n)`) but keep them hidden by default; call `ptModelSetAicBic(model, 1)` to reveal the two extra GOF rows. This only ever affects the optional trailing AIC/BIC pair those two adapters add — it never hides an `"AIC"`/`"BIC"` GOF row that's already a normal part of another adapter's output (e.g. `ptModelFromGlm`).
+
+Use `ptModelSetDataLabel(model, label)` to record a dataset description as its own `"Data: <label>."` note, kept separate from `ptModelSetNotes(model, notes)` so callers don't have to hand-concatenate the two.
+
 Initial exporters:
 
 | Exporter | Extensions and notes |
@@ -236,6 +243,7 @@ Modern examples are in `examples/model_table_ols.e`, `examples/model_comparison.
 | --- | --- |
 | [docs/README.md](docs/README.md) | Documentation index, including a command reference for the modern API in `docs/api/`. |
 | [docs/migration.md](docs/migration.md) | Mapping from the legacy `tableControl`/`tableSet...`/`outputTable` workflow to the modern `pt*` API. |
+| [CHANGELOG.md](CHANGELOG.md) | Notable changes by version. |
 
 ## Authors
 

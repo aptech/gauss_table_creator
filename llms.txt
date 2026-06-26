@@ -57,7 +57,15 @@ Current/provisional modern API:
 
 `ptModelSetStars(model, cutoffs, symbols)` / `ptSetStars(tbl, cutoffs, symbols)` set custom significance cutoffs/symbols (default `0.10`/`0.05`/`0.01` -> `"+"`/`"*"`/`"**"`); `ptModelNoStars(model)` / `ptNoStars(tbl)` disable stars.
 
-`ptModelApplyPreset(model, preset)` / `ptApplyPreset(tbl, preset)` apply a bundle of `ptFormat` settings for one of `"journal"`, `"compact"`, `"plain"`, or `"report"` (digits, significance stars, statRows, and statistic wrapper).
+`ptModelApplyPreset(model, preset)` / `ptApplyPreset(tbl, preset)` apply a bundle of `ptFormat` settings for one of `"journal"`, `"journal_booktabs"`, `"compact"`, `"plain"`, or `"report"` (digits, significance stars, statRows, and statistic wrapper). `"journal_booktabs"` is identical to `"journal"` except it also sets `ptFormat.ruleStyle = "booktabs"`, which makes `ptRenderHtml`/`ptRenderRtf` draw only a table-top rule, a header-bottom rule, and a table-bottom rule (no vertical/column-divider rules); `ptRenderLatex` is unaffected since it is already booktabs-style by default, and Markdown has no border concept to affect. `ptFormat.preset` records which preset (if any) was last applied.
+
+Exporting or rendering (`ptExport`, `ptRenderLatex`, `ptRenderHtml`, `ptRenderRtf`) a `"journal"`/`"journal_booktabs"` table with an empty `title` prints a non-fatal `errorlog` warning ("pubtable warning: journal-style table has no title. Use ptSetTitle(tbl, ...) before exporting.") via the shared helper `_ptCheckJournalTitle`, but still completes the export/render.
+
+`ptModelSetDataLabel(model, label)` sets `ptModel.dataLabel`, rendered by `ptModelTable`/`ptModelCompareWith` as a separate `"Data: <label>."` note, kept apart from `ptModelSetNotes`/`ptModelSetGOF` content so callers don't have to hand-concatenate a dataset description into another note string.
+
+`ptModelSetAicBic(model, tf)` toggles whether a model's *optional* trailing AIC/BIC GOF rows are shown (default off). `ptModelFromCmlmt`/`ptModelFromMaxlikmt` always compute and append AIC/BIC as the last two `gofNames`/`gofValues` entries (`AIC = -2*fval + 2*k`, `BIC = -2*fval + 2*k*ln(n)`) and set `ptModel.hasOptionalAicBic = 1`; `ptFilterGofRows` (called from `ptModelTable`/`ptModelCompareWith`) drops exactly those last two rows by *position* when `hasOptionalAicBic` is set and `showAicBic` is not. This never matches on the row label text, so it does not affect adapters that already report their own non-optional `"AIC"`/`"BIC"` GOF rows (e.g. `ptModelFromGlm`), since those never set `hasOptionalAicBic`.
+
+Plain-text and Markdown rendering (`ptRenderText`, `ptRenderMarkdown`) right-pad each data cell with `ptApplyStarGutter`/`ptTrailingDecorLen` so a coefficient's significance-star suffix (0/1/2 characters) and its stat sub-row's wrapping punctuation (`)`/`]`) consume the same fixed-width trailing slot before column-width padding is computed — without this, a coefficient's number and its SE/CI row's number would land in different columns whenever the star count differs from row to row.
 
 Built-in adapters (always available with `library pubtable;`):
 

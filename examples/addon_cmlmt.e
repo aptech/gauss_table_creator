@@ -67,7 +67,8 @@ out = cmlmt(&lpsn, p0, d0, c0);
 /* Step 5: Convert to pubtable via the standard dispatcher — no 'struct
 ** ptModel' or 'struct ptTable' needed */
 mdl = ptModelFrom("Poisson (b1 = b2)", out);
-mdl = ptModelSetNotes(mdl, "Equality constraint: b1 = b2.  Data: cmlmtpsn.");
+mdl = ptModelSetNotes(mdl, "Equality constraint: b1 = b2.");
+mdl = ptModelSetDataLabel(mdl, "cmlmtpsn");
 
 tbl = ptModelTable(mdl);
 tbl = ptSetTitle(tbl, "Constrained Poisson MLE");

@@ -13,23 +13,39 @@
 | Parameter | Description |
 |:------- |:------- |
 | tbl / mdl | `ptTable` or `ptModel` struct to modify. |
-| preset | String, one of `"journal"`, `"compact"`, `"plain"`, or `"report"`. |
+| preset | String, one of `"journal"`, `"journal_booktabs"`, `"compact"`, `"plain"`, or `"report"`. |
 
 ## Output
 | Output | Description |
 |:------- |:------- |
-| tbl / mdl | Modified struct with `fmt` fields overwritten by the preset. |
+| tbl / mdl | Modified struct with `fmt` fields overwritten by the preset, including `fmt.preset` (the preset name itself) and, for `"journal_booktabs"`, `fmt.ruleStyle`. |
 
 ## Available presets
 
-| Preset | digits | Stars | Wrapper | statRows |
-|:------- |:------- |:------- |:------- |:------- |
-| `"journal"` | 3 | `+`/`*`/`**` at 0.10/0.05/0.01 | parentheses | `se` |
-| `"compact"` | 2 | `+`/`*`/`**` at 0.10/0.05/0.01 | parentheses | `se` |
-| `"plain"` | 3 | none | none | `se` |
-| `"report"` | 3 | `+`/`*`/`**` at 0.10/0.05/0.01 | parentheses | `se`, `pvalue` |
+| Preset | digits | Stars | Wrapper | statRows | ruleStyle |
+|:------- |:------- |:------- |:------- |:------- |:------- |
+| `"journal"` | 3 | `+`/`*`/`**` at 0.10/0.05/0.01 | parentheses | `se` | (default) |
+| `"journal_booktabs"` | 3 | `+`/`*`/`**` at 0.10/0.05/0.01 | parentheses | `se` | `"booktabs"` |
+| `"compact"` | 2 | `+`/`*`/`**` at 0.10/0.05/0.01 | parentheses | `se` | (default) |
+| `"plain"` | 3 | none | none | `se` | (default) |
+| `"report"` | 3 | `+`/`*`/`**` at 0.10/0.05/0.01 | parentheses | `se`, `pvalue` | (default) |
 
 `"journal"` is equivalent to the default `ptFormat` created by `ptFormatCreate`.
+
+`"journal_booktabs"` is identical to `"journal"` except for `ruleStyle`: `ptRenderHtml`/
+`ptRenderRtf` then draw only a table-top rule, a header-bottom rule, and a table-bottom
+rule — no vertical/column-divider rules. `ptRenderLatex` is unaffected, since it already
+renders `booktabs`-style with no vertical rules by default; Markdown is unaffected, since
+it has no border concept.
+
+## Journal-style title warning
+
+If `fmt.preset` is `"journal"` or `"journal_booktabs"` and the table's `title` is empty,
+`ptExport`/`ptRenderLatex`/`ptRenderHtml`/`ptRenderRtf` print a non-fatal `errorlog`
+warning ("pubtable warning: journal-style table has no title. Use ptSetTitle(tbl, ...)
+before exporting.") but still complete the export/render. Call `ptSetTitle(tbl, ...)`
+(or pass a non-empty `name` into `ptModelFrom`/`ptModelCreate`, which becomes the table
+title via `ptModelTable`) before exporting to silence it.
 
 ## Notes
 - Presets overwrite the entire `fmt` block. Apply a preset first, then use individual
@@ -40,6 +56,10 @@
   change formatting for the *next* render, but will not re-format the string body already
   in the table. For model tables, apply the preset to the `ptModel` before calling
   `ptModelTable`.
+- `fmt.preset` is only set by `ptApplyPreset`/`ptModelApplyPreset`. A `ptFormat` built
+  manually (via `ptFormatCreate`/`ptModelCreate` followed by individual setters) has
+  `fmt.preset $== ""`, so the title warning above never fires for it even if its
+  settings happen to match `"journal"`.
 
 ## Example
 ```gauss
@@ -66,6 +86,16 @@ plnTbl = ptSetTitle(plnTbl, "Plain preset");
 
 call ptExport(cmpTbl, "compact.md");
 call ptExport(plnTbl, "plain.md");
+
+/* "journal_booktabs" preset: same as "journal", plus booktabs-style rules
+** in HTML/RTF. Title is required for the warning above to stay silent. */
+btMdl = ptModelFrom("", out);
+btMdl = ptModelApplyPreset(btMdl, "journal_booktabs");
+btTbl = ptModelTable(btMdl);
+btTbl = ptSetTitle(btTbl, "Journal (booktabs) preset");
+
+call ptExport(btTbl, "journal_booktabs.html");
+call ptExport(btTbl, "journal_booktabs.rtf");
 ```
 
 ## See Also

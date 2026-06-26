@@ -127,6 +127,42 @@ presetTbl = ptApplyPreset(presetTbl, "plain");
 checkScalarEqual(presetTbl.fmt.stars, 0, "ptApplyPreset plain disables stars");
 checkStringEqual(presetTbl.fmt.statisticWrapper, "none", "ptApplyPreset plain removes statistic wrapper");
 
+/* journal_booktabs preset: same settings as journal, plus booktabs rules */
+struct ptTable journalTbl;
+journalTbl = ptApplyPreset(ptTableFromMatrix(1.23456, "x", "Model 1", "Demo_table"), "journal");
+checkStringEqual(journalTbl.fmt.preset, "journal", "journal preset records its own name");
+checkStringEqual(journalTbl.fmt.ruleStyle, "", "journal preset leaves ruleStyle at default (unchanged behavior)");
+
+struct ptTable btTbl;
+btTbl = ptApplyPreset(ptTableFromMatrix(1.23456, "x", "Model 1", "Demo_table"), "journal_booktabs");
+checkStringEqual(btTbl.fmt.preset, "journal_booktabs", "journal_booktabs preset records its own name");
+checkStringEqual(btTbl.fmt.ruleStyle, "booktabs", "journal_booktabs preset sets booktabs rule style");
+checkScalarEqual(btTbl.fmt.digits, 3, "journal_booktabs keeps journal's digit count");
+checkScalarEqual(btTbl.fmt.stars, 1, "journal_booktabs keeps journal's significance stars");
+
+checkStringContains(ptRenderLatex(btTbl), "\\toprule", "journal_booktabs latex keeps toprule (already booktabs by default)");
+checkStringContains(ptRenderLatex(btTbl), "\\bottomrule", "journal_booktabs latex keeps bottomrule");
+
+checkStringContains(ptRenderHtml(btTbl), "border-top:1px solid #000;", "journal_booktabs html adds table top rule");
+checkStringContains(ptRenderHtml(btTbl), "border-bottom:1px solid #000;", "journal_booktabs html adds header/bottom rule");
+checkScalarEqual(strindx(ptRenderHtml(journalTbl), "border-top", 1), 0, "default journal html has no border styling (unchanged)");
+
+checkStringContains(ptRenderRtf(btTbl), "\\clbrdrt", "journal_booktabs rtf keeps a top rule");
+checkStringContains(ptRenderRtf(btTbl), "\\clbrdrb", "journal_booktabs rtf keeps header/bottom rules");
+checkScalarEqual(strindx(ptRenderRtf(btTbl), "\\clbrdrl", 1), 0, "journal_booktabs rtf drops left/vertical borders");
+checkScalarEqual(strindx(ptRenderRtf(journalTbl), "\\clbrdrl", 1) > 0, 1, "default journal rtf keeps the full grid (unchanged)");
+
+/* journal-style title warning: ptExport/ptRenderLatex/ptRenderHtml/ptRenderRtf
+** call _ptCheckJournalTitle, which warns via errorlog but never aborts. */
+struct ptTable noTitleTbl;
+noTitleTbl = ptApplyPreset(ptTableFromMatrix(1.0, "x", "M", ""), "journal");
+call _ptCheckJournalTitle(noTitleTbl.fmt, noTitleTbl.title);
+call _ptCheckJournalTitle(journalTbl.fmt, journalTbl.title);
+local noTitlePath;
+noTitlePath = "C:\\Users\\eclow\\Documents\\GitHub\\gauss_table_creator\\tests\\_pubtable_test_notitle.md";
+checkScalarEqual(ptExport(noTitleTbl, noTitlePath), 0, "journal table without a title still exports (warning only, no abort)");
+call deleteFile(noTitlePath);
+
 struct ptModel mdl2;
 mdl2 = ptModelCreate("Model2", 0.8 | 0.5, 0.05 | 0.3);
 mdl2 = ptModelSetNames(mdl2, "Constant" $| "z");
@@ -172,6 +208,66 @@ statTbl = ptModelTable(statMdl);
 checkScalarEqual(rows(statTbl.notes), 2, "model table combines significance note with model notes");
 checkStringEqual(statTbl.notes[2], "Robust standard errors.", "model-level note appended to table notes");
 
+/* ptModelSetDataLabel: a separate "Data: <label>." note, decoupled from
+** ptModelSetNotes so callers don't have to hand-concatenate it themselves. */
+struct ptModel dataLabelMdl;
+dataLabelMdl = ptModelCreate("DataLabelTest", 1.0, 0.1);
+dataLabelMdl = ptModelSetDataLabel(dataLabelMdl, "mydata");
+
+struct ptTable dataLabelTbl;
+dataLabelTbl = ptModelTable(dataLabelMdl);
+checkStringEqual(dataLabelTbl.notes[rows(dataLabelTbl.notes)], "Data: mydata.", "ptModelSetDataLabel appends a separate Data note");
+
+dataLabelMdl = ptModelSetNotes(dataLabelMdl, "Some other note.");
+dataLabelTbl = ptModelTable(dataLabelMdl);
+checkScalarEqual(rows(dataLabelTbl.notes), 3, "dataLabel note coexists with significance note and a regular note");
+checkStringEqual(dataLabelTbl.notes[rows(dataLabelTbl.notes)], "Data: mydata.", "Data note stays last and separate from the regular note");
+
+/* ptModelSetAicBic / ptFilterGofRows: AIC/BIC GOF rows stay hidden unless
+** explicitly enabled -- but only for models whose adapter marked its
+** trailing AIC/BIC pair as optional via hasOptionalAicBic (cmlmt/maxlikmt).
+** A model with its own non-optional "AIC"/"BIC" GOF rows (e.g. glm, via
+** ptModelFromGlm) must NOT be affected just because the labels match. */
+struct ptModel aicMdl;
+aicMdl = ptModelCreate("AICTest", 1.0, 0.1);
+aicMdl = ptModelSetGOF(aicMdl, "N" $| "Function value" $| "AIC" $| "BIC", 100 | -50.0 | 104.0 | 109.2);
+aicMdl.hasOptionalAicBic = 1;
+
+struct ptTable aicTblHidden;
+aicTblHidden = ptModelTable(aicMdl);
+checkScalarEqual(rows(aicTblHidden.body), 4, "AIC/BIC stay hidden by default (term rows + N + Function value only)");
+checkStringEqual(aicTblHidden.rowNames[rows(aicTblHidden.rowNames)], "Function value", "last visible GOF row is Function value when AIC/BIC are hidden");
+
+aicMdl = ptModelSetAicBic(aicMdl, 1);
+struct ptTable aicTblShown;
+aicTblShown = ptModelTable(aicMdl);
+checkScalarEqual(rows(aicTblShown.body), 6, "ptModelSetAicBic(mdl, 1) reveals the AIC and BIC GOF rows");
+checkStringEqual(aicTblShown.rowNames[rows(aicTblShown.rowNames) - 1], "AIC", "AIC GOF row present once shown");
+checkStringEqual(aicTblShown.rowNames[rows(aicTblShown.rowNames)], "BIC", "BIC GOF row present once shown");
+
+/* A model that never sets hasOptionalAicBic (e.g. glm's own AIC/BIC GOF
+** rows) must keep showing them even though showAicBic defaults to 0. */
+struct ptModel nonOptionalAicMdl;
+nonOptionalAicMdl = ptModelCreate("NonOptionalAIC", 1.0, 0.1);
+nonOptionalAicMdl = ptModelSetGOF(nonOptionalAicMdl, "N" $| "DF" $| "AIC" $| "BIC", 100 | 97 | 104.0 | 109.2);
+struct ptTable nonOptionalAicTbl;
+nonOptionalAicTbl = ptModelTable(nonOptionalAicMdl);
+checkScalarEqual(rows(nonOptionalAicTbl.body), 6, "AIC/BIC stay visible when hasOptionalAicBic was never set (matches ptModelFromGlm)");
+
+struct ptModel aicMdl2;
+aicMdl2 = ptModelCreate("AICTest2", 2.0, 0.2);
+aicMdl2 = ptModelSetGOF(aicMdl2, "N" $| "Function value" $| "AIC" $| "BIC", 100 | -60.0 | 124.0 | 129.2);
+aicMdl2.hasOptionalAicBic = 1;
+aicMdl2 = ptModelSetAicBic(aicMdl2, 1);
+
+struct ptModel aicModels;
+aicModels = reshape(aicMdl, 2, 1);
+aicModels[2] = aicMdl2;
+
+struct ptTable aicCmpTbl;
+aicCmpTbl = ptModelCompare(aicModels);
+checkScalarEqual(rows(aicCmpTbl.body), 6, "ptModelCompare reveals AIC/BIC GOF rows when each model's showAicBic is set");
+
 struct ptCompareOptions cmpOpts;
 cmpOpts = ptCompareOptionsCreate();
 cmpOpts = ptCompareSetTermOrder(cmpOpts, "z" $| "x" $| "Constant");
@@ -201,6 +297,48 @@ local txtLines;
 txtLines = strsplit(ptRenderText(cmpTbl2), "\n");
 checkScalarEqual(strlen(txtLines[2]), strlen(txtLines[3]), "text rendering aligns header and data row widths");
 checkStringEqual(strtrim(strreplace(txtLines[3], "-", "")), "", "text rendering separator row contains only dashes and spaces");
+
+/* Star-gutter alignment: a coefficient's SE row must right-align so its
+** number lines up with the coefficient's own number, regardless of how
+** many significance-star characters (0/1/2) follow the coefficient. */
+struct ptModel gutterMdl;
+gutterMdl = ptModelCreate("GutterTest", 1.200 | 0.400, 0.100 | 0.200);
+gutterMdl = ptModelSetNames(gutterMdl, "A" $| "B");
+gutterMdl = ptModelSetPValues(gutterMdl, 0.001 | 0.500);
+
+struct ptTable gutterTbl;
+gutterTbl = ptModelTable(gutterMdl);
+checkStringEqual(gutterTbl.body[1, 1], "1.200**", "gutter test: term A has a double-star suffix");
+checkStringEqual(gutterTbl.body[3, 1], "0.400", "gutter test: term B has no star suffix");
+
+local gutterLines, estALine, seALine, estBLine, seBLine, numEndA, seNumEndA, numEndB, seNumEndB;
+gutterLines = strsplit(ptRenderText(gutterTbl), "\n");
+/* strsplit omits empty segments, so there's no blank line for the title's
+** trailing "\n\n": [1]=title, [2]=header, [3]=separator, [4]=estA,
+** [5]=seA, [6]=estB, [7]=seB, [8]=significance note. */
+estALine = gutterLines[4];
+seALine = gutterLines[5];
+estBLine = gutterLines[6];
+seBLine = gutterLines[7];
+
+/* Compare the *number's* ending column in each line (not the closing
+** paren, which always sits exactly 1 column after its own number --
+** comparing paren-to-number-end would be off by construction). */
+numEndA = strindx(estALine, "1.200", 1) + strlen("1.200") - 1;
+seNumEndA = strindx(seALine, "0.100", 1) + strlen("0.100") - 1;
+checkScalarEqual(numEndA, seNumEndA, "text: SE number aligns under coefficient number (with stars)");
+
+numEndB = strindx(estBLine, "0.400", 1) + strlen("0.400") - 1;
+seNumEndB = strindx(seBLine, "0.200", 1) + strlen("0.200") - 1;
+checkScalarEqual(numEndB, seNumEndB, "text: SE number aligns under coefficient number (no stars)");
+
+checkScalarEqual(numEndA, numEndB, "text: coefficient numbers align across rows regardless of star count");
+
+local gutterMd;
+gutterMd = ptRenderMarkdown(gutterTbl);
+checkStringContains(gutterMd, "1.200**", "markdown: term A keeps its double-star suffix");
+checkStringContains(gutterMd, "0.400", "markdown: term B value still present");
+checkScalarEqual(strindx(gutterMd, "0.400  ", 1) > 0, 1, "markdown: shorter estimate is right-padded to reserve the star gutter");
 
 struct olsmtControl ctl;
 struct olsmtOut out;

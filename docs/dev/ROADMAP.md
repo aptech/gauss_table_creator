@@ -396,3 +396,37 @@ and `#include qardl.sdf`): `ptModelFromArdl`/`ptFromArdl` (`ardlOut`), `ptModelF
 `ptTablesFromNardlFull`/`ptTablesFromCsardlFull` for the `*Full` workflow outputs, and the
 `ptFromArdlFamily` dispatcher. Diagnostic/Wald/rolling/QIRF/selection/AutoCase/SparseGETS output
 structs are not covered.
+
+---
+
+# P3: Journal Submission Aesthetics
+
+Improve table presentation for camera-ready/journal-style output, with a focus on
+`cmlmt` output applying to all renderers where appropriate. See `CHANGELOG.md`
+`[Unreleased]` for full detail.
+
+- [x] `"journal_booktabs"` preset (`ptApplyPreset`/`ptModelApplyPreset`): `"journal"`
+  settings plus `ptFormat.ruleStyle = "booktabs"`, drawing only top/header-bottom/
+  table-bottom rules in `ptRenderHtml`/`ptRenderRtf` (no vertical/column-divider
+  rules). `ptRenderLatex` already rendered this way by default; `"journal"` itself is
+  unchanged.
+- [x] Non-fatal title warning for journal-style tables: `ptExport`/`ptRenderLatex`/
+  `ptRenderHtml`/`ptRenderRtf` warn via `errorlog` (does not abort) when
+  `fmt.preset` is `"journal"`/`"journal_booktabs"` and `title` is empty. Required
+  adding `ptFormat.preset` to track which preset (if any) was last applied.
+- [x] Consistent SE/stat-row alignment in `ptRenderText`/`ptRenderMarkdown`:
+  `ptApplyStarGutter`/`ptTrailingDecorLen` reserve a fixed trailing width per column for
+  significance stars and closing `)`/`]`, so a coefficient and its stat sub-row's
+  numbers line up regardless of star count. `ptRenderMarkdown` previously had no cell
+  padding at all.
+- [x] `ptModelSetDataLabel(model, label)` / `ptModel.dataLabel`: a dataset description
+  rendered as its own `"Data: <label>."` note, separate from `ptModelSetNotes`.
+  (`ptModelFromCmlmt` itself never auto-generated a "Data: ..." note — that text came
+  from the `addon_cmlmt.e` example's own hand-written note string, now updated to use
+  this setter instead.)
+- [x] Optional AIC/BIC GOF rows for `ptModelFromCmlmt`/`ptModelFromMaxlikmt`: always
+  computed and appended, hidden by default, revealed via `ptModelSetAicBic(model, 1)`.
+  Implemented via `ptModel.hasOptionalAicBic` + `ptFilterGofRows`, which drops the
+  trailing two GOF rows by *position* (never by matching the `"AIC"`/`"BIC"` label
+  text), so it doesn't collide with adapters that already report their own
+  non-optional AIC/BIC (e.g. `ptModelFromGlm`).

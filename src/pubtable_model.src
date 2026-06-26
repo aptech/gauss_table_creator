@@ -32,6 +32,8 @@ proc (struct ptModel) = ptModelCreate(name, estimates, stdErrors);
     mdl.gofNames = "";
     mdl.gofValues = miss(0, 0);
     mdl.notes = "";
+    mdl.dataLabel = "";
+    mdl.hasOptionalAicBic = 0;
     mdl.fmt = ptFormatCreate();
 
     retp(mdl);
@@ -124,6 +126,41 @@ proc (struct ptModel) = ptModelSetNotes(struct ptModel mdl, notes);
     retp(mdl);
 endp;
 
+proc (struct ptModel) = ptModelSetDataLabel(struct ptModel mdl, dataLabel);
+    mdl.dataLabel = dataLabel;
+    retp(mdl);
+endp;
+
+/*
+** ptModelSetAicBic: toggles whether the optional "AIC"/"BIC" GOF rows an
+** adapter already computed (e.g. ptModelFromCmlmt/ptModelFromMaxlikmt) are
+** shown in the rendered table. Those adapters always compute and append
+** AIC/BIC as the *last two* gofNames/gofValues entries and set
+** mdl.hasOptionalAicBic, so ptFilterGofRows can hide exactly those two
+** rows by position unless showAicBic is set -- existing output (including
+** adapters such as ptModelFromGlm that already report their own,
+** non-optional "AIC"/"BIC" rows) is unaffected, since this never matches
+** on the row label itself.
+*/
+proc (struct ptModel) = ptModelSetAicBic(struct ptModel mdl, tf);
+    mdl.fmt.showAicBic = tf;
+    retp(mdl);
+endp;
+
+/* Drops the last two gofNames/gofValues rows when hasOptionalAicBic is set
+** and showAicBic is not -- i.e. only for models whose adapter explicitly
+** marked its trailing AIC/BIC pair as optional (ptModelFromCmlmt,
+** ptModelFromMaxlikmt). Models that never set hasOptionalAicBic (built-in
+** adapters such as ptModelFromGlm, or plain ptModelCreate) are returned
+** unchanged regardless of their GOF row labels. */
+proc (2) = ptFilterGofRows(gofNames, gofValues, hasOptionalAicBic, showAicBic);
+    if not hasOptionalAicBic or showAicBic or gofNames[1] $== "" or rows(gofNames) < 2;
+        retp(gofNames, gofValues);
+    endif;
+
+    retp(gofNames[1:rows(gofNames) - 2], gofValues[1:rows(gofValues) - 2]);
+endp;
+
 proc (struct ptCompareOptions) = ptCompareOptionsCreate();
     struct ptCompareOptions opts;
 
@@ -165,17 +202,19 @@ proc (struct ptCompareOptions) = ptCompareSetColGroups(struct ptCompareOptions o
 endp;
 
 proc (struct ptTable) = ptModelTable(struct ptModel mdl);
-    local n_terms, n_gof, n_stat, rows_per_term, body, row_names, i, k, base;
+    local n_terms, n_gof, n_stat, rows_per_term, body, row_names, i, k, base, gofNames, gofValues, notes;
     struct ptTable tbl;
 
     call ptValidateModel(mdl, "ptModelTable");
+
+    { gofNames, gofValues } = ptFilterGofRows(mdl.gofNames, mdl.gofValues, mdl.hasOptionalAicBic, mdl.fmt.showAicBic);
 
     n_terms = rows(mdl.estimates);
     n_stat = rows(mdl.fmt.statRows);
     rows_per_term = 1 + n_stat;
     n_gof = 0;
-    if mdl.gofNames[1] $/= "";
-        n_gof = rows(mdl.gofValues);
+    if gofNames[1] $/= "";
+        n_gof = rows(gofValues);
     endif;
 
     body = ptBlankSA(rows_per_term * n_terms + n_gof, 1);
@@ -193,8 +232,8 @@ proc (struct ptTable) = ptModelTable(struct ptModel mdl);
     endfor;
 
     for i(1, n_gof, 1);
-        row_names[rows_per_term * n_terms + i] = mdl.gofNames[i];
-        body[rows_per_term * n_terms + i, 1] = ptFormatGOFValue(mdl.gofValues[i], mdl.fmt.digits);
+        row_names[rows_per_term * n_terms + i] = gofNames[i];
+        body[rows_per_term * n_terms + i, 1] = ptFormatGOFValue(gofValues[i], mdl.fmt.digits);
     endfor;
 
     tbl = ptTableCreate(mdl.name);
@@ -203,7 +242,11 @@ proc (struct ptTable) = ptModelTable(struct ptModel mdl);
     tbl.colNames = mdl.name;
     tbl.body = body;
     tbl.fmt = mdl.fmt;
-    tbl.notes = ptAppendNotes(ptStarNote(mdl.fmt), mdl.notes);
+    notes = ptAppendNotes(ptStarNote(mdl.fmt), mdl.notes);
+    if mdl.dataLabel $/= "";
+        notes = ptAppendNotes(notes, "Data: " $+ mdl.dataLabel $+ ".");
+    endif;
+    tbl.notes = notes;
 
     retp(tbl);
 endp;
@@ -226,6 +269,7 @@ proc (struct ptTable) = ptModelCompareWith(struct ptModel models, struct ptCompa
 
     for j(1, n_models, 1);
         call ptValidateModel(models[j], "ptModelCompare");
+        { models[j].gofNames, models[j].gofValues } = ptFilterGofRows(models[j].gofNames, models[j].gofValues, models[j].hasOptionalAicBic, models[j].fmt.showAicBic);
     endfor;
 
     term_names = models[1].termNames;
@@ -313,6 +357,13 @@ proc (struct ptTable) = ptModelCompareWith(struct ptModel models, struct ptCompa
                 notes = ptAppendNotes(notes, models[j].name $+ ": " $+ models[j].notes);
             else;
                 notes = ptAppendNotes(notes, models[j].notes);
+            endif;
+        endif;
+        if models[j].dataLabel $/= "";
+            if n_models > 1;
+                notes = ptAppendNotes(notes, models[j].name $+ ": Data: " $+ models[j].dataLabel $+ ".");
+            else;
+                notes = ptAppendNotes(notes, "Data: " $+ models[j].dataLabel $+ ".");
             endif;
         endif;
     endfor;

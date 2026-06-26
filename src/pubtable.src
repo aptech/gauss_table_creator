@@ -11,6 +11,9 @@ proc (struct ptFormat) = ptFormatCreate();
     fmt.statRows = "se";
     fmt.label = "";
     fmt.colAlign = "";
+    fmt.preset = "";
+    fmt.ruleStyle = "";
+    fmt.showAicBic = 0;
 
     retp(fmt);
 endp;
@@ -23,6 +26,15 @@ proc (struct ptFormat) = ptPresetFormat(struct ptFormat fmt, preset);
         fmt.starSymbols = "+" $| "*" $| "**";
         fmt.statisticWrapper = "paren";
         fmt.statRows = "se";
+        fmt.ruleStyle = "";
+    elseif preset $== "journal_booktabs";
+        fmt.digits = 3;
+        fmt.stars = 1;
+        fmt.starCutoffs = 0.10 | 0.05 | 0.01;
+        fmt.starSymbols = "+" $| "*" $| "**";
+        fmt.statisticWrapper = "paren";
+        fmt.statRows = "se";
+        fmt.ruleStyle = "booktabs";
     elseif preset $== "compact";
         fmt.digits = 2;
         fmt.stars = 1;
@@ -43,16 +55,30 @@ proc (struct ptFormat) = ptPresetFormat(struct ptFormat fmt, preset);
         fmt.statisticWrapper = "paren";
         fmt.statRows = "se" $| "pvalue";
     else;
-        errorlog "ptPresetFormat: unsupported preset '" $+ preset $+ "'. Supported presets are journal, compact, plain, report.";
+        errorlog "ptPresetFormat: unsupported preset '" $+ preset $+ "'. Supported presets are journal, journal_booktabs, compact, plain, report.";
         end;
     endif;
 
+    fmt.preset = preset;
     retp(fmt);
 endp;
 
 proc (struct ptTable) = ptApplyPreset(struct ptTable tbl, preset);
     tbl.fmt = ptPresetFormat(tbl.fmt, preset);
     retp(tbl);
+endp;
+
+/*
+** _ptCheckJournalTitle: non-fatal warning when a journal-style table is
+** rendered/exported without a title. Called from ptExport and from
+** ptRenderLatex/ptRenderHtml/ptRenderRtf, so it may print twice when
+** ptExport delegates to one of those renderers -- acceptable since
+** errorlog does not abort and the duplicate is harmless.
+*/
+proc (0) = _ptCheckJournalTitle(struct ptFormat fmt, title);
+    if (fmt.preset $== "journal" or fmt.preset $== "journal_booktabs") and title $== "";
+        errorlog "pubtable warning: journal-style table has no title. Use ptSetTitle(tbl, ...) before exporting.";
+    endif;
 endp;
 
 proc (struct ptModel) = ptModelApplyPreset(struct ptModel mdl, preset);

@@ -15,7 +15,7 @@
 #endif
 
 proc (struct ptModel) = ptModelFromMaxlikmt(...);
-    local name, names, estimates, se, tstat, pval;
+    local name, names, estimates, se, tstat, pval, k, n, fval, aic, bic;
     struct ptModel mdl;
 
     #ifDef PT_USE_MAXLIKMT
@@ -28,10 +28,20 @@ proc (struct ptModel) = ptModelFromMaxlikmt(...);
         tstat = estimates ./ se;
         pval = 2 * cdfnc(abs(tstat));
 
+        /* AIC/BIC are always computed from the log-likelihood but stay
+        ** hidden in rendered tables unless ptModelSetAicBic(mdl, 1) is
+        ** called -- see ptFilterGofRows in pubtable_model.src. */
+        k = rows(estimates);
+        n = out.numObs;
+        fval = out.fct;
+        aic = -2 * fval + 2 * k;
+        bic = -2 * fval + 2 * k * ln(n);
+
         mdl = ptModelCreate(name, estimates, se);
         mdl = ptModelSetNames(mdl, names);
         mdl = ptModelSetPValues(mdl, pval);
-        mdl = ptModelSetGOF(mdl, "N" $| "Log-likelihood", out.numObs | out.fct);
+        mdl = ptModelSetGOF(mdl, "N" $| "Log-likelihood" $| "AIC" $| "BIC", n | fval | aic | bic);
+        mdl.hasOptionalAicBic = 1;
     #else;
         _library_missing_error(currentprocname(), "Maxlikmt");
     #endif;

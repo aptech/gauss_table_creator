@@ -7,6 +7,9 @@ struct ptFormat {
     string array statRows;
     string label;
     string colAlign;
+    string preset;
+    string ruleStyle;
+    scalar showAicBic;
 };
 
 struct ptTable {
@@ -32,6 +35,8 @@ struct ptModel {
     string array gofNames;
     matrix gofValues;
     string array notes;
+    string dataLabel;
+    scalar hasOptionalAicBic;
     struct ptFormat fmt;
 };
 

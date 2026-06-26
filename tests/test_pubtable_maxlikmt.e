@@ -79,6 +79,25 @@ checkStringEqual(mlTbl.title, "Maximum likelihood results", "maxlikmt table titl
 checkScalarEqual(rows(mlTbl.body), 2 * pvLength(mlOut.par) + 2, "maxlikmt table row count includes statistic and GOF rows");
 checkStringEqual(mlTbl.rowNames[1], "b0[1,1]", "maxlikmt parameter name from pvGetParNames");
 
+/* AIC/BIC: hidden by default (already covered by the row count check
+** above), but always correctly computed by the adapter once revealed. */
+local mlK, mlExpectedAic, mlExpectedBic;
+struct ptModel mlMdl;
+struct ptTable mlAicTbl;
+
+mlMdl = ptModelFromMaxlikmt("MLE AIC/BIC", mlOut);
+mlMdl = ptModelSetAicBic(mlMdl, 1);
+mlAicTbl = ptModelTable(mlMdl);
+
+mlK = pvLength(mlOut.par);
+mlExpectedAic = -2 * mlOut.fct + 2 * mlK;
+mlExpectedBic = -2 * mlOut.fct + 2 * mlK * ln(mlOut.numObs);
+
+checkStringEqual(mlAicTbl.rowNames[rows(mlAicTbl.rowNames) - 1], "AIC", "maxlikmt AIC row present once shown");
+checkStringEqual(mlAicTbl.rowNames[rows(mlAicTbl.rowNames)], "BIC", "maxlikmt BIC row present once shown");
+checkStringEqual(mlAicTbl.body[rows(mlAicTbl.body) - 1, 1], ptFormatGOFValue(mlExpectedAic, mlMdl.fmt.digits), "maxlikmt AIC matches -2*fval + 2*k");
+checkStringEqual(mlAicTbl.body[rows(mlAicTbl.body), 1], ptFormatGOFValue(mlExpectedBic, mlMdl.fmt.digits), "maxlikmt BIC matches -2*fval + 2*k*ln(n)");
+
 struct cmlmtControl cmlCtl;
 cmlCtl = cmlmtcontrolcreate;
 cmlCtl.title = "tobit example";
@@ -96,5 +115,22 @@ cmlTbl = ptFromCmlmt(cmlOut);
 checkStringEqual(cmlTbl.title, "Constrained ML results", "cmlmt table title");
 checkScalarEqual(rows(cmlTbl.body), 2 * pvLength(cmlOut.par) + 2, "cmlmt table row count includes statistic and GOF rows");
 checkStringEqual(cmlTbl.rowNames[1], "b0[1,1]", "cmlmt parameter name from pvGetParNames");
+
+local cmlK, cmlExpectedAic, cmlExpectedBic;
+struct ptModel cmlMdl;
+struct ptTable cmlAicTbl;
+
+cmlMdl = ptModelFromCmlmt("CML AIC/BIC", cmlOut);
+cmlMdl = ptModelSetAicBic(cmlMdl, 1);
+cmlAicTbl = ptModelTable(cmlMdl);
+
+cmlK = pvLength(cmlOut.par);
+cmlExpectedAic = -2 * cmlOut.fct + 2 * cmlK;
+cmlExpectedBic = -2 * cmlOut.fct + 2 * cmlK * ln(cmlOut.numObs);
+
+checkStringEqual(cmlAicTbl.rowNames[rows(cmlAicTbl.rowNames) - 1], "AIC", "cmlmt AIC row present once shown");
+checkStringEqual(cmlAicTbl.rowNames[rows(cmlAicTbl.rowNames)], "BIC", "cmlmt BIC row present once shown");
+checkStringEqual(cmlAicTbl.body[rows(cmlAicTbl.body) - 1, 1], ptFormatGOFValue(cmlExpectedAic, cmlMdl.fmt.digits), "cmlmt AIC matches -2*fval + 2*k");
+checkStringEqual(cmlAicTbl.body[rows(cmlAicTbl.body), 1], ptFormatGOFValue(cmlExpectedBic, cmlMdl.fmt.digits), "cmlmt BIC matches -2*fval + 2*k*ln(n)");
 
 print "pubtable maxlikmt/cmlmt adapter tests passed";

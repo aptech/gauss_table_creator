@@ -33,11 +33,21 @@ rendered string rather than a file.
 |:------- |:------- |
 | text | String containing the rendered table. |
 
+## Journal-style title warning
+`ptRenderLatex`, `ptRenderHtml`, and `ptRenderRtf` each print a non-fatal `errorlog`
+warning ("pubtable warning: journal-style table has no title. Use ptSetTitle(tbl, ...)
+before exporting.") when `tbl.fmt.preset` is `"journal"`/`"journal_booktabs"` and
+`tbl.title` is empty, but still return the rendered string. `ptRenderMarkdown`/
+`ptRenderCsv`/`ptRenderText` do not check this. See [ptApplyPreset](ptApplyPreset.md).
+
 ## Renderer notes
 
 **Markdown** (`ptRenderMarkdown`):
 - Column groups (`tbl.colGroups`) render as a pseudo-span row: label in the first column
   of each run, blanks elsewhere.
+- Data cells are right-padded (respecting `ptSetColAlign`) so columns line up when the
+  raw Markdown source is viewed as plain text, not just after a Markdown renderer
+  applies the alignment row. Also reserves a star/wrapper gutter — see below.
 - `ptSetColAlign` controls the alignment row (`:---` / `:---:` / `---:`).
 
 **LaTeX** (`ptRenderLatex`):
@@ -45,6 +55,9 @@ rendered string rather than a file.
 - `\multicolumn`/`\cmidrule` used for column groups.
 - `ptSetLabel` sets the `\label{}` for cross-referencing.
 - `ptSetColAlign` is used directly as the `tabular` column spec string.
+- Already renders `booktabs`-style (`\toprule`/`\midrule`/`\bottomrule`, no vertical
+  rules) regardless of `fmt.ruleStyle`, so the `"journal_booktabs"` preset changes
+  nothing here.
 
 **CSV** (`ptRenderCsv`):
 - Cell values are quoted if they contain commas.
@@ -53,16 +66,32 @@ rendered string rather than a file.
 **Text** (`ptRenderText`):
 - Column widths computed from the longest cell in each column.
 - `ptSetColAlign` controls `l`/`c`/`r` padding.
+- For model/comparison tables (i.e. any table with at least one blank-named stat
+  sub-row), reserves a fixed-width trailing "gutter" per column sized to the longest
+  configured significance-star symbol, so a coefficient's star suffix (0/1/2
+  characters) and its SE/t-stat/p-value/CI row's closing `)`/`]` consume the same
+  trailing space — without this, the coefficient's number and its stat row's number
+  would land in different columns whenever the star count differs row to row. No-op
+  when `fmt.stars` is off or the table has no stat sub-rows (e.g. matrix tables).
 
 **RTF** (`ptRenderRtf`):
 - Column groups use `\clmgf`/`\clmrg` cell merges.
 - Bold header row; cell styles applied to body cells.
 - Suitable for pasting into Microsoft Word.
+- Default `fmt.ruleStyle`: every cell gets a full 4-sided grid border (`\clbrdrt`/
+  `\clbrdrl`/`\clbrdrb`/`\clbrdrr`). With `fmt.ruleStyle == "booktabs"` (the
+  `"journal_booktabs"` preset), only three rules are drawn — a top rule (on the
+  column-group row if present, else the header row), a header-bottom rule, and a
+  table-bottom rule on the last row — with no left/right or inter-row borders.
 
 **HTML** (`ptRenderHtml`):
 - Column groups use `colspan` spanning `<th>` elements.
 - `ptSetColAlign` adds `style="text-align:..."` to header and data cells.
 - Cell styles (`bold`, `italic`) wrap text in `<strong>`/`<em>` tags.
+- Default `fmt.ruleStyle`: no border styling at all (unstyled `<table>`). With
+  `fmt.ruleStyle == "booktabs"` (the `"journal_booktabs"` preset), inline `border-top`/
+  `border-bottom` CSS draws a table-top rule, a header-bottom rule, and a table-bottom
+  rule — no column-divider borders.
 
 ## Example — capture output without writing a file
 ```gauss

@@ -58,6 +58,7 @@ proc (1) = ptExport(struct ptTable tbl, fname);
     local ext, text, ret, oldtrap;
 
     call ptValidateTable(tbl, "ptExport");
+    call _ptCheckJournalTitle(tbl.fmt, tbl.title);
 
     ext = ptFileExt(fname);
 

@@ -18,6 +18,13 @@
 |:------- |:------- |
 | ret | Scalar return code. `0` on success. For `.xls`/`.xlsx`, `ret` is the (possibly trapped) return value of `SpreadsheetWrite`; a missing value indicates a trapped write error. |
 
+## Journal-style title warning
+If `tbl.fmt.preset` is `"journal"` or `"journal_booktabs"` (set by `ptApplyPreset`/
+`ptModelApplyPreset`) and `tbl.title` is empty, `ptExport` prints a non-fatal `errorlog`
+warning ("pubtable warning: journal-style table has no title. Use ptSetTitle(tbl, ...)
+before exporting.") but still writes the file. Call `ptSetTitle(tbl, ...)` first to
+silence it. See [ptApplyPreset](ptApplyPreset.md).
+
 ## Supported extensions
 | Extension | Renderer | Notes |
 |:------- |:------- |:------- |

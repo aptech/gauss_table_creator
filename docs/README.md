@@ -25,6 +25,11 @@ top-level `README.md` for the full current list.
 [migration.md](migration.md) maps the legacy `tableControl`/`tableSet...`/`outputTable` workflow to
 the modern `pt*` API.
 
+## Changelog
+
+[../CHANGELOG.md](../CHANGELOG.md) lists notable changes by version, including the current
+`[Unreleased]` work-in-progress section.
+
 ## Legacy API reference (`docs/tableset*.md`)
 
 The `tablesetasterisk.md`, `tablesetbrackets.md`, `tablesetcolumnheaders.md`, `tablesetexport.md`,

@@ -24,6 +24,9 @@ after installing cmlmt, then use `library cmlmt, pubtable;` in your programs.
 ## GOF rows
 - `"N"` — `out.numObs`
 - `"Function value"` — `out.fct`
+- `"AIC"` / `"BIC"` — always computed (`-2*fval + 2*k` / `-2*fval + 2*k*ln(n)`) and
+  appended, but hidden by default. Call `ptModelSetAicBic(mdl, 1)` to show them. See
+  [ptModelSetters](ptModelSetters.md).
 
 ## Prerequisites
 1. cmlmt is installed (`library cmlmt;` loads without error).
@@ -70,11 +73,16 @@ out = cmlmt(&lpsn, p0, d0, c0);
 
 mdl = ptModelFrom("Poisson (b1=b2)", out);
 mdl = ptModelSetNotes(mdl, "Equality constraint: b1 = b2.");
+mdl = ptModelSetDataLabel(mdl, "cmlmtpsn");
 
 tbl = ptModelTable(mdl);
 tbl = ptSetTitle(tbl, "Constrained Poisson MLE");
 call ptExport(tbl, "cmlmt.md");
+
+/* To also show the AIC/BIC GOF rows this adapter always computes: */
+mdl = ptModelSetAicBic(mdl, 1);
+tbl = ptModelTable(mdl);
 ```
 
 ## See Also
-`pubtableSet`, `ptModelFromMaxlikmt`, `ptModelCreate`, `ptModelTable`
+`pubtableSet`, `ptModelFromMaxlikmt`, `ptModelCreate`, `ptModelTable`, `ptModelSetDataLabel`, `ptModelSetAicBic`
