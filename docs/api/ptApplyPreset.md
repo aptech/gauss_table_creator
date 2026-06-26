@@ -33,10 +33,13 @@
 `"journal"` is equivalent to the default `ptFormat` created by `ptFormatCreate`.
 
 `"journal_booktabs"` is identical to `"journal"` except for `ruleStyle`: `ptRenderHtml`/
-`ptRenderRtf` then draw only a table-top rule, a header-bottom rule, and a table-bottom
-rule — no vertical/column-divider rules. `ptRenderLatex` is unaffected, since it already
-renders `booktabs`-style with no vertical rules by default; Markdown is unaffected, since
-it has no border concept.
+`ptRenderRtf` then draw a table-top rule, a header-bottom rule, a mid-rule separating the
+coefficient block from the goodness-of-fit block, and a table-bottom rule — no
+vertical/column-divider rules. The mid-rule is found by `ptGofStartRow`: term blocks
+always end in a blank-named stat sub-row (since `statRows` requires at least one entry),
+so the GOF block — if the table has one — starts right after the *last* blank-named row.
+`ptRenderLatex` is unaffected, since it already renders `booktabs`-style with no vertical
+rules by default; Markdown is unaffected, since it has no border concept.
 
 ## Journal-style title warning
 

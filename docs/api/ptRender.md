@@ -80,9 +80,10 @@ before exporting.") when `tbl.fmt.preset` is `"journal"`/`"journal_booktabs"` an
 - Suitable for pasting into Microsoft Word.
 - Default `fmt.ruleStyle`: every cell gets a full 4-sided grid border (`\clbrdrt`/
   `\clbrdrl`/`\clbrdrb`/`\clbrdrr`). With `fmt.ruleStyle == "booktabs"` (the
-  `"journal_booktabs"` preset), only three rules are drawn — a top rule (on the
-  column-group row if present, else the header row), a header-bottom rule, and a
-  table-bottom rule on the last row — with no left/right or inter-row borders.
+  `"journal_booktabs"` preset), only four rules are drawn — a top rule (on the
+  column-group row if present, else the header row), a header-bottom rule, a mid-rule
+  before the goodness-of-fit block (if any — see `ptGofStartRow`), and a table-bottom
+  rule on the last row — with no left/right or other inter-row borders.
 
 **HTML** (`ptRenderHtml`):
 - Column groups use `colspan` spanning `<th>` elements.
@@ -90,8 +91,8 @@ before exporting.") when `tbl.fmt.preset` is `"journal"`/`"journal_booktabs"` an
 - Cell styles (`bold`, `italic`) wrap text in `<strong>`/`<em>` tags.
 - Default `fmt.ruleStyle`: no border styling at all (unstyled `<table>`). With
   `fmt.ruleStyle == "booktabs"` (the `"journal_booktabs"` preset), inline `border-top`/
-  `border-bottom` CSS draws a table-top rule, a header-bottom rule, and a table-bottom
-  rule — no column-divider borders.
+  `border-bottom` CSS draws a table-top rule, a header-bottom rule, a mid-rule before the
+  goodness-of-fit block (if any), and a table-bottom rule — no column-divider borders.
 
 ## Example — capture output without writing a file
 ```gauss

@@ -406,10 +406,11 @@ Improve table presentation for camera-ready/journal-style output, with a focus o
 `[Unreleased]` for full detail.
 
 - [x] `"journal_booktabs"` preset (`ptApplyPreset`/`ptModelApplyPreset`): `"journal"`
-  settings plus `ptFormat.ruleStyle = "booktabs"`, drawing only top/header-bottom/
+  settings plus `ptFormat.ruleStyle = "booktabs"`, drawing top/header-bottom/
   table-bottom rules in `ptRenderHtml`/`ptRenderRtf` (no vertical/column-divider
-  rules). `ptRenderLatex` already rendered this way by default; `"journal"` itself is
-  unchanged.
+  rules), plus a mid-rule separating the coefficient block from the goodness-of-fit
+  block via the new `ptGofStartRow` helper. `ptRenderLatex` already rendered this way
+  by default; `"journal"` itself is unchanged.
 - [x] Non-fatal title warning for journal-style tables: `ptExport`/`ptRenderLatex`/
   `ptRenderHtml`/`ptRenderRtf` warn via `errorlog` (does not abort) when
   `fmt.preset` is `"journal"`/`"journal_booktabs"` and `title` is empty. Required

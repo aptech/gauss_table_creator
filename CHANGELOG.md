@@ -11,9 +11,10 @@ it is in beta (`0.x`) while the modern `pt*` API stabilizes. The format loosely 
 ### Added
 - `"journal_booktabs"` style preset (`ptApplyPreset`/`ptModelApplyPreset`): identical to
   `"journal"`, plus `ptFormat.ruleStyle = "booktabs"`, which makes `ptRenderHtml`/`ptRenderRtf`
-  draw only a table-top rule, a header-bottom rule, and a table-bottom rule (no
-  vertical/column-divider rules). `ptRenderLatex` needed no change — it already renders
-  booktabs-style with no vertical rules by default.
+  draw a table-top rule, a header-bottom rule, a mid-rule separating the coefficient
+  block from the goodness-of-fit block (via the new `ptGofStartRow` helper), and a
+  table-bottom rule — no vertical/column-divider rules. `ptRenderLatex` needed no
+  change — it already renders booktabs-style with no vertical rules by default.
 - `ptFormat.preset` now records the name of the last-applied preset (`""` if none), so
   preset-dependent behavior (the title warning below) can be conditioned on it.
 - Non-fatal title warning for journal-style tables: `ptExport`, `ptRenderLatex`,

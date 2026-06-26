@@ -50,7 +50,7 @@ Significance stars use the default cutoffs `0.10`/`0.05`/`0.01` with symbols `"+
 | Preset | Settings |
 | --- | --- |
 | `"journal"` | 3 digits, default significance stars, one `"se"` row, parenthesized statistics (the default settings). |
-| `"journal_booktabs"` | Same as `"journal"`, plus `booktabs`-style rules in LaTeX/HTML/RTF (top rule, header-bottom rule, table-bottom rule; no vertical/column-divider rules). LaTeX is unaffected since it already renders this way by default; Markdown is unaffected since it has no border concept. |
+| `"journal_booktabs"` | Same as `"journal"`, plus `booktabs`-style rules in LaTeX/HTML/RTF (top rule, header-bottom rule, a mid-rule separating coefficients from goodness-of-fit rows, table-bottom rule; no vertical/column-divider rules). LaTeX is unaffected since it already renders this way by default; Markdown is unaffected since it has no border concept. |
 | `"compact"` | 2 digits, default significance stars, one `"se"` row, parenthesized statistics. |
 | `"plain"` | 3 digits, no significance stars, one `"se"` row, no statistic wrapper. |
 | `"report"` | 3 digits, default significance stars, `"se"` and `"pvalue"` rows, parenthesized statistics. |

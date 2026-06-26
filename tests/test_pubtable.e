@@ -152,6 +152,32 @@ checkStringContains(ptRenderRtf(btTbl), "\\clbrdrb", "journal_booktabs rtf keeps
 checkScalarEqual(strindx(ptRenderRtf(btTbl), "\\clbrdrl", 1), 0, "journal_booktabs rtf drops left/vertical borders");
 checkScalarEqual(strindx(ptRenderRtf(journalTbl), "\\clbrdrl", 1) > 0, 1, "default journal rtf keeps the full grid (unchanged)");
 
+/* GOF mid-rule: journal_booktabs also separates the coefficient block from
+** the goodness-of-fit block with its own rule, on top of the table-level
+** top/header-bottom/bottom rules above. Needs a model table (GOF rows),
+** not a plain matrix table. */
+struct ptModel gofRuleMdl;
+gofRuleMdl = ptModelCreate("GofRuleTest", 1.2, 0.1);
+gofRuleMdl = ptModelSetGOF(gofRuleMdl, "N" $| "R-squared", 100 | 0.5);
+gofRuleMdl = ptModelApplyPreset(gofRuleMdl, "journal_booktabs");
+
+struct ptTable gofRuleTbl;
+gofRuleTbl = ptModelTable(gofRuleMdl);
+gofRuleTbl = ptSetTitle(gofRuleTbl, "GOF rule test");
+
+local gofRuleHtml, gofRuleRtf;
+gofRuleHtml = ptRenderHtml(gofRuleTbl);
+checkStringContains(gofRuleHtml, "border-top:1px solid #000;\">N</th>", "html GOF mid-rule lands on the N (first GOF) row");
+checkStringContains(gofRuleHtml, "<th scope=\"row\">x1</th>", "html: the coefficient row itself carries no extra border styling");
+
+gofRuleRtf = ptRenderRtf(gofRuleTbl);
+checkStringContains(gofRuleRtf, "\\clbrdrt\\brdrs\\brdrw10\\cellx", "rtf GOF mid-rule present before the GOF block");
+checkStringContains(gofRuleRtf, "\\pard\\intbl N\\cell", "rtf N row present right after the mid-rule");
+
+/* No stat sub-rows (matrix table) -> no GOF block -> no mid-rule, even
+** with journal_booktabs applied. */
+checkScalarEqual(strindx(ptRenderHtml(btTbl), "<th scope=\"row\" style=\"border-top", 1), 0, "no GOF mid-rule on a matrix table (no GOF/stat-row concept)");
+
 /* journal-style title warning: ptExport/ptRenderLatex/ptRenderHtml/ptRenderRtf
 ** call _ptCheckJournalTitle, which warns via errorlog but never aborts. */
 struct ptTable noTitleTbl;
