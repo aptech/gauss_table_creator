@@ -21,4 +21,4 @@
 ** machine-specific and should not be committed to shared source control.
 */
 
-declare matrix _pubtable_ver = { 0, 3, 0 };
+declare matrix _pubtable_ver = { 1, 0, 0 };

@@ -311,7 +311,7 @@ proc (struct ptModel) = ptModelFromGarchmt(...);
         mdl = ptModelCreate(name, estimates, se);
         mdl = ptModelSetNames(mdl, names);
         mdl = ptModelSetPValues(mdl, pval);
-        mdl = ptModelSetGOF(mdl, "N" $| "AIC" $| "BIC" $| "Function value", out.numObs | out.aic | out.bic | out.fct);
+        mdl = ptModelSetGOF(mdl, "N" $| "AIC" $| "BIC" $| "Fnc value", out.numObs | out.aic | out.bic | out.fct);
     #else;
         _library_missing_error(currentprocname(), "Tsmt");
     #endif;

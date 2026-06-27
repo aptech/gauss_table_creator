@@ -58,6 +58,10 @@ before exporting.") when `tbl.fmt.preset` is `"journal"`/`"journal_booktabs"` an
 - Already renders `booktabs`-style (`\toprule`/`\midrule`/`\bottomrule`, no vertical
   rules) regardless of `fmt.ruleStyle`, so the `"journal_booktabs"` preset changes
   nothing here.
+- Table notes (significance note, model notes, `dataLabel`) render as
+  `\multicolumn{n}{l}{\footnotesize ...}` rows *inside* the `tabular`, just before
+  `\end{tabular}` — not as plain paragraph text after it — so note text wraps to the
+  tabular's own rendered width instead of the surrounding page/text width.
 
 **CSV** (`ptRenderCsv`):
 - Cell values are quoted if they contain commas.
@@ -84,12 +88,25 @@ before exporting.") when `tbl.fmt.preset` is `"journal"`/`"journal_booktabs"` an
   column-group row if present, else the header row), a header-bottom rule, a mid-rule
   before the goodness-of-fit block (if any — see `ptGofStartRow`), and a table-bottom
   rule on the last row — with no left/right or other inter-row borders.
+- Table notes render as their own single-cell, borderless `\intbl` row, sized to the
+  same total width (`\cellx`) as the data table — not as bare `{\i ...}\par` paragraphs
+  after the table's last `\row`, which would wrap to the page's full text width in Word.
 
 **HTML** (`ptRenderHtml`):
 - Column groups use `colspan` spanning `<th>` elements.
-- `ptSetColAlign` adds `style="text-align:..."` to header and data cells.
+- `ptSetColAlign` adds `style="text-align:..."` to header and data cells. Even when
+  `colAlign` is unset, every cell still gets an explicit `text-align` matching the
+  stub-left/data-right default used by `ptRenderText`/`ptRenderMarkdown`/`ptRenderLatex`
+  (rather than falling back to the browser's own default, which left-aligns `<td>`).
 - Cell styles (`bold`, `italic`) wrap text in `<strong>`/`<em>` tags.
-- Default `fmt.ruleStyle`: no border styling at all (unstyled `<table>`). With
+- `<table>` always gets `style="border-collapse:collapse;"`, and every `<th>`/`<td>`
+  gets `padding:4px 10px;` (merged with any alignment/border styling already on that
+  cell), so the default rendering doesn't look loosely/"double" spaced.
+- Table notes (significance note, model notes, `dataLabel`) render as a `<tfoot>` row
+  per note, each a single `<td colspan="...">` spanning every column — not `<p>` tags
+  after `</table>` — so note text stays constrained to the table's own width rather
+  than stretching across the page/container.
+- Default `fmt.ruleStyle`: no border styling beyond the padding/collapse above. With
   `fmt.ruleStyle == "booktabs"` (the `"journal_booktabs"` preset), inline `border-top`/
   `border-bottom` CSS draws a table-top rule, a header-bottom rule, a mid-rule before the
   goodness-of-fit block (if any), and a table-bottom rule — no column-divider borders.

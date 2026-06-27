@@ -14,13 +14,8 @@ new;
 library pubtable;
 
 /* Step 1: Estimate the model */
-struct olsmtControl ctl;
-struct olsmtOut out;
-ctl = olsmtControlCreate;
-ctl.output = 0;
-
 fname = getGAUSSHome() $+ "examples/auto.dat";
-out = olsmt(ctl, fname, "mpg ~ weight + length");
+out = olsmt(fname, "mpg ~ weight + length");
 
 /* Step 2 & 3: Build and title the table.
 ** pubtable procs declare their return types, so no 'struct ptTable tbl'

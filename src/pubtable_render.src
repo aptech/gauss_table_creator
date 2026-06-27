@@ -502,7 +502,7 @@ proc (1) = ptHtmlColGroupRow(struct ptTable tbl);
 
     { labels, spans } = ptColGroupRuns(tbl.colGroups);
 
-    borderAttr = ptHtmlMergeBorderAttr("", ptHtmlBorderCss(tbl.fmt, 1, 0, 0, 0));
+    borderAttr = ptHtmlMergeBorderAttr(" style=\"padding:4px 10px;\"", ptHtmlBorderCss(tbl.fmt, 1, 0, 0, 0));
 
     out = "<tr><th" $+ borderAttr $+ "></th>";
     for g(1, rows(labels), 1);
@@ -683,15 +683,19 @@ proc (1) = ptRenderLatex(struct ptTable tbl);
         out = out $+ ptJoinLatexRowStyled(arr[i, .], ptCellStyleRow(tbl, i - 1)) $+ " \\\\\n";
     endfor;
 
-    out = out $+ "\\bottomrule\n\\end{tabular}\n";
+    out = out $+ "\\bottomrule\n";
 
+    /* Notes as \multicolumn rows *inside* the tabular (after \bottomrule,
+    ** still before \end{tabular}), not as separate paragraph text below
+    ** it -- paragraph text there would wrap to the surrounding text width
+    ** rather than the tabular's own (usually narrower) rendered width. */
     if tbl.notes[1] $/= "";
-        out = out $+ "\\\\\n";
         for i(1, rows(tbl.notes), 1);
-            out = out $+ "\\footnotesize{" $+ ptEscapeLatex(tbl.notes[i]) $+ "}\\\\\n";
+            out = out $+ "\\multicolumn{" $+ sprintf("%d", cols(arr)) $+ "}{l}{\\footnotesize " $+ ptEscapeLatex(tbl.notes[i]) $+ "} \\\\\n";
         endfor;
     endif;
 
+    out = out $+ "\\end{tabular}\n";
     out = out $+ "\\end{table}\n";
     retp(out);
 endp;
@@ -823,14 +827,31 @@ proc (1) = ptRenderRtf(struct ptTable tbl);
         out = out $+ "\\row\n";
     endfor;
 
+    /* Notes as their own single-cell, borderless table rows -- each
+    ** spanning the same total width as the data table (cellx retains the
+    ** cumulative width from the last data row above) -- rather than plain
+    ** {\i ...}\par paragraphs, which would wrap to the page's full text
+    ** width instead of the (usually narrower) table width. */
     if tbl.notes[1] $/= "";
         for i(1, rows(tbl.notes), 1);
-            out = out $+ "{\\i " $+ ptEscapeRtf(tbl.notes[i]) $+ "}\\par\n";
+            out = out $+ "\\trowd\\trgaph108\\trleft0\n\\cellx" $+ ntos(cellx) $+ "\n";
+            out = out $+ "\\pard\\intbl {\\i " $+ ptEscapeRtf(tbl.notes[i]) $+ "}\\cell\\row\n";
         endfor;
     endif;
 
     out = out $+ "}\n";
     retp(out);
+endp;
+
+/* Fixed cell padding applied to every <th>/<td>, merged in with whatever
+** alignment/border styling that cell already has, via ptHtmlMergeBorderAttr.
+** Without this, default browser table rendering (no border-collapse, no
+** padding override) tends to look loosely/"double" spaced. */
+proc (1) = ptHtmlCellAttr(struct ptTable tbl, j, n_cols, borderCss);
+    local attr;
+
+    attr = ptHtmlMergeBorderAttr(ptHtmlAlignAttr(tbl, j, n_cols), "padding:4px 10px;");
+    retp(ptHtmlMergeBorderAttr(attr, borderCss));
 endp;
 
 proc (1) = ptRenderHtml(struct ptTable tbl);
@@ -843,7 +864,7 @@ proc (1) = ptRenderHtml(struct ptTable tbl);
     n_rows = rows(arr);
     gofStart = ptGofStartRow(tbl);
 
-    out = "<table>\n";
+    out = "<table style=\"border-collapse:collapse;\">\n";
     if tbl.title $/= "";
         out = out $+ "<caption>" $+ ptEscapeHtml(tbl.title) $+ "</caption>\n";
     endif;
@@ -859,33 +880,40 @@ proc (1) = ptRenderHtml(struct ptTable tbl);
 
     out = out $+ "<tr>";
     for j(1, n_cols, 1);
-        headerAttr = ptHtmlMergeBorderAttr(ptHtmlAlignAttr(tbl, j, n_cols), ptHtmlBorderCss(tbl.fmt, headerHasTop, 1, 0, 0));
+        headerAttr = ptHtmlCellAttr(tbl, j, n_cols, ptHtmlBorderCss(tbl.fmt, headerHasTop, 1, 0, 0));
         out = out $+ "<th" $+ headerAttr $+ ">" $+ ptEscapeHtml(arr[1, j]) $+ "</th>";
     endfor;
     out = out $+ "</tr>\n</thead>\n<tbody>\n";
 
     for i(2, n_rows, 1);
         styles = ptCellStyleRow(tbl, i - 1);
-        rowAttr = ptHtmlMergeBorderAttr(ptHtmlAlignAttr(tbl, 1, n_cols), ptHtmlBorderCss(tbl.fmt, 0, 0, i == n_rows, i == gofStart));
+        rowAttr = ptHtmlCellAttr(tbl, 1, n_cols, ptHtmlBorderCss(tbl.fmt, 0, 0, i == n_rows, i == gofStart));
         out = out $+ "<tr><th scope=\"row\"" $+ rowAttr $+ ">" $+ ptEscapeHtml(arr[i, 1]) $+ "</th>";
         for j(2, n_cols, 1);
             cellText = ptEscapeHtml(arr[i, j]);
             if styles[j] $/= "";
                 cellText = ptStyleHtml(cellText, styles[j]);
             endif;
-            rowAttr = ptHtmlMergeBorderAttr(ptHtmlAlignAttr(tbl, j, n_cols), ptHtmlBorderCss(tbl.fmt, 0, 0, i == n_rows, i == gofStart));
+            rowAttr = ptHtmlCellAttr(tbl, j, n_cols, ptHtmlBorderCss(tbl.fmt, 0, 0, i == n_rows, i == gofStart));
             out = out $+ "<td" $+ rowAttr $+ ">" $+ cellText $+ "</td>";
         endfor;
         out = out $+ "</tr>\n";
     endfor;
 
-    out = out $+ "</tbody>\n</table>\n";
+    out = out $+ "</tbody>\n";
 
+    /* Notes as a <tfoot> row spanning all columns, rather than <p> tags
+    ** after </table> -- keeps note text constrained to the table's own
+    ** width instead of stretching across the full page/container width. */
     if tbl.notes[1] $/= "";
+        out = out $+ "<tfoot>\n";
         for i(1, rows(tbl.notes), 1);
-            out = out $+ "<p class=\"pt-note\">" $+ ptEscapeHtml(tbl.notes[i]) $+ "</p>\n";
+            out = out $+ "<tr><td colspan=\"" $+ sprintf("%d", n_cols) $+ "\" class=\"pt-note\" style=\"padding:4px 10px;\">" $+ ptEscapeHtml(tbl.notes[i]) $+ "</td></tr>\n";
         endfor;
+        out = out $+ "</tfoot>\n";
     endif;
+
+    out = out $+ "</table>\n";
 
     retp(out);
 endp;

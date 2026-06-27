@@ -23,7 +23,7 @@ after installing cmlmt, then use `library cmlmt, pubtable;` in your programs.
 
 ## GOF rows
 - `"N"` — `out.numObs`
-- `"Function value"` — `out.fct`
+- `"Fnc value"` — `out.fct`
 - `"AIC"` / `"BIC"` — always computed (`-2*fval + 2*k` / `-2*fval + 2*k*ln(n)`) and
   appended, but hidden by default. Call `ptModelSetAicBic(mdl, 1)` to show them. See
   [ptModelSetters](ptModelSetters.md).

@@ -20,7 +20,7 @@ is defined in `pubtable.dec` — run `pubtableSet()` once after installing tsmt,
 | `ptFromLsdvmt(out)` | `lsdvmtOut` | `ptTable` | Shorthand for LSDV. |
 | `ptModelFromSwitchmt(name, out)` | `switchmtOut` | `ptModel` | Switching regression (PV name/value pattern). |
 | `ptFromSwitchmt(out)` | `switchmtOut` | `ptTable` | Shorthand for switching regression. |
-| `ptModelFromGarchmt(name, out)` | `garchEstimation` | `ptModel` | GARCH (PV name/value pattern; N/AIC/BIC/Function value GOF). |
+| `ptModelFromGarchmt(name, out)` | `garchEstimation` | `ptModel` | GARCH (PV name/value pattern; N/AIC/BIC/Fnc value GOF). |
 | `ptFromGarchmt(out)` | `garchEstimation` | `ptTable` | Shorthand for GARCH. |
 | `ptModelFromTscsmtDV(name, out)` | `tscsmtOut` | `ptModel` | TSCS within/dummy-variable estimate column. |
 | `ptModelFromTscsmtEC(name, out)` | `tscsmtOut` | `ptModel` | TSCS error-components (GLS) estimate column. |

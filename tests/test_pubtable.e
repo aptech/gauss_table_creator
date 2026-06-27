@@ -76,8 +76,10 @@ checkStringEqual(ptStripRtfHeader("{\\rtf1\\ansi\nbody}\n"), "body}\n", "rtf hea
 checkStringEqual(ptStripRtfFooter("body}\n"), "body", "rtf footer strip");
 
 checkStringContains(ptRenderHtml(tbl), "<caption>Demo_table</caption>", "html caption");
-checkStringContains(ptRenderHtml(tbl), "<th>Model 1</th>", "html column header");
-checkStringContains(ptRenderHtml(tbl), "<td>1.235</td>", "html data cell");
+checkStringContains(ptRenderHtml(tbl), ">Model 1</th>", "html column header");
+checkStringContains(ptRenderHtml(tbl), ">1.235</td>", "html data cell");
+checkStringContains(ptRenderHtml(tbl), "<table style=\"border-collapse:collapse;\">", "html table has border-collapse for tighter default spacing");
+checkStringContains(ptRenderHtml(tbl), "text-align:right;padding:4px 10px;", "html default alignment right-aligns data columns even with colAlign unset");
 checkStringEqual(ptEscapeHtml("a < b & c > d"), "a &lt; b &amp; c &gt; d", "html escaping");
 
 struct ptTable latexTbl;
@@ -168,15 +170,30 @@ gofRuleTbl = ptSetTitle(gofRuleTbl, "GOF rule test");
 local gofRuleHtml, gofRuleRtf;
 gofRuleHtml = ptRenderHtml(gofRuleTbl);
 checkStringContains(gofRuleHtml, "border-top:1px solid #000;\">N</th>", "html GOF mid-rule lands on the N (first GOF) row");
-checkStringContains(gofRuleHtml, "<th scope=\"row\">x1</th>", "html: the coefficient row itself carries no extra border styling");
+checkStringContains(gofRuleHtml, "<th scope=\"row\" style=\"text-align:left;padding:4px 10px;\">x1</th>", "html: the coefficient row itself carries alignment/padding but no extra border styling");
 
 gofRuleRtf = ptRenderRtf(gofRuleTbl);
 checkStringContains(gofRuleRtf, "\\clbrdrt\\brdrs\\brdrw10\\cellx", "rtf GOF mid-rule present before the GOF block");
 checkStringContains(gofRuleRtf, "\\pard\\intbl N\\cell", "rtf N row present right after the mid-rule");
 
+/* Table-width issue (all rich formats): notes must be constrained to the
+** table's own rendered width, not the surrounding page/container width. */
+local gofRuleLatex;
+gofRuleLatex = ptRenderLatex(gofRuleTbl);
+checkStringContains(gofRuleLatex, "\\multicolumn{2}{l}{\\footnotesize Significance:", "latex notes render as a multicolumn row inside the tabular, not as text below it");
+checkStringContains(gofRuleLatex, "} \\\\\n\\end{tabular}", "latex multicolumn note row is the tabular's last row, just before \\end{tabular}");
+
+/* rtf: the note must render inside its own \intbl cell (sized to the
+** table's own width), not as a bare {\i ...}\par paragraph. */
+checkStringContains(gofRuleRtf, "\\pard\\intbl {\\i Significance:", "rtf note renders inside its own width-matched \\intbl cell, not a bare paragraph");
+
 /* No stat sub-rows (matrix table) -> no GOF block -> no mid-rule, even
-** with journal_booktabs applied. */
-checkScalarEqual(strindx(ptRenderHtml(btTbl), "<th scope=\"row\" style=\"border-top", 1), 0, "no GOF mid-rule on a matrix table (no GOF/stat-row concept)");
+** with journal_booktabs applied. Check the <tbody> specifically, since
+** the header legitimately carries its own top/bottom rule. */
+local btTblHtml, btTblBody;
+btTblHtml = ptRenderHtml(btTbl);
+btTblBody = strsect(btTblHtml, strindx(btTblHtml, "<tbody>", 1), strindx(btTblHtml, "</tbody>", 1) - strindx(btTblHtml, "<tbody>", 1));
+checkScalarEqual(strindx(btTblBody, "border-top", 1), 0, "no GOF mid-rule on a matrix table (no GOF/stat-row concept)");
 
 /* journal-style title warning: ptExport/ptRenderLatex/ptRenderHtml/ptRenderRtf
 ** call _ptCheckJournalTitle, which warns via errorlog but never aborts. */
@@ -412,7 +429,8 @@ checkStringContains(ptRenderCsv(grpTbl), "G1", "csv column group label");
 checkStringContains(ptRenderText(grpTbl), "G1", "text column group label");
 checkStringContains(ptRenderLatex(grpTbl), "\\multicolumn{2}{c}{G1}", "latex spanning header");
 checkStringContains(ptRenderLatex(grpTbl), "\\cmidrule(lr){2-3}", "latex cmidrule under group");
-checkStringContains(ptRenderHtml(grpTbl), "<th colspan=\"2\">G1</th>", "html spanning header");
+checkStringContains(ptRenderHtml(grpTbl), "<th colspan=\"2\"", "html spanning header has colspan");
+checkStringContains(ptRenderHtml(grpTbl), ">G1</th>", "html spanning header label");
 checkStringContains(ptRenderRtf(grpTbl), "\\clmgf", "rtf merged cell start");
 checkStringContains(ptRenderRtf(grpTbl), "\\clmrg", "rtf merged cell continuation");
 
@@ -426,9 +444,9 @@ struct ptTable alignTbl;
 alignTbl = ptSetColAlign(grpTbl, "lcrrc");
 checkStringContains(ptRenderMarkdown(alignTbl), ":---:", "markdown center alignment marker");
 checkStringContains(ptRenderMarkdown(alignTbl), "---:", "markdown right alignment marker");
-checkStringContains(ptRenderHtml(alignTbl), "style=\"text-align:center\"", "html center alignment style");
-checkStringContains(ptRenderHtml(alignTbl), "style=\"text-align:right\"", "html right alignment style");
-checkStringContains(ptRenderHtml(alignTbl), "style=\"text-align:left\"", "html left alignment style");
+checkStringContains(ptRenderHtml(alignTbl), "style=\"text-align:center;", "html center alignment style");
+checkStringContains(ptRenderHtml(alignTbl), "style=\"text-align:right;", "html right alignment style");
+checkStringContains(ptRenderHtml(alignTbl), "style=\"text-align:left;", "html left alignment style");
 
 local alignLines;
 alignLines = strsplit(ptRenderText(alignTbl), "\n");

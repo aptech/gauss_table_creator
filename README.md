@@ -49,15 +49,15 @@ Significance stars use the default cutoffs `0.10`/`0.05`/`0.01` with symbols `"+
 
 | Preset | Settings |
 | --- | --- |
-| `"journal"` | 3 digits, default significance stars, one `"se"` row, parenthesized statistics (the default settings). |
-| `"journal_booktabs"` | Same as `"journal"`, plus `booktabs`-style rules in LaTeX/HTML/RTF (top rule, header-bottom rule, a mid-rule separating coefficients from goodness-of-fit rows, table-bottom rule; no vertical/column-divider rules). LaTeX is unaffected since it already renders this way by default; Markdown is unaffected since it has no border concept. |
+| `"journal_booktabs"` | 3 digits, default significance stars, one `"se"` row, parenthesized statistics, plus `booktabs`-style rules in LaTeX/HTML/RTF (top rule, header-bottom rule, a mid-rule separating coefficients from goodness-of-fit rows, table-bottom rule; no vertical/column-divider rules). **This is the default** — `ptFormatCreate`/`ptTableCreate`/`ptModelCreate` start with it already applied, with no `ptApplyPreset` call needed. |
+| `"journal"` | Same as `"journal_booktabs"`, minus the `booktabs` rule styling (an unstyled `<table>`/full-grid RTF). |
 | `"compact"` | 2 digits, default significance stars, one `"se"` row, parenthesized statistics. |
 | `"plain"` | 3 digits, no significance stars, one `"se"` row, no statistic wrapper. |
 | `"report"` | 3 digits, default significance stars, `"se"` and `"pvalue"` rows, parenthesized statistics. |
 
 Apply a preset before calling `ptModelTable`/`ptExport` so the chosen formatting is used when the table is rendered.
 
-Exporting/rendering a `"journal"` or `"journal_booktabs"` table with no title set prints a non-fatal `errorlog` warning ("pubtable warning: journal-style table has no title. Use ptSetTitle(tbl, ...) before exporting.") but still completes the export — call `ptSetTitle(tbl, ...)` first to silence it.
+Exporting/rendering a `"journal"` or `"journal_booktabs"` (the default) table with no title set prints a non-fatal `errorlog` warning ("pubtable warning: journal-style table has no title. Use ptSetTitle(tbl, ...) before exporting.") but still completes the export — call `ptSetTitle(tbl, ...)` first to silence it.
 
 For more control over model comparisons, build a `ptCompareOptions` struct with `ptCompareOptionsCreate()` and pass it to `ptModelCompareWith(models, opts)`:
 

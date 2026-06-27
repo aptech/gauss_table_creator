@@ -2,11 +2,27 @@
 
 All notable changes to `pubtable` are documented in this file.
 
-This project does not yet follow strict [Semantic Versioning](https://semver.org/) —
-it is in beta (`0.x`) while the modern `pt*` API stabilizes. The format loosely follows
+This project follows [Semantic Versioning](https://semver.org/) as of `1.0.0`; the
+modern `pt*` API is now considered stable. The format loosely follows
 [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ## [Unreleased]
+
+## [1.0.0]
+
+### Changed
+- **Breaking:** `ptFormatCreate()` now defaults to the `"journal_booktabs"` preset
+  (`fmt.preset = "journal_booktabs"`, `fmt.ruleStyle = "booktabs"`) instead of an
+  unstyled default (`fmt.preset = ""`, `fmt.ruleStyle = ""`). Every `ptTableCreate`/
+  `ptModelCreate` call that doesn't explicitly apply a different preset now renders with
+  booktabs-style rules in `ptRenderHtml`/`ptRenderRtf` (LaTeX already rendered this way
+  unconditionally). One side effect: `_ptCheckJournalTitle`'s "journal-style table has no
+  title" warning (`ptExport`/`ptRenderLatex`/`ptRenderHtml`/`ptRenderRtf`) now fires by
+  default for any untitled table, not just ones that explicitly opted into a journal
+  preset. Call `ptApplyPreset(tbl, "plain")` (or any other preset) to opt back out.
+- `ptModelFromCmlmt`'s `"Function value"` GOF row label is now `"Fnc value"`. The
+  `garchEstimation` adapter's (`ptModelFromGarchmt`) own `"Function value"` GOF row is
+  renamed the same way, for consistency between the two PV-pattern adapters.
 
 ### Added
 - `"journal_booktabs"` style preset (`ptApplyPreset`/`ptModelApplyPreset`): identical to
@@ -35,6 +51,29 @@ it is in beta (`0.x`) while the modern `pt*` API stabilizes. The format loosely 
   already report their own non-optional AIC/BIC (e.g. `ptModelFromGlm`) are unaffected.
 
 ### Fixed
+- `ptRenderHtml` output looked loosely/"double" spaced — no `border-collapse` and no
+  explicit cell padding, so it fell back to default browser table spacing. Every `<table>`
+  now gets `border-collapse:collapse;`, and every `<th>`/`<td>` gets `padding:4px 10px;`
+  (merged with any alignment/border styling via `ptHtmlMergeBorderAttr`).
+- `ptRenderHtml` table notes (the significance note, model notes, `dataLabel`) rendered
+  as `<p class="pt-note">` elements *after* `</table>`, so they stretched to the full
+  page/container width instead of the table's own width. They now render inside a
+  `<tfoot>` row with `colspan` spanning all columns, staying visually aligned with the
+  table above them.
+- `ptRenderLatex`/`ptRenderRtf` had the same table-width problem: LaTeX notes rendered as
+  plain paragraph text below `\end{tabular}` (wrapping to the surrounding text width,
+  not the tabular's own width), and RTF notes rendered as bare `{\i ...}\par` paragraphs
+  after the table's last `\row` (wrapping to the page's full text width in Word). LaTeX
+  notes now render as `\multicolumn{n}{l}{...}` rows inside the `tabular`, just before
+  `\end{tabular}`; RTF notes now render as their own single-cell, borderless `\intbl` row
+  sized to the same total width (`\cellx`) as the data table.
+- `ptRenderHtml` applied no default column alignment at all when `fmt.colAlign` was
+  unset, relying on the browser's own default (`<td>` left-aligned, `<th>` centered).
+  This was inconsistent with `ptRenderText`/`ptRenderMarkdown`/`ptRenderLatex`, which all
+  default to stub-left/data-right alignment, and looked unbalanced whenever a data
+  column was forced wide by its header text (numeric values left-aligned with a lot of
+  trailing whitespace). `ptHtmlAlignAttr` now always applies the same stub-left/
+  data-right default via `ptColAlignChar` unless `colAlign` is set explicitly.
 - `ptRenderText` and `ptRenderMarkdown` could misalign a coefficient's stat sub-row
   (SE/t-stat/p-value/CI) against its own coefficient whenever the coefficient's
   significance-star suffix had a different length than other rows in the same column

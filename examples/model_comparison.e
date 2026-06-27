@@ -14,17 +14,11 @@ new;
 library pubtable;
 
 /* Step 1: Estimate two models */
-struct olsmtControl ctl;
-struct olsmtOut out1;
-struct olsmtOut out2;
-ctl = olsmtControlCreate;
-ctl.output = 0;
-
 fname = getGAUSSHome() $+ "examples/auto.dat";
-out1 = olsmt(ctl, fname, "mpg ~ weight");
-out2 = olsmt(ctl, fname, "mpg ~ weight + length");
+out1 = olsmt(fname, "mpg ~ weight");
+out2 = olsmt(fname, "mpg ~ weight + length");
 
-/* Step 2: Wrap in ptModel — no 'struct ptModel mdl' declaration needed */
+/* Step 2: Wrap in ptModel no 'struct ptModel mdl' declaration needed */
 mdl1 = ptModelFrom("(1)", out1);
 mdl2 = ptModelFrom("(2)", out2);
 
@@ -39,5 +33,5 @@ models[2] = mdl2;
 tbl = ptModelCompare(models);
 tbl = ptSetTitle(tbl, "Model Comparison: Fuel Efficiency");
 
-call ptExport(tbl, "model_comparison.md");
-call ptExport(tbl, "model_comparison.rtf");
+call ptExport(tbl, "model_comparison.html");
+

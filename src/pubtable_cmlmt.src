@@ -41,7 +41,7 @@ proc (struct ptModel) = ptModelFromCmlmt(...);
         mdl = ptModelCreate(name, estimates, se);
         mdl = ptModelSetNames(mdl, names);
         mdl = ptModelSetPValues(mdl, pval);
-        mdl = ptModelSetGOF(mdl, "N" $| "Function value" $| "AIC" $| "BIC", n | fval | aic | bic);
+        mdl = ptModelSetGOF(mdl, "N" $| "Fnc value" $| "AIC" $| "BIC", n | fval | aic | bic);
         mdl.hasOptionalAicBic = 1;
     #else;
         _library_missing_error(currentprocname(), "Cmlmt");

@@ -30,7 +30,9 @@
 | `"plain"` | 3 | none | none | `se` | (default) |
 | `"report"` | 3 | `+`/`*`/`**` at 0.10/0.05/0.01 | parentheses | `se`, `pvalue` | (default) |
 
-`"journal"` is equivalent to the default `ptFormat` created by `ptFormatCreate`.
+`"journal_booktabs"` is the default `ptFormat` created by `ptFormatCreate` (and so the
+default for `ptTableCreate`/`ptModelCreate` whenever no preset is applied explicitly).
+`"journal"` is identical except it leaves `ruleStyle` unset.
 
 `"journal_booktabs"` is identical to `"journal"` except for `ruleStyle`: `ptRenderHtml`/
 `ptRenderRtf` then draw a table-top rule, a header-bottom rule, a mid-rule separating the
@@ -59,10 +61,9 @@ title via `ptModelTable`) before exporting to silence it.
   change formatting for the *next* render, but will not re-format the string body already
   in the table. For model tables, apply the preset to the `ptModel` before calling
   `ptModelTable`.
-- `fmt.preset` is only set by `ptApplyPreset`/`ptModelApplyPreset`. A `ptFormat` built
-  manually (via `ptFormatCreate`/`ptModelCreate` followed by individual setters) has
-  `fmt.preset $== ""`, so the title warning above never fires for it even if its
-  settings happen to match `"journal"`.
+- `fmt.preset` defaults to `"journal_booktabs"` from `ptFormatCreate` itself (not only
+  via `ptApplyPreset`/`ptModelApplyPreset`), so the title warning above fires for any
+  untitled table unless a different preset (e.g. `"plain"`) is applied explicitly.
 
 ## Example
 ```gauss
